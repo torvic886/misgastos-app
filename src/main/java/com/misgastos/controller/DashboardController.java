@@ -12,7 +12,7 @@ public class DashboardController {
     
     @FXML
     public void initialize() {
-        System.out.println("Dashboard cargado");
+        System.out.println("Dashboard Cargado");
     }
     
     @FXML
@@ -32,7 +32,7 @@ public class DashboardController {
     
     @FXML
     public void handleCerrarSesion() {
-        System.out.println("Cerrando sesion");
+        System.out.println("Cerrando Sesion");
     }
     
     public void setUsuario(String username) {
