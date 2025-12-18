@@ -1,0 +1,148 @@
+/* ===============================
+   GLOBAL
+   =============================== */
+
+.root {
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+    -fx-background-color: #f7fafc;
+}
+
+/* ===============================
+   TOP BAR (HEADER)
+   =============================== */
+
+.top-bar {
+    -fx-background-color: linear-gradient(to right, #667eea, #764ba2);
+    -fx-padding: 15;
+}
+
+.top-bar .label {
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+}
+
+.top-bar .title {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+}
+
+/* Botón cerrar sesión */
+.top-bar .button {
+    -fx-background-color: rgba(255,255,255,0.2);
+    -fx-text-fill: white;
+    -fx-background-radius: 5;
+    -fx-cursor: hand;
+}
+
+.top-bar .button:hover {
+    -fx-background-color: rgba(255,255,255,0.35);
+}
+
+/* ===============================
+   SIDEBAR
+   =============================== */
+
+.sidebar {
+    -fx-background-color: #2d3748;
+    -fx-padding: 20;
+}
+
+.sidebar-title {
+    -fx-text-fill: #a0aec0;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+/* Botones menú */
+.menu-button {
+    -fx-background-color: #4a5568;
+    -fx-text-fill: white;
+    -fx-background-radius: 5;
+    -fx-padding: 10;
+    -fx-alignment: center-left;
+    -fx-cursor: hand;
+}
+
+.menu-button:hover {
+    -fx-background-color: #667eea;
+}
+
+/* Botón activo */
+.menu-button.active {
+    -fx-background-color: #667eea;
+    -fx-font-weight: bold;
+}
+
+/* ===============================
+   CONTENT AREA
+   =============================== */
+
+.content {
+    -fx-background-color: #f7fafc;
+    -fx-padding: 20;
+}
+
+.content-title {
+    -fx-font-size: 32px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2d3748;
+}
+
+.content-subtitle {
+    -fx-font-size: 16px;
+    -fx-text-fill: #718096;
+}
+
+/* ===============================
+   FORMS
+   =============================== */
+
+.text-field,
+.password-field {
+    -fx-background-color: transparent;
+    -fx-border-color: #cbd5e0;
+    -fx-border-radius: 4;
+    -fx-padding: 6;
+    -fx-font-size: 14px;
+    -fx-text-fill: #2d3748;
+}
+
+.text-field:focused,
+.password-field:focused {
+    -fx-border-color: #667eea;
+}
+
+/* ===============================
+   BUTTONS (GENERIC)
+   =============================== */
+
+.button {
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 8, 0, 0, 2);
+}
+
+/* ===============================
+   CHECKBOX
+   =============================== */
+
+.check-box {
+    -fx-text-fill: #4a5568;
+}
+
+.check-box .box {
+    -fx-background-color: white;
+    -fx-border-color: #cbd5e0;
+    -fx-border-radius: 3;
+}
+
+.check-box:selected .box {
+    -fx-background-color: #667eea;
+    -fx-border-color: #667eea;
+}
+
+.check-box:selected .mark {
+    -fx-background-color: white;
+}
