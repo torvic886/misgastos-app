@@ -146,3 +146,45 @@
 .check-box:selected .mark {
     -fx-background-color: white;
 }
+/* ===============================
+   FORM LABELS
+   =============================== */
+
+.form-label {
+    -fx-font-weight: 600;
+    -fx-text-fill: #2d3748;
+    -fx-font-size: 14px;
+}
+
+/* ===============================
+   PRIMARY BUTTON
+   =============================== */
+
+.primary-button {
+    -fx-background-color: linear-gradient(to right, #667eea, #764ba2);
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 5;
+    -fx-padding: 12 24;
+    -fx-cursor: hand;
+}
+
+.primary-button:hover {
+    -fx-effect: dropshadow(gaussian, rgba(102, 126, 234, 0.4), 10, 0, 0, 3);
+}
+
+/* ===============================
+   SECONDARY BUTTON
+   =============================== */
+
+.secondary-button {
+    -fx-background-color: #e2e8f0;
+    -fx-text-fill: #2d3748;
+    -fx-background-radius: 5;
+    -fx-padding: 12 24;
+    -fx-cursor: hand;
+}
+
+.secondary-button:hover {
+    -fx-background-color: #cbd5e0;
+}

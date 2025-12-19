@@ -43,6 +43,9 @@ public class Subcategoria {
 		this.categoria = categoria;
 	}
     
-    
+	@Override
+	public String toString() {
+	    return nombre;
+	}
     
 }
