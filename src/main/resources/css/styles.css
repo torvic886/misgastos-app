@@ -1,190 +1,186 @@
 /* ===============================
-   GLOBAL
+   DESIGN TOKENS
    =============================== */
-
 .root {
+    -primary: #6f6dd9;
+    -primary-dark: #5a58c8;
+    -background: #f5f7fb;
+    -card-bg: #ffffff;
+    -sidebar-bg: #2f3545;
+    -text-main: #1f2937;
+    -text-muted: #6b7280;
+
     -fx-font-family: "Segoe UI", Arial, sans-serif;
-    -fx-background-color: #f7fafc;
+    -fx-background-color: -background;
 }
 
 /* ===============================
-   TOP BAR (HEADER)
+   HEADER
    =============================== */
-
-.top-bar {
-    -fx-background-color: linear-gradient(to right, #667eea, #764ba2);
-    -fx-padding: 15;
+.header {
+    -fx-background-color: linear-gradient(to right, #6f6dd9, #7b5cc9);
+    -fx-padding: 14 24;
 }
 
-.top-bar .label {
+.header Label {
     -fx-text-fill: white;
     -fx-font-size: 14px;
-}
-
-.top-bar .title {
-    -fx-font-size: 20px;
-    -fx-font-weight: bold;
-}
-
-/* Botón cerrar sesión */
-.top-bar .button {
-    -fx-background-color: rgba(255,255,255,0.2);
-    -fx-text-fill: white;
-    -fx-background-radius: 5;
-    -fx-cursor: hand;
-}
-
-.top-bar .button:hover {
-    -fx-background-color: rgba(255,255,255,0.35);
 }
 
 /* ===============================
    SIDEBAR
    =============================== */
-
 .sidebar {
-    -fx-background-color: #2d3748;
-    -fx-padding: 20;
+    -fx-background-color: -sidebar-bg;
+    -fx-padding: 20 12;
 }
 
 .sidebar-title {
-    -fx-text-fill: #a0aec0;
+    -fx-text-fill: #9ca3af;
     -fx-font-size: 12px;
     -fx-font-weight: bold;
 }
 
-/* Botones menú */
 .menu-button {
-    -fx-background-color: #4a5568;
-    -fx-text-fill: white;
-    -fx-background-radius: 5;
-    -fx-padding: 10;
-    -fx-alignment: center-left;
+    -fx-background-color: transparent;
+    -fx-text-fill: #e5e7eb;
+    -fx-padding: 10 14;
+    -fx-background-radius: 8;
+    -fx-font-size: 13px;
     -fx-cursor: hand;
 }
 
 .menu-button:hover {
-    -fx-background-color: #667eea;
+    -fx-background-color: rgba(255,255,255,0.08);
 }
 
-/* Botón activo */
 .menu-button.active {
-    -fx-background-color: #667eea;
+    -fx-background-color: -primary;
     -fx-font-weight: bold;
 }
 
 /* ===============================
-   CONTENT AREA
+   CONTENT
    =============================== */
-
 .content {
-    -fx-background-color: #f7fafc;
-    -fx-padding: 20;
+    -fx-padding: 30;
 }
 
 .content-title {
-    -fx-font-size: 32px;
+    -fx-font-size: 30px;
     -fx-font-weight: bold;
-    -fx-text-fill: #2d3748;
+    -fx-text-fill: -text-main;
 }
 
 .content-subtitle {
-    -fx-font-size: 16px;
-    -fx-text-fill: #718096;
+    -fx-font-size: 15px;
+    -fx-text-fill: -text-muted;
 }
 
 /* ===============================
-   FORMS
+   STAT CARDS
    =============================== */
+.stat-card {
+    -fx-background-color: -card-bg;
+    -fx-background-radius: 14;
+    -fx-padding: 18;
+    -fx-spacing: 8;
+    -fx-alignment: center;
+    -fx-min-width: 200;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 14, 0, 0, 4);
+}
 
-.text-field,
-.password-field {
-    -fx-background-color: transparent;
-    -fx-border-color: #cbd5e0;
-    -fx-border-radius: 4;
-    -fx-padding: 6;
+.stat-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: -text-muted;
+}
+
+.stat-value {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -primary;
+}
+
+.stat-icon {
+    -fx-font-size: 20px;
+    -fx-text-fill: -primary;
+}
+
+.stat-card:hover {
+    -fx-translate-y: -3;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.14), 20, 0, 0, 6);
+}
+
+/* ===============================
+   INFO PANELS
+   =============================== */
+.info-panel {
+    -fx-background-color: -card-bg;
+    -fx-background-radius: 14;
+    -fx-padding: 16;
+    -fx-spacing: 10;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 3);
+}
+
+.panel-title {
     -fx-font-size: 14px;
-    -fx-text-fill: #2d3748;
-}
-
-.text-field:focused,
-.password-field:focused {
-    -fx-border-color: #667eea;
+    -fx-font-weight: bold;
+    -fx-text-fill: -text-main;
 }
 
 /* ===============================
-   BUTTONS (GENERIC)
+   BUTTONS
    =============================== */
-
-.button {
-    -fx-cursor: hand;
-}
-
-.button:hover {
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 8, 0, 0, 2);
-}
-
-/* ===============================
-   CHECKBOX
-   =============================== */
-
-.check-box {
-    -fx-text-fill: #4a5568;
-}
-
-.check-box .box {
-    -fx-background-color: white;
-    -fx-border-color: #cbd5e0;
-    -fx-border-radius: 3;
-}
-
-.check-box:selected .box {
-    -fx-background-color: #667eea;
-    -fx-border-color: #667eea;
-}
-
-.check-box:selected .mark {
-    -fx-background-color: white;
-}
-/* ===============================
-   FORM LABELS
-   =============================== */
-
-.form-label {
-    -fx-font-weight: 600;
-    -fx-text-fill: #2d3748;
-    -fx-font-size: 14px;
-}
-
-/* ===============================
-   PRIMARY BUTTON
-   =============================== */
-
 .primary-button {
-    -fx-background-color: linear-gradient(to right, #667eea, #764ba2);
+    -fx-background-color: linear-gradient(to right, #6f6dd9, #7b5cc9);
     -fx-text-fill: white;
     -fx-font-weight: bold;
-    -fx-background-radius: 5;
-    -fx-padding: 12 24;
+    -fx-background-radius: 6;
+    -fx-padding: 10 22;
     -fx-cursor: hand;
 }
 
 .primary-button:hover {
-    -fx-effect: dropshadow(gaussian, rgba(102, 126, 234, 0.4), 10, 0, 0, 3);
+    -fx-effect: dropshadow(gaussian, rgba(111,109,217,0.5), 10, 0, 0, 3);
 }
 
-/* ===============================
-   SECONDARY BUTTON
-   =============================== */
-
-.secondary-button {
-    -fx-background-color: #e2e8f0;
-    -fx-text-fill: #2d3748;
-    -fx-background-radius: 5;
-    -fx-padding: 12 24;
-    -fx-cursor: hand;
+.dashboard-root {
+    -fx-background-color: #f7fafc;
 }
 
-.secondary-button:hover {
-    -fx-background-color: #cbd5e0;
+.login-root {
+    -fx-background-color: linear-gradient(
+        to bottom right,
+        #667eea,
+        #764ba2
+    );
 }
+
+.login-card {
+    -fx-background-color: white;
+    -fx-background-radius: 20;
+    -fx-padding: 0;
+    -fx-effect: dropshadow(
+        gaussian,
+        rgba(0,0,0,0.25),
+        30,
+        0,
+        0,
+        10
+    );
+}
+
+.login-header {
+    -fx-background-color: linear-gradient(
+        to right,
+        #667eea,
+        #764ba2
+    );
+    -fx-background-radius: 20 20 0 0;
+}
+
+.login-header .label {
+    -fx-text-fill: white;
+}
+
+

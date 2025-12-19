@@ -1,91 +1,96 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.CheckBox?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.PasswordField?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.Circle?>
 
-<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="700.0" prefWidth="500.0" style="-fx-background-color: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.misgastos.controller.LoginController">
-   <children>
-      <VBox alignment="TOP_CENTER" maxHeight="650.0" maxWidth="440.0" spacing="30.0" style="-fx-background-color: white; -fx-background-radius: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 30, 0, 0, 10);">
-         <children>
-            <VBox alignment="CENTER" spacing="15.0" style="-fx-background-color: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -fx-background-radius: 20 20 0 0;">
-               <children>
-                  <StackPane prefHeight="80.0" prefWidth="80.0">
-                     <children>
-                        <Circle fill="WHITE" radius="40.0" />
-                        <Label style="-fx-font-size: 36px; -fx-text-fill: #667eea; -fx-font-weight: bold;" text="💰" />
-                     </children>
-                  </StackPane>
-                  <Label style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: white;" text="ExpenseFlow" />
-                  <Label style="-fx-font-size: 14px; -fx-text-fill: rgba(255,255,255,0.9);" text="Control Inteligente de Gastos Personales" />
-               </children>
-               <padding>
-                  <Insets bottom="30.0" left="40.0" right="40.0" top="40.0" />
-               </padding>
+<StackPane prefHeight="700.0"
+           prefWidth="500.0"
+		   maxHeight="Infinity"
+		   maxWidth="Infinity"           
+           styleClass="login-root"
+           xmlns="http://javafx.com/javafx/17"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.misgastos.controller.LoginController">
+
+    <children>
+        <VBox alignment="TOP_CENTER"
+              maxHeight="650.0"
+              maxWidth="440.0"
+              spacing="30.0"
+              styleClass="login-card">
+
+            <!-- HEADER -->
+            <VBox alignment="CENTER"
+                  spacing="15.0"
+                  styleClass="login-header">
+
+                <StackPane prefHeight="80" prefWidth="80">
+                    <Circle radius="40" styleClass="login-icon-bg"/>
+                    <Label text="💰" styleClass="login-icon"/>
+                </StackPane>
+
+                <Label text="ExpenseFlow" styleClass="login-title"/>
+                <Label text="Control Inteligente de Gastos Personales"
+                       styleClass="login-subtitle"/>
+
+                <padding>
+                    <Insets top="40" right="40" bottom="30" left="40"/>
+                </padding>
             </VBox>
-            
-            <VBox spacing="20.0">
-               <children>
-                  <VBox spacing="8.0">
-                     <children>
-                        <Label style="-fx-font-size: 13px; -fx-font-weight: 600; -fx-text-fill: #4a5568;" text="Usuario" />
-                        <HBox alignment="CENTER_LEFT" spacing="10.0" style="-fx-background-color: #f7fafc; -fx-border-color: #e2e8f0; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 5;">
-                           <children>
-                              <Label style="-fx-text-fill: #a0aec0; -fx-font-size: 16px;" text="👤" />
-                              <TextField fx:id="txtUsername" promptText="Ingrese su usuario" style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 14px;" HBox.hgrow="ALWAYS" />
-                           </children>
-                        </HBox>
-                     </children>
-                  </VBox>
-                  
-                  <VBox spacing="8.0">
-                     <children>
-                        <Label style="-fx-font-size: 13px; -fx-font-weight: 600; -fx-text-fill: #4a5568;" text="Contraseña" />
-                        <HBox alignment="CENTER_LEFT" spacing="10.0" style="-fx-background-color: #f7fafc; -fx-border-color: #e2e8f0; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 5;">
-                           <children>
-                              <Label style="-fx-text-fill: #a0aec0; -fx-font-size: 16px;" text="🔒" />
-                              <PasswordField fx:id="txtPassword" promptText="Ingrese su contraseña" style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 14px;" HBox.hgrow="ALWAYS" />
-                           </children>
-                        </HBox>
-                     </children>
-                  </VBox>
-                  
-                  <HBox alignment="CENTER_LEFT">
-                     <children>
-                        <CheckBox style="-fx-text-fill: #4a5568;" text="Recordarme" />
-                     </children>
-                  </HBox>
-                  
-                  <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleLogin" style="-fx-background-color: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 15; -fx-cursor: hand;" text="🔓 Iniciar Sesión" />
-                  
-                  <VBox spacing="8.0" style="-fx-background-color: #ebf8ff; -fx-background-radius: 8; -fx-border-color: #bee3f8; -fx-border-radius: 8; -fx-padding: 15;">
-                     <children>
-                        <Label style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #2c5282;" text="🔥 Credenciales de prueba:" />
-                        <Label style="-fx-font-size: 11px; -fx-text-fill: #2d3748;" text="Admin: admin / admin123" />
-                        <Label style="-fx-font-size: 11px; -fx-text-fill: #2d3748;" text="Usuario: usuario / usuario123" />
-                     </children>
-                  </VBox>
-               </children>
-               <padding>
-                  <Insets left="40.0" right="40.0" />
-               </padding>
+
+            <!-- FORM -->
+            <VBox spacing="20">
+                <padding>
+                    <Insets left="40" right="40"/>
+                </padding>
+
+                <VBox spacing="8">
+                    <Label text="Usuario" styleClass="form-label"/>
+                    <HBox spacing="10" alignment="CENTER_LEFT" styleClass="input-box">
+                        <Label text="👤" styleClass="input-icon"/>
+                        <TextField fx:id="txtUsername"
+                                   promptText="Ingrese su usuario"
+                                   HBox.hgrow="ALWAYS"/>
+                    </HBox>
+                </VBox>
+
+                <VBox spacing="8">
+                    <Label text="Contraseña" styleClass="form-label"/>
+                    <HBox spacing="10" alignment="CENTER_LEFT" styleClass="input-box">
+                        <Label text="🔒" styleClass="input-icon"/>
+                        <PasswordField fx:id="txtPassword"
+                                       promptText="Ingrese su contraseña"
+                                       HBox.hgrow="ALWAYS"/>
+                    </HBox>
+                </VBox>
+
+                <CheckBox text="Recordarme"/>
+
+                <Button text="🔓 Iniciar Sesión"
+                        maxWidth="Infinity"
+                        onAction="#handleLogin"
+                        styleClass="login-button"/>
+
+                <VBox spacing="8" styleClass="login-hint">
+                    <Label text="🔥 Credenciales de prueba:" styleClass="hint-title"/>
+                    <Label text="Admin: admin / admin123"/>
+                    <Label text="Usuario: usuario / usuario123"/>
+                </VBox>
             </VBox>
-            
-            <Label style="-fx-font-size: 11px; -fx-text-fill: #a0aec0; -fx-padding: 20 0 0 0;" text="© 2024 ExpenseFlow - v1.0.0" />
-         </children>
-         <padding>
-            <Insets bottom="30.0" />
-         </padding>
-         <StackPane.margin>
-            <Insets bottom="40.0" left="40.0" right="40.0" top="40.0" />
-         </StackPane.margin>
-      </VBox>
-   </children>
+
+            <Label text="© 2024 ExpenseFlow - v1.0.0"
+                   styleClass="login-footer"/>
+
+            <padding>
+                <Insets bottom="30"/>
+            </padding>
+
+            <StackPane.margin>
+                <Insets top="40" right="40" bottom="40" left="40"/>
+            </StackPane.margin>
+
+        </VBox>
+    </children>
 </StackPane>

@@ -15,7 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -76,6 +79,28 @@ public class GastoService {
     public BigDecimal calcularTotalPorPeriodo(LocalDate inicio, LocalDate fin) {
         BigDecimal total = gastoRepository.sumarGastosPorPeriodo(inicio, fin);
         return total != null ? total : BigDecimal.ZERO;
+    }
+    
+    public Map<String, BigDecimal> obtenerGastosPorCategoria() {
+        List<Object[]> resultados = gastoRepository.sumarPorCategoria();
+        Map<String, BigDecimal> mapa = new HashMap<>();
+        for (Object[] obj : resultados) {
+            mapa.put((String) obj[0], (BigDecimal) obj[1]);
+        }
+        return mapa;
+    }
+    
+    public List<Map<String, Object>> obtenerTopProductos(int limite) {
+        List<Object[]> resultados = gastoRepository.topProductos();
+        return resultados.stream()
+            .limit(limite)
+            .map(obj -> {
+                Map<String, Object> item = new HashMap<>();
+                item.put("producto", obj[0]);
+                item.put("total", obj[1]);
+                return item;
+            })
+            .collect(Collectors.toList());
     }
     
     public void eliminarGasto(Long id) {

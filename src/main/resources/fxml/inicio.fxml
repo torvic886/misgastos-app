@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox spacing="30" styleClass="content" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.misgastos.controller.InicioController">
+    <padding>
+        <Insets top="30" right="30" bottom="30" left="30"/>
+    </padding>
+    
+    <children>
+        <Label text="📊 Panel de Control" styleClass="content-title"/>
+        <Label text="Resumen de tus gastos y estadísticas" styleClass="content-subtitle"/>
+        
+        <!-- Tarjetas de indicadores -->
+        <HBox spacing="20" alignment="CENTER">
+            <!-- Tarjeta Hoy -->
+            <VBox styleClass="stat-card" >
+                <Label text="Hoy" styleClass="stat-label"/>
+                <Label fx:id="lblTotalHoy" text="\$0.00" styleClass="stat-value"/>
+                <Label text="📅" styleClass="stat-icon"/>
+            </VBox>
+            
+            <!-- Tarjeta Semana -->
+            <VBox styleClass="stat-card" >
+                <Label text="Esta Semana" styleClass="stat-label"/>
+                <Label fx:id="lblTotalSemana" text="\$0.00" styleClass="stat-value"/>
+                <Label text="📆" styleClass="stat-icon"/>
+            </VBox>
+            
+            <!-- Tarjeta Mes -->
+            <VBox styleClass="stat-card" >
+                <Label text="Este Mes" styleClass="stat-label"/>
+                <Label fx:id="lblTotalMes" text="\$0.00" styleClass="stat-value"/>
+                <Label text="📊" styleClass="stat-icon"/>
+            </VBox>
+            
+            <!-- Tarjeta Año -->
+            <VBox styleClass="stat-card" >
+                <Label text="Este Año" styleClass="stat-label"/>
+                <Label fx:id="lblTotalAnio" text="\$0.00" styleClass="stat-value"/>
+                <Label text="📈" styleClass="stat-icon"/>
+            </VBox>
+        </HBox>
+        
+        <!-- Sección de detalles -->
+        <HBox spacing="20" >
+            <!-- Top Productos -->
+            <VBox spacing="10" styleClass="info-panel" >
+                <Label text="🏆 Top 5 Productos" styleClass="panel-title"/>
+                <VBox fx:id="vboxTopProductos" spacing="5"/>
+            </VBox>
+            
+            <!-- Por Categorías -->
+            <VBox spacing="10" styleClass="info-panel" >
+                <Label text="📂 Gastos por Categoría" styleClass="panel-title"/>
+                <VBox fx:id="vboxCategorias" spacing="5"/>
+            </VBox>
+        </HBox>
+    </children>
+</VBox>
