@@ -1,0 +1,22 @@
+<VBox spacing="12" xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.misgastos.controller.ProductoNuevoController"
+      style="-fx-padding: 20;">
+
+    <Label fx:id="lblMensaje" wrapText="true"/>
+
+    <Label text="Categoría"/>
+    <ComboBox fx:id="cmbCategoria"/>
+
+    <CheckBox fx:id="chkNuevaCategoria" text="Crear nueva categoría"/>
+
+    <Label text="Subcategoría"/>
+    <ComboBox fx:id="cmbSubcategoria"/>
+
+    <CheckBox fx:id="chkNuevaSubcategoria" text="Crear nueva subcategoría"/>
+
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button text="Cancelar" onAction="#handleCancelar"/>
+        <Button text="Guardar" onAction="#handleGuardar"/>
+    </HBox>
+</VBox>

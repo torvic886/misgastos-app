@@ -52,4 +52,36 @@ public class CategoriaService {
     public Optional<Categoria> buscarCategoriaPorId(Long id) {
         return categoriaRepository.findById(id);
     }
+    
+    public Categoria crearSiNoExiste(String nombre) {
+
+        String limpio = nombre.trim();
+
+        return categoriaRepository
+            .findByNombreIgnoreCase(limpio)
+            .orElseGet(() -> {
+                Categoria c = new Categoria();
+                c.setNombre(limpio);
+                return categoriaRepository.save(c);
+            });
+    }
+
+    @Transactional
+    public Subcategoria crearSubcategoriaSiNoExiste(Long categoriaId, String nombre) {
+
+        String limpio = nombre.trim();
+
+        return subcategoriaRepository
+            .findByCategoriaIdAndNombreIgnoreCase(categoriaId, limpio)
+            .orElseGet(() -> {
+                Subcategoria s = new Subcategoria();
+                s.setNombre(limpio);
+                s.setCategoria(
+                    categoriaRepository.findById(categoriaId)
+                        .orElseThrow(() -> new RuntimeException("Categoría no encontrada"))
+                );
+                return subcategoriaRepository.save(s);
+            });
+    }
+
 }

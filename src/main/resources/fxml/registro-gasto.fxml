@@ -1,62 +1,112 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.ComboBox?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TextArea?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.VBox?>
 
-<VBox spacing="20" styleClass="content" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.misgastos.controller.RegistroGastoController">
+<HBox spacing="20"
+      styleClass="content"
+      xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.misgastos.controller.RegistroGastoController">
+
     <padding>
-        <Insets top="30" right="30" bottom="30" left="30"/>
+        <Insets top="20" right="20" bottom="20" left="20"/>
     </padding>
-    
-    <children>
-        <Label text="📝 Registrar Nuevo Gasto" styleClass="content-title"/>
-        <Label text="Complete el formulario para registrar un nuevo gasto" styleClass="content-subtitle"/>
-        
-        <GridPane hgap="15" vgap="15">
+
+    <!-- ================= IZQUIERDA: FORMULARIO ================= -->
+    <VBox spacing="15" HBox.hgrow="ALWAYS">
+
+        <Label text="➕ Registrar Gasto" styleClass="content-title"/>
+
+        <GridPane hgap="10" vgap="10">
             <columnConstraints>
-                <javafx.scene.layout.ColumnConstraints minWidth="150" prefWidth="150"/>
-                <javafx.scene.layout.ColumnConstraints minWidth="300" prefWidth="400" hgrow="ALWAYS"/>
+                <ColumnConstraints prefWidth="120"/>
+                <ColumnConstraints hgrow="ALWAYS"/>
             </columnConstraints>
-            
+
             <!-- Categoría -->
-            <Label text="Categoría:" GridPane.columnIndex="0" GridPane.rowIndex="0" styleClass="form-label"/>
-            <ComboBox fx:id="cmbCategoria" promptText="Seleccione categoría" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
-            
+            <Label text="Categoría:" GridPane.rowIndex="0"/>
+            <ComboBox fx:id="cmbCategoria"
+                      promptText="Seleccione"
+                      GridPane.rowIndex="0"
+                      GridPane.columnIndex="1"/>
+
             <!-- Subcategoría -->
-            <Label text="Subcategoría:" GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="form-label"/>
-            <ComboBox fx:id="cmbSubcategoria" promptText="Seleccione subcategoría" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
-            
+            <Label text="Subcategoría:" GridPane.rowIndex="1"/>
+            <ComboBox fx:id="cmbSubcategoria"
+                      promptText="Seleccione"
+                      GridPane.rowIndex="1"
+                      GridPane.columnIndex="1"/>
+
             <!-- Producto -->
-            <Label text="Producto:" GridPane.columnIndex="0" GridPane.rowIndex="2" styleClass="form-label"/>
-            <ComboBox fx:id="cmbProducto" editable="true" promptText="Nombre del producto o servicio" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
-            
+            <Label text="Producto:" GridPane.rowIndex="2"/>
+            <ComboBox fx:id="cmbProducto"
+                      editable="true"
+                      promptText="Ej: Arroz"
+                      GridPane.rowIndex="2"
+                      GridPane.columnIndex="1"/>
+
             <!-- Cantidad -->
-            <Label text="Cantidad:" GridPane.columnIndex="0" GridPane.rowIndex="3" styleClass="form-label"/>
-            <TextField fx:id="txtCantidad" text="1" promptText="Cantidad" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
-            
+            <Label text="Cantidad:" GridPane.rowIndex="3"/>
+            <TextField fx:id="txtCantidad"
+                       text="1"
+                       GridPane.rowIndex="3"
+                       GridPane.columnIndex="1"/>
+
             <!-- Valor Unitario -->
-            <Label text="Valor Unitario:" GridPane.columnIndex="0" GridPane.rowIndex="4" styleClass="form-label"/>
-            <TextField fx:id="txtValorUnitario" promptText="0.00" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
-            
-            <!-- Valor Total -->
-            <Label text="Valor Total:" GridPane.columnIndex="0" GridPane.rowIndex="5" styleClass="form-label"/>
-            <TextField fx:id="txtValorTotal" text="0.00" editable="false" focusTraversable="false"  style="-fx-background-color: #e2e8f0;" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
-            
+            <Label text="Valor Unitario:" GridPane.rowIndex="4"/>
+            <TextField fx:id="txtValorUnitario"
+                       promptText="0.00"
+                       GridPane.rowIndex="4"
+                       GridPane.columnIndex="1"/>
+
+            <!-- Total -->
+            <Label text="Total:" GridPane.rowIndex="5"/>
+            <TextField fx:id="txtValorTotal"
+                       editable="false"
+                       GridPane.rowIndex="5"
+                       GridPane.columnIndex="1"/>
+
             <!-- Notas -->
-            <Label text="Notas (opcional):" GridPane.columnIndex="0" GridPane.rowIndex="6" styleClass="form-label"/>
-            <TextArea fx:id="txtNotas" promptText="Comentarios adicionales..." prefRowCount="3" GridPane.columnIndex="1" GridPane.rowIndex="6"/>
+            <Label text="Notas:" GridPane.rowIndex="6"/>
+            <TextArea fx:id="txtNotas"
+                      prefRowCount="3"
+                      GridPane.rowIndex="6"
+                      GridPane.columnIndex="1"/>
         </GridPane>
-        
-        <HBox spacing="15" alignment="CENTER_RIGHT">
-            <Button text="Limpiar" onAction="#handleLimpiar" styleClass="secondary-button"/>
-            <Button text="💾 Guardar Gasto" onAction="#handleGuardar" styleClass="primary-button"/>
+
+        <!-- Botones -->
+        <HBox spacing="10">
+            <Button text="💾 Guardar"
+                    styleClass="primary-button"
+                    onAction="#handleGuardar"/>
+            <Button text="🧹 Limpiar"
+                    styleClass="secondary-button"
+                    onAction="#handleLimpiar"/>
         </HBox>
-    </children>
-</VBox>
+
+    </VBox>
+
+    <!-- ================= DERECHA: TABLA ================= -->
+    <VBox spacing="10" HBox.hgrow="ALWAYS">
+
+        <Label text="📋 Últimos gastos registrados" styleClass="content-title"/>
+
+		<TableView fx:id="tblUltimosGastos"
+		           prefHeight="500"
+		           VBox.vgrow="ALWAYS"
+		           maxWidth="Infinity">
+		    <columns>
+		        <TableColumn fx:id="colFecha" text="Fecha"/>
+		        <TableColumn fx:id="colCategoria" text="Categoría"/>
+		        <TableColumn fx:id="colProducto" text="Producto"/>
+		        <TableColumn fx:id="colCantidad" text="Cant"/>
+		        <TableColumn fx:id="colValorUnitario" text="V. Unit"/>
+		        <TableColumn fx:id="colTotal" text="Total"/>
+		    </columns>
+		</TableView>
+
+    </VBox>
+
+</HBox>

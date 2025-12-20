@@ -92,13 +92,11 @@ public class GastoService {
     }
     
     public List<String> buscarProductos(String texto) {
-        return gastoRepository
-                .findTop10ByProductoContainingIgnoreCaseOrderByFechaDesc(texto)
-                .stream()
-                .map(Gasto::getProducto)
-                .distinct()
-                .toList();
-    }    
+        if (texto == null) return List.of();
+        String t = texto.trim();
+        if (t.isEmpty()) return List.of();
+        return gastoRepository.buscarProductos(t);
+    } 
     
     public List<Map<String, Object>> obtenerTopProductos(int limite) {
         List<Object[]> resultados = gastoRepository.topProductos();
@@ -118,9 +116,26 @@ public class GastoService {
     }
     
     public Optional<Gasto> buscarUltimoGastoPorProducto(String producto) {
-        if (producto == null || producto.isBlank()) return Optional.empty();
-        return gastoRepository.findTopByProductoIgnoreCaseOrderByFechaDescHoraDesc(producto.trim());
+        if (producto == null) return Optional.empty();
+        String p = producto.trim();
+        if (p.isEmpty()) return Optional.empty();
+
+        List<Gasto> lista = gastoRepository.ultimosGastosPorProducto(p);
+        if (lista == null || lista.isEmpty()) return Optional.empty();
+        return Optional.of(lista.get(0));
     }
 
+    public List<Gasto> obtenerUltimosGastos(Long usuarioId, int limite) {
+        return gastoRepository.findUltimosPorUsuario(usuarioId, limite);
+    }
+    
+    public boolean existeProducto(String producto) {
+        if (producto == null) return false;
+        String p = producto.trim();
+        if (p.isEmpty()) return false;
+        return gastoRepository.existeProducto(p);
+    }
+
+    
 
 }
