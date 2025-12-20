@@ -18,6 +18,7 @@ import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -90,6 +91,15 @@ public class GastoService {
         return mapa;
     }
     
+    public List<String> buscarProductos(String texto) {
+        return gastoRepository
+                .findTop10ByProductoContainingIgnoreCaseOrderByFechaDesc(texto)
+                .stream()
+                .map(Gasto::getProducto)
+                .distinct()
+                .toList();
+    }    
+    
     public List<Map<String, Object>> obtenerTopProductos(int limite) {
         List<Object[]> resultados = gastoRepository.topProductos();
         return resultados.stream()
@@ -106,4 +116,11 @@ public class GastoService {
     public void eliminarGasto(Long id) {
         gastoRepository.deleteById(id);
     }
+    
+    public Optional<Gasto> buscarUltimoGastoPorProducto(String producto) {
+        if (producto == null || producto.isBlank()) return Optional.empty();
+        return gastoRepository.findTopByProductoIgnoreCaseOrderByFechaDescHoraDesc(producto.trim());
+    }
+
+
 }

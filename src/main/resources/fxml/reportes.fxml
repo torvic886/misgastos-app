@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox spacing="30" styleClass="content" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.misgastos.controller.ReportesController">
+    <padding>
+        <Insets top="30" right="30" bottom="30" left="30"/>
+    </padding>
+
+    <children>
+        <Label text="📄 Reportes y Exportación" styleClass="content-title"/>
+        <Label text="Exporta tus gastos a Excel o PDF para análisis externos" styleClass="content-subtitle"/>
+
+        <!-- Exportar todos -->
+        <VBox spacing="15" styleClass="info-panel">
+            <Label text="Exportar Todos los Gastos" styleClass="panel-title"/>
+            <Label text="Genera un archivo con todos tus gastos registrados" style="-fx-text-fill: #718096;"/>
+            
+            <HBox spacing="15">
+                <Button text="📊 Exportar a Excel" onAction="#handleExportarTodosExcel" styleClass="primary-button" prefWidth="200"/>
+                <Button text="📑 Exportar a PDF" onAction="#handleExportarTodosPDF" styleClass="secondary-button" prefWidth="200"/>
+            </HBox>
+        </VBox>
+
+        <Separator/>
+
+        <!-- Exportar por fecha -->
+        <VBox spacing="15" styleClass="info-panel">
+            <Label text="Exportar por Rango de Fechas" styleClass="panel-title"/>
+            <Label text="Filtra tus gastos por período y exporta" style="-fx-text-fill: #718096;"/>
+
+            <HBox spacing="20" alignment="CENTER_LEFT">
+                <VBox spacing="8">
+                    <Label text="Fecha Inicio:" styleClass="form-label"/>
+                    <DatePicker fx:id="dpFechaInicio" prefWidth="200"/>
+                </VBox>
+
+                <VBox spacing="8">
+                    <Label text="Fecha Fin:" styleClass="form-label"/>
+                    <DatePicker fx:id="dpFechaFin" prefWidth="200"/>
+                </VBox>
+            </HBox>
+
+            <HBox spacing="15">
+                <Button text="📅 Exportar a Excel" onAction="#handleExportarPorFechaExcel" styleClass="primary-button" prefWidth="200"/>
+                <Button text="📅 Exportar a PDF" onAction="#handleExportarPorFechaPDF" styleClass="secondary-button" prefWidth="200"/>
+            </HBox>
+        </VBox>
+
+        <!-- Información adicional -->
+        <VBox spacing="10" style="-fx-background-color: #ebf8ff; -fx-background-radius: 8; -fx-padding: 20;">
+            <Label text="ℹ️ Información sobre los reportes:" style="-fx-font-weight: bold; -fx-text-fill: #2c5282;"/>
+            
+            <Label text="📊 Reportes Excel:" style="-fx-font-weight: bold; -fx-text-fill: #2d3748; -fx-padding: 10 0 5 0;"/>
+            <Label text="• Formato .xlsx con encabezados y filtros automáticos" style="-fx-text-fill: #2d3748;"/>
+            <Label text="• Se calculan totales automáticamente" style="-fx-text-fill: #2d3748;"/>
+            <Label text="• Compatible con Excel, Google Sheets y LibreOffice" style="-fx-text-fill: #2d3748;"/>
+            
+            <Label text="📑 Reportes PDF:" style="-fx-font-weight: bold; -fx-text-fill: #2d3748; -fx-padding: 10 0 5 0;"/>
+            <Label text="• Formato profesional listo para imprimir o compartir" style="-fx-text-fill: #2d3748;"/>
+            <Label text="• Incluye fecha de generación y totales" style="-fx-text-fill: #2d3748;"/>
+            <Label text="• Ideal para presentaciones y reportes formales" style="-fx-text-fill: #2d3748;"/>
+        </VBox>
+    </children>
+</VBox>

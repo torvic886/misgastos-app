@@ -35,7 +35,7 @@
             
             <!-- Producto -->
             <Label text="Producto:" GridPane.columnIndex="0" GridPane.rowIndex="2" styleClass="form-label"/>
-            <TextField fx:id="txtProducto" promptText="Nombre del producto o servicio" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+            <ComboBox fx:id="cmbProducto" editable="true" promptText="Nombre del producto o servicio" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
             
             <!-- Cantidad -->
             <Label text="Cantidad:" GridPane.columnIndex="0" GridPane.rowIndex="3" styleClass="form-label"/>
@@ -47,7 +47,7 @@
             
             <!-- Valor Total -->
             <Label text="Valor Total:" GridPane.columnIndex="0" GridPane.rowIndex="5" styleClass="form-label"/>
-            <TextField fx:id="txtValorTotal" text="0.00" editable="false" style="-fx-background-color: #e2e8f0;" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+            <TextField fx:id="txtValorTotal" text="0.00" editable="false" focusTraversable="false"  style="-fx-background-color: #e2e8f0;" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
             
             <!-- Notas -->
             <Label text="Notas (opcional):" GridPane.columnIndex="0" GridPane.rowIndex="6" styleClass="form-label"/>

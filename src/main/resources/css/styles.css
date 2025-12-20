@@ -183,4 +183,21 @@
     -fx-text-fill: white;
 }
 
+.secondary-button {
+    -fx-background-color: #48bb78;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 10 20;
+    -fx-background-radius: 5;
+    -fx-cursor: hand;
+}
 
+.secondary-button:hover {
+    -fx-background-color: #38a169;
+}
+
+.combo-box .text-field {
+    -fx-background-color: white;
+    -fx-border-color: #cbd5e0;
+    -fx-border-radius: 6;
+}

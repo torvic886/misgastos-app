@@ -1,5 +1,16 @@
 package com.misgastos.controller;
 
+import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.event.EventHandler;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.KeyCode;
+
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.scene.control.TextField;
+
+
 import com.misgastos.model.Categoria;
 import com.misgastos.model.Subcategoria;
 import com.misgastos.service.CategoriaService;
@@ -22,7 +33,7 @@ public class RegistroGastoController {
     private ComboBox<Subcategoria> cmbSubcategoria;
     
     @FXML
-    private TextField txtProducto;
+    private ComboBox<String> cmbProducto;
     
     @FXML
     private TextField txtCantidad;
@@ -44,10 +55,34 @@ public class RegistroGastoController {
     
     private Long usuarioId = 1L; // Temporal, luego vendrá del login
     
+    private ObservableList<String> productosObservable;
+    private FilteredList<String> productosFiltrados;
+
+    
     @FXML
     public void initialize() {
         cargarCategorias();
         configurarCalculoAutomatico();
+        configurarProductoAutocomplete();
+        
+        cmbProducto.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && !newVal.isBlank()) {
+                autocompletarDatosPorProducto(newVal);
+            }
+        });
+        
+        configurarGuardarConEnter();
+        
+        Platform.runLater(() -> {
+            if (!cmbCategoria.getItems().isEmpty()) {
+                cmbCategoria.setValue(cmbCategoria.getItems().get(0));
+                cargarSubcategorias(cmbCategoria.getValue().getId());
+
+                if (!cmbSubcategoria.getItems().isEmpty()) {
+                    cmbSubcategoria.setValue(cmbSubcategoria.getItems().get(0));
+                }
+            }
+        });
     }
     
     private void cargarCategorias() {
@@ -61,6 +96,131 @@ public class RegistroGastoController {
             }
         });
     }
+    
+    private void configurarProductoAutocomplete() {
+
+        cmbProducto.setEditable(true);
+        TextField editor = cmbProducto.getEditor();
+
+        editor.setOnKeyPressed(event -> {
+
+            // 🔽 Flecha abajo → mostrar lista
+            if (event.getCode() == KeyCode.DOWN) {
+                cmbProducto.show();
+                return;
+            }
+
+            // ⏎ ENTER → autocompletar + mover foco
+            if (event.getCode() == KeyCode.ENTER) {
+                String producto = editor.getText();
+
+                if (producto != null && !producto.isBlank()) {
+                    autocompletarDatosPorProducto(producto);
+                    moverFoco(txtCantidad);
+                }
+
+                event.consume();
+            }
+        });
+
+        editor.textProperty().addListener((obs, oldText, newText) -> {
+
+            if (newText == null || newText.isBlank()) {
+                Platform.runLater(cmbProducto::hide);
+                return;
+            }
+
+            Platform.runLater(() -> {
+                List<String> productos = gastoService.buscarProductos(newText);
+
+                if (productos.isEmpty()) {
+                    cmbProducto.hide();
+                    return;
+                }
+
+                cmbProducto.getItems().setAll(productos);
+                cmbProducto.show();
+            });
+        });
+
+        // 👉 Selección con mouse
+        cmbProducto.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && !newVal.isBlank()) {
+                autocompletarDatosPorProducto(newVal);
+                moverFoco(txtCantidad);
+            }
+        });
+    }
+
+
+    
+    private void configurarGuardarConEnter() {
+
+        cmbProducto.getEditor().setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                autocompletarDatosPorProducto(
+                    cmbProducto.getEditor().getText()
+                );
+                txtCantidad.requestFocus(); // UX rápida
+                event.consume();
+            }
+        });
+
+        txtCantidad.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                txtValorUnitario.requestFocus();
+                event.consume();
+            }
+        });
+
+        txtValorUnitario.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                handleGuardar();
+                event.consume();
+            }
+        });
+    }
+
+    
+    private void autocompletarDatosPorProducto(String producto) {
+
+        if (producto == null || producto.isBlank()) return;
+
+        // 🔐 Guardar texto actual
+        String textoProducto = producto;
+
+        gastoService.buscarUltimoGastoPorProducto(producto)
+            .ifPresent(gasto -> {
+
+                // 🟣 Categoría
+                cmbCategoria.setValue(gasto.getCategoria());
+
+                // 🟣 Subcategorías
+                cargarSubcategorias(gasto.getCategoria().getId());
+                cmbSubcategoria.setValue(gasto.getSubcategoria());
+
+                // 🟣 Precio
+                txtValorUnitario.setText(
+                    gasto.getValorUnitario().toString()
+                );
+
+                // 🟣 Cantidad por defecto
+                txtCantidad.setText("");
+
+                // 🟣 Total
+                calcularTotal();
+
+                // 🔑 RESTAURAR TEXTO DEL PRODUCTO (en el siguiente frame)
+                Platform.runLater(() -> {
+                    cmbProducto.getEditor().setText(textoProducto);
+                    cmbProducto.getEditor().positionCaret(textoProducto.length());
+                });
+            });
+    }
+
+
+    
+
     
     private void cargarSubcategorias(Long categoriaId) {
         cmbSubcategoria.getItems().clear();
@@ -83,6 +243,11 @@ public class RegistroGastoController {
             txtValorTotal.setText("0.00");
         }
     }
+
+    private void moverFoco(Control control) {
+        Platform.runLater(control::requestFocus);
+    }
+
     
     @FXML
     public void handleGuardar() {
@@ -93,7 +258,7 @@ public class RegistroGastoController {
                 usuarioId,
                 cmbCategoria.getValue().getId(),
                 cmbSubcategoria.getValue().getId(),
-                txtProducto.getText(),
+                cmbProducto.getEditor().getText(),
                 Integer.parseInt(txtCantidad.getText()),
                 new BigDecimal(txtValorUnitario.getText()),
                 txtNotas.getText()
@@ -110,8 +275,11 @@ public class RegistroGastoController {
     
     @FXML
     public void handleLimpiar() {
+        cmbCategoria.setValue(null);
+        cmbSubcategoria.getItems().clear();
         limpiarFormulario();
     }
+
     
     private boolean validarCampos() {
         if (cmbCategoria.getValue() == null) {
@@ -122,7 +290,9 @@ public class RegistroGastoController {
             mostrarAlerta("Validación", "Seleccione una subcategoría", Alert.AlertType.WARNING);
             return false;
         }
-        if (txtProducto.getText().isEmpty()) {
+        String producto = cmbProducto.getEditor().getText();
+
+        if (producto == null || producto.isBlank()) {
             mostrarAlerta("Validación", "Ingrese un producto", Alert.AlertType.WARNING);
             return false;
         }
@@ -130,14 +300,33 @@ public class RegistroGastoController {
     }
     
     private void limpiarFormulario() {
+
+        // 🔑 NO limpiar categoría ni subcategoría
+        // Se asume que el usuario seguirá en la misma
+
+        cmbProducto.getEditor().clear();
+        cmbProducto.setValue(null);
+        cmbProducto.getItems().clear();
+        
+        cmbCategoria.getEditor().clear();
         cmbCategoria.setValue(null);
+        cmbCategoria.getItems().clear();
+        
+        cmbSubcategoria.getEditor().clear();
+        cmbSubcategoria.setValue(null);
         cmbSubcategoria.getItems().clear();
-        txtProducto.clear();
-        txtCantidad.setText("1");
+
+        txtCantidad.setText("");
         txtValorUnitario.clear();
         txtValorTotal.setText("0.00");
         txtNotas.clear();
+
+        // 🔥 Foco inmediato al producto para el siguiente gasto
+        Platform.runLater(() -> {
+            cmbProducto.getEditor().requestFocus();
+        });
     }
+
     
     private void mostrarAlerta(String titulo, String mensaje, Alert.AlertType tipo) {
         Alert alert = new Alert(tipo);
@@ -146,4 +335,6 @@ public class RegistroGastoController {
         alert.setContentText(mensaje);
         alert.showAndWait();
     }
+    
+
 }

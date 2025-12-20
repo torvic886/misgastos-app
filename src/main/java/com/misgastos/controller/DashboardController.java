@@ -86,6 +86,7 @@ public class DashboardController {
     @FXML
     public void handleReportes() {
         System.out.println("Navegando a Reportes");
+        cargarVista("/fxml/reportes.fxml");
     }
     
     @FXML
