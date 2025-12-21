@@ -80,6 +80,13 @@
 		    <version>17.0.9</version>
 		</dependency>
 		
+		<!-- JavaFX WebView -->
+		<dependency>
+		    <groupId>org.openjfx</groupId>
+		    <artifactId>javafx-web</artifactId>
+		    <version>17.0.9</version>
+		</dependency>		
+		
 		<!-- Apache POI para Excel -->
 		<dependency>
 		    <groupId>org.apache.poi</groupId>

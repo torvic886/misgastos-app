@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.geometry.Orientation?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.misgastos.controller.InformesController"
+            styleClass="content">
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <!-- ========== IZQUIERDA: CONTROLES ========== -->
+    <left>
+        <VBox spacing="20" styleClass="info-panel" 
+              prefWidth="380" maxWidth="380"
+              style="-fx-padding: 20;">
+            
+            <BorderPane.margin>
+                <Insets right="20"/>
+            </BorderPane.margin>
+
+            <!-- Título -->
+            <Label text="📊 Informes Avanzados" 
+                   styleClass="content-title"
+                   style="-fx-font-size: 22px;"/>
+            
+            <Label text="Genera informes detallados y expórtalos" 
+                   styleClass="content-subtitle"
+                   wrapText="true"/>
+
+            <Separator/>
+
+            <!-- Configuración -->
+            <VBox spacing="15">
+                <Label text="⚙️ Configuración del Informe" 
+                       style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
+
+                <!-- Tipo de Informe -->
+                <VBox spacing="8">
+                    <Label text="Tipo de Informe:"/>
+                    <ComboBox fx:id="cmbTipoInforme" 
+                              maxWidth="Infinity"
+                              promptText="Selecciona tipo"/>
+                </VBox>
+
+                <!-- Rango de Fechas -->
+                <HBox spacing="10">
+                    <VBox spacing="8" HBox.hgrow="ALWAYS">
+                        <Label text="Fecha Inicio:"/>
+                        <DatePicker fx:id="dpFechaInicio" 
+                                    maxWidth="Infinity"/>
+                    </VBox>
+
+                    <VBox spacing="8" HBox.hgrow="ALWAYS">
+                        <Label text="Fecha Fin:"/>
+                        <DatePicker fx:id="dpFechaFin" 
+                                    maxWidth="Infinity"/>
+                    </VBox>
+                </HBox>
+
+                <!-- Filtros Opcionales -->
+                <VBox spacing="8">
+                    <Label text="Categoría (opcional):"/>
+                    <ComboBox fx:id="cmbCategoria" 
+                              maxWidth="Infinity"
+                              promptText="Todas las categorías"/>
+                </VBox>
+
+                <VBox spacing="8">
+                    <Label text="Producto (opcional):"/>
+                    <TextField fx:id="txtProducto" 
+                               promptText="Buscar producto..."/>
+                </VBox>
+            </VBox>
+
+            <Separator/>
+
+            <!-- Botones de Acción -->
+            <VBox spacing="12">
+                <Button text="🔍 Generar Vista Previa" 
+                        onAction="#handleGenerarVista"
+                        styleClass="primary-button"
+                        maxWidth="Infinity"
+                        prefHeight="40"/>
+
+                <HBox spacing="10">
+                    <Button text="📄 Exportar PDF" 
+                            onAction="#handleExportarPDF"
+                            styleClass="secondary-button"
+                            prefHeight="35"
+                            HBox.hgrow="ALWAYS"/>
+
+                    <Button text="📊 Exportar Excel" 
+                            onAction="#handleExportarExcel"
+                            style="-fx-background-color: #48bb78; -fx-text-fill: white; -fx-font-weight: bold;"
+                            prefHeight="35"
+                            HBox.hgrow="ALWAYS"/>
+                </HBox>
+
+                <Button text="🧹 Limpiar" 
+                        onAction="#handleLimpiar"
+                        style="-fx-background-color: #e2e8f0; -fx-text-fill: #4a5568;"
+                        maxWidth="Infinity"
+                        prefHeight="30"/>
+            </VBox>
+
+            <Separator/>
+
+            <!-- Información -->
+            <VBox spacing="8" 
+                  style="-fx-background-color: #ebf8ff; -fx-background-radius: 8; -fx-padding: 15;">
+                <Label text="💡 Información sobre los informes:" 
+                       style="-fx-font-weight: bold; -fx-text-fill: #2c5282;"/>
+                
+                <Label text="• General Mensual: Vista panorámica por mes y categoría" 
+                       wrapText="true"
+                       style="-fx-text-fill: #2d3748; -fx-font-size: 11px;"/>
+                
+                <Label text="• Por Categoría: Análisis detallado de una categoría específica" 
+                       wrapText="true"
+                       style="-fx-text-fill: #2d3748; -fx-font-size: 11px;"/>
+                
+                <Label text="• Por Producto: Seguimiento de productos individuales" 
+                       wrapText="true"
+                       style="-fx-text-fill: #2d3748; -fx-font-size: 11px;"/>
+                
+                <Label text="• Comparativo: Compara períodos o categorías" 
+                       wrapText="true"
+                       style="-fx-text-fill: #2d3748; -fx-font-size: 11px;"/>
+            </VBox>
+
+        </VBox>
+    </left>
+
+    <!-- ========== CENTRO: VISTA PREVIA ========== -->
+    <center>
+        <VBox spacing="15" styleClass="info-panel" 
+              style="-fx-padding: 20;">
+
+            <!-- Header de Vista Previa -->
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label text="📋 Vista Previa del Informe" 
+                       styleClass="panel-title"
+                       style="-fx-font-size: 16px;"
+                       HBox.hgrow="ALWAYS"/>
+                
+                <Button text="🔄 Actualizar" 
+                        onAction="#handleGenerarVista"
+                        style="-fx-background-color: transparent; -fx-text-fill: #667eea; -fx-cursor: HAND;"/>
+            </HBox>
+
+            <Separator/>
+
+            <!-- Vista Previa con TextArea -->
+            <TextArea fx:id="txtPreview" 
+                      editable="false"
+                      wrapText="false"
+                      VBox.vgrow="ALWAYS"
+                      style="-fx-font-family: 'Courier New'; -fx-font-size: 11px; -fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 8;"/>
+
+            <!-- Footer con estadísticas -->
+            <HBox spacing="20" alignment="CENTER" 
+                  style="-fx-background-color: #f7fafc; -fx-padding: 10; -fx-background-radius: 6;">
+                
+                <VBox alignment="CENTER" spacing="3">
+                    <Label text="Total Gastos:" 
+                           style="-fx-font-size: 11px; -fx-text-fill: #718096;"/>
+                    <Label fx:id="lblTotalGastos" 
+                           text="0" 
+                           style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2d3748;"/>
+                </VBox>
+
+                <!-- Separator Vertical sin orientation attribute -->
+                <Region prefWidth="2" maxWidth="2" 
+                        style="-fx-background-color: #cbd5e0;"/>
+
+                <VBox alignment="CENTER" spacing="3">
+                    <Label text="Monto Total:" 
+                           style="-fx-font-size: 11px; -fx-text-fill: #718096;"/>
+                    <Label fx:id="lblMontoTotal" 
+                           text="0.00" 
+                           style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #667eea;"/>
+                </VBox>
+
+                <!-- Separator Vertical sin orientation attribute -->
+                <Region prefWidth="2" maxWidth="2" 
+                        style="-fx-background-color: #cbd5e0;"/>
+
+                <VBox alignment="CENTER" spacing="3">
+                    <Label text="Categorías:" 
+                           style="-fx-font-size: 11px; -fx-text-fill: #718096;"/>
+                    <Label fx:id="lblCategorias" 
+                           text="0" 
+                           style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2d3748;"/>
+                </VBox>
+
+            </HBox>
+
+        </VBox>
+    </center>
+
+</BorderPane>

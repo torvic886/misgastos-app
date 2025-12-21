@@ -84,6 +84,12 @@ public class DashboardController {
     }
     
     @FXML
+    public void handleInformes() {
+        System.out.println("Navegando a Informes");
+        cargarVista("/fxml/informes.fxml");
+    }
+    
+    @FXML
     public void handleReportes() {
         System.out.println("Navegando a Reportes");
         cargarVista("/fxml/reportes.fxml");
@@ -96,7 +102,7 @@ public class DashboardController {
                     getClass().getResource("/fxml/login.fxml")
             );
             loader.setControllerFactory(
-            		MisGastosApplication.getSpringContext()::getBean
+                    MisGastosApplication.getSpringContext()::getBean
             );
 
             Parent root = loader.load();
