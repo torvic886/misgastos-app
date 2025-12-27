@@ -104,12 +104,17 @@ public class InformesController {
         String tipoInforme = cmbTipoInforme.getValue();
         LocalDate inicio = dpFechaInicio.getValue();
         LocalDate fin = dpFechaFin.getValue();
+        
+        System.out.println("✅ Fecha Inicio: " + inicio);
+        System.out.println("✅ Fecha fin: " + fin);
 
         try {
             String informe = "";
 
             if (tipoInforme.contains("General Mensual")) {
                 informe = informeService.generarInformeGeneralMensual(inicio, fin);
+                System.out.println("✅ Fecha Inicio InformeGeneralMensual: " + inicio);
+                System.out.println("✅ Fecha fin InformeGeneralMensual: " + fin);
             }
             else if (tipoInforme.contains("Categoría")) {
                 Categoria categoria = cmbCategoria.getValue();
@@ -118,6 +123,8 @@ public class InformesController {
                     return;
                 }
                 informe = informeService.generarInformePorCategoria(categoria.getNombre(), inicio, fin);
+                System.out.println("✅ Fecha Inicio InformePorCategoria: " + inicio);
+                System.out.println("✅ Fecha fin InformePorCategoria: " + fin);
             }
             else if (tipoInforme.contains("Producto")) {
                 String producto = txtProducto.getText();
@@ -125,19 +132,39 @@ public class InformesController {
                     mostrarAlerta("Validación", "Por favor ingrese el nombre del producto", Alert.AlertType.WARNING);
                     return;
                 }
+                
+                System.out.println("✅ Fecha Inicio InformePorProducto: " + inicio);
+                System.out.println("✅ Fecha fin InformePorProducto: " + fin);
+                
                 informe = informeService.generarInformePorProducto(producto.trim(), inicio, fin);
             }
             else if (tipoInforme.contains("Comparativo")) {
+            	
+                System.out.println("✅ Fecha Inicio InformeComparativo: " + inicio);
+                System.out.println("✅ Fecha fin InformeComparativo: " + fin);
+            	
                 informe = informeService.generarInformeComparativo(inicio, fin);
             }
             else if (tipoInforme.contains("Dashboard")) {
+            	
+                System.out.println("✅ Fecha Inicio DashboardEjecutivo: " + inicio);
+                System.out.println("✅ Fecha fin DashboardEjecutivo: " + fin);
+            	
                 informe = informeService.generarDashboardEjecutivo(inicio, fin);
             }
             else if (tipoInforme.contains("Subcategorías")) {
+            	
+                System.out.println("✅ Fecha Inicio InformeSubcategorias: " + inicio);
+                System.out.println("✅ Fecha fin InformeSubcategorias: " + fin);
+            	
                 informe = informeService.generarInformeSubcategorias(inicio, fin);
             }
             else if (tipoInforme.contains("Anual")) {
                 int anio = inicio.getYear();
+                
+                System.out.println("✅ Fecha Inicio InformeAnual: " + inicio);
+                System.out.println("✅ Fecha fin InformeAnual: " + fin);
+                
                 informe = informeService.generarInformeAnual(anio);
             }
 
@@ -234,9 +261,16 @@ public class InformesController {
                 else if (tipoInforme.contains("Dashboard")) {
                     informeService.exportarDashboardPDF(inicio, fin, archivo.getAbsolutePath());
                 }
+                else if (tipoInforme.contains("Comparativo")) {
+                	informeService.exportarComparativoPDF(inicio, fin, archivo.getAbsolutePath());
+                } 
+                else if (tipoInforme.contains("Subcategorías")) {
+                	informeService.exportarSubCategoriasPDF(inicio, fin, archivo.getAbsolutePath());
+                }                  
                 else {
                     // Para otros informes, usar exportación genérica de texto
-                    informeService.exportarInformeGeneralPDF(inicio, fin, archivo.getAbsolutePath());
+                	int anio = inicio.getYear();
+                	informeService.exportarAnualPDF(anio, archivo.getAbsolutePath());
                 }
 
                 mostrarAlerta("Éxito", "Informe PDF exportado correctamente a:\n" + archivo.getAbsolutePath(), Alert.AlertType.INFORMATION);

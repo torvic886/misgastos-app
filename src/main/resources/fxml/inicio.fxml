@@ -1,63 +1,102 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.chart.PieChart?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox spacing="30" styleClass="content" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.misgastos.controller.InicioController">
-    <padding>
-        <Insets top="30" right="30" bottom="30" left="30"/>
-    </padding>
-    
-    <children>
-        <Label text="📊 Panel de Control" styleClass="content-title"/>
-        <Label text="Resumen de tus gastos y estadísticas" styleClass="content-subtitle"/>
+<ScrollPane fitToWidth="true" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.misgastos.controller.InicioController">
+    <VBox spacing="12" styleClass="content">
+        <padding>
+            <Insets top="16" right="16" bottom="16" left="16"/>
+        </padding>
         
-        <!-- Tarjetas de indicadores -->
-        <HBox spacing="20" alignment="CENTER">
+        <!-- Encabezado compacto -->
+        <VBox spacing="2">
+            <Label text="📊 Panel de Control" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #1f2937;"/>
+            <Label text="Resumen de tus gastos y estadísticas" style="-fx-font-size: 12px; -fx-text-fill: #6b7280;"/>
+        </VBox>
+        
+        <!-- Tarjetas de indicadores - 4 columnas ultra compactas -->
+        <HBox spacing="10" alignment="CENTER">
             <!-- Tarjeta Hoy -->
-            <VBox styleClass="stat-card" >
-                <Label text="Hoy" styleClass="stat-label"/>
-                <Label fx:id="lblTotalHoy" text="\$0.00" styleClass="stat-value"/>
-                <Label text="📅" styleClass="stat-icon"/>
+            <VBox styleClass="stat-card stat-card-today" prefWidth="160" style="-fx-padding: 14;">
+                <Label text="Hoy" style="-fx-font-size: 12px; -fx-text-fill: #6b7280; -fx-font-weight: 600;"/>
+                <Label fx:id="lblTotalHoy" text="0" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #1f2937;"/>
+                <HBox fx:id="hboxCambioHoy" styleClass="stat-change stat-change-neutral">
+                    <Label fx:id="lblCambioHoy" text="Sin datos previos" style="-fx-font-size: 10px;"/>
+                </HBox>
             </VBox>
             
             <!-- Tarjeta Semana -->
-            <VBox styleClass="stat-card" >
-                <Label text="Esta Semana" styleClass="stat-label"/>
-                <Label fx:id="lblTotalSemana" text="\$0.00" styleClass="stat-value"/>
-                <Label text="📆" styleClass="stat-icon"/>
+            <VBox styleClass="stat-card stat-card-week" prefWidth="160" style="-fx-padding: 14;">
+                <Label text="Esta Semana" style="-fx-font-size: 12px; -fx-text-fill: #6b7280; -fx-font-weight: 600;"/>
+                <Label fx:id="lblTotalSemana" text="0" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #1f2937;"/>
+                <HBox fx:id="hboxCambioSemana" styleClass="stat-change stat-change-neutral">
+                    <Label fx:id="lblCambioSemana" text="Sin datos previos" style="-fx-font-size: 10px;"/>
+                </HBox>
             </VBox>
             
             <!-- Tarjeta Mes -->
-            <VBox styleClass="stat-card" >
-                <Label text="Este Mes" styleClass="stat-label"/>
-                <Label fx:id="lblTotalMes" text="\$0.00" styleClass="stat-value"/>
-                <Label text="📊" styleClass="stat-icon"/>
+            <VBox styleClass="stat-card stat-card-month" prefWidth="160" style="-fx-padding: 14;">
+                <Label text="Este Mes" style="-fx-font-size: 12px; -fx-text-fill: #6b7280; -fx-font-weight: 600;"/>
+                <Label fx:id="lblTotalMes" text="0" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #1f2937;"/>
+                <HBox fx:id="hboxCambioMes" styleClass="stat-change stat-change-neutral">
+                    <Label fx:id="lblCambioMes" text="Sin datos previos" style="-fx-font-size: 10px;"/>
+                </HBox>
             </VBox>
             
             <!-- Tarjeta Año -->
-            <VBox styleClass="stat-card" >
-                <Label text="Este Año" styleClass="stat-label"/>
-                <Label fx:id="lblTotalAnio" text="\$0.00" styleClass="stat-value"/>
-                <Label text="📈" styleClass="stat-icon"/>
+            <VBox styleClass="stat-card stat-card-year" prefWidth="160" style="-fx-padding: 14;">
+                <Label text="Este Año" style="-fx-font-size: 12px; -fx-text-fill: #6b7280; -fx-font-weight: 600;"/>
+                <Label fx:id="lblTotalAnio" text="0" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #1f2937;"/>
+                <HBox fx:id="hboxCambioAnio" styleClass="stat-change stat-change-neutral">
+                    <Label fx:id="lblCambioAnio" text="Sin datos previos" style="-fx-font-size: 10px;"/>
+                </HBox>
             </VBox>
         </HBox>
         
-        <!-- Sección de detalles -->
-        <HBox spacing="20" >
-            <!-- Top Productos -->
-            <VBox spacing="10" styleClass="info-panel" >
-                <Label text="🏆 Top 5 Productos" styleClass="panel-title"/>
-                <VBox fx:id="vboxTopProductos" spacing="5"/>
+        <!-- Gráficos - Aprovechando todo el ancho -->
+        <HBox spacing="16" alignment="CENTER" fillHeight="true">
+            <!-- Gráfico de Barras - Más ancho -->
+            <VBox spacing="6" styleClass="chart-container" prefWidth="520" style="-fx-padding: 14;">
+                <Label text="📈 Gastos últimos 7 días" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1f2937;"/>
+                <BarChart fx:id="chartUltimosDias" legendVisible="false" animated="true" prefHeight="140" maxHeight="140">
+                    <xAxis>
+                        <CategoryAxis side="BOTTOM" />
+                    </xAxis>
+                    <yAxis>
+                        <NumberAxis side="LEFT" label="Monto ($)" />
+                    </yAxis>
+                </BarChart>
             </VBox>
             
-            <!-- Por Categorías -->
-            <VBox spacing="10" styleClass="info-panel" >
-                <Label text="📂 Gastos por Categoría" styleClass="panel-title"/>
-                <VBox fx:id="vboxCategorias" spacing="5"/>
+            <!-- Gráfico de Torta - Más ancho -->
+            <VBox spacing="6" styleClass="chart-container" prefWidth="420" style="-fx-padding: 14;">
+                <Label text="🍰 Distribución por Categoría" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1f2937;"/>
+                <PieChart fx:id="chartCategorias" legendVisible="true" animated="true" prefHeight="140" maxHeight="140" legendSide="RIGHT"/>
             </VBox>
         </HBox>
-    </children>
-</VBox>
+        
+        <!-- Sección de detalles - Aprovechando todo el ancho -->
+        <HBox spacing="16" alignment="CENTER" fillHeight="true">
+            <!-- Top Productos - Más ancho -->
+            <VBox spacing="6" styleClass="info-panel" prefWidth="470" style="-fx-padding: 14;">
+                <Label text="🏆 Top 5 Productos" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1f2937;"/>
+                <VBox fx:id="vboxTopProductos" spacing="4"/>
+            </VBox>
+            
+            <!-- Por Categorías - Más ancho -->
+            <VBox spacing="6" styleClass="info-panel" prefWidth="470" style="-fx-padding: 14;">
+                <Label text="📂 Resumen por Categoría" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1f2937;"/>
+                <VBox fx:id="vboxCategorias" spacing="4"/>
+            </VBox>
+        </HBox>
+    </VBox>
+</ScrollPane>

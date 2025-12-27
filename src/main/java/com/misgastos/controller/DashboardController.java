@@ -137,6 +137,10 @@ public class DashboardController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
             loader.setControllerFactory(springContext::getBean);
+            
+            // Limpiar caché
+            loader.setClassLoader(getClass().getClassLoader());  
+            
             Parent vista = loader.load();
             mainBorderPane.setCenter(vista);
         } catch (Exception e) {
