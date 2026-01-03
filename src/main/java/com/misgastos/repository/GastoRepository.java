@@ -80,4 +80,17 @@ public interface GastoRepository extends JpaRepository<Gasto, Long> {
         ORDER BY g.fecha DESC, g.hora DESC
     """)
     List<Gasto> ultimosGastosPorProducto(@Param("producto") String producto);
+
+ // Buscar gastos por una fecha específica
+    @Query("SELECT g FROM Gasto g WHERE g.fecha = :fecha ORDER BY g.hora DESC")
+    List<Gasto> findByFechaExacta(@Param("fecha") LocalDate fecha);
+
+    // Buscar gastos por usuario y rango de fechas
+    @Query("SELECT g FROM Gasto g WHERE g.usuario.id = :usuarioId AND g.fecha BETWEEN :inicio AND :fin ORDER BY g.fecha DESC, g.hora DESC")
+    List<Gasto> findByUsuarioAndFechaBetween(
+        @Param("usuarioId") Long usuarioId,
+        @Param("inicio") LocalDate inicio,
+        @Param("fin") LocalDate fin
+    );
+
 }

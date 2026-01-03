@@ -136,6 +136,46 @@ public class GastoService {
         return gastoRepository.existeProducto(p);
     }
 
-    
+    // ============================================================================
+    		// 2️⃣ AGREGAR ESTOS MÉTODOS A GastoService.java
+    		// ============================================================================
+
+    		public List<Gasto> buscarPorFecha(LocalDate fecha) {
+    		    return gastoRepository.findByFechaExacta(fecha);
+    		}
+
+    		public List<Gasto> buscarPorUsuarioYPeriodo(Long usuarioId, LocalDate inicio, LocalDate fin) {
+    		    return gastoRepository.findByUsuarioAndFechaBetween(usuarioId, inicio, fin);
+    		}
+
+    		public Gasto actualizarGasto(Long id, Long categoriaId, Long subcategoriaId,
+    		                             String producto, Integer cantidad, BigDecimal valorUnitario,
+    		                             String notas, LocalDate fecha, LocalTime hora) {
+    		    
+    		    Gasto gasto = gastoRepository.findById(id)
+    		        .orElseThrow(() -> new RuntimeException("Gasto no encontrado"));
+    		    
+    		    Categoria categoria = categoriaRepository.findById(categoriaId)
+    		        .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
+    		    
+    		    Subcategoria subcategoria = subcategoriaRepository.findById(subcategoriaId)
+    		        .orElseThrow(() -> new RuntimeException("Subcategoría no encontrada"));
+    		    
+    		    gasto.setCategoria(categoria);
+    		    gasto.setSubcategoria(subcategoria);
+    		    gasto.setProducto(producto);
+    		    gasto.setCantidad(cantidad);
+    		    gasto.setValorUnitario(valorUnitario);
+    		    gasto.setValorTotal(valorUnitario.multiply(BigDecimal.valueOf(cantidad)));
+    		    gasto.setNotas(notas);
+    		    gasto.setFecha(fecha);
+    		    gasto.setHora(hora);
+    		    
+    		    return gastoRepository.save(gasto);
+    		}
+
+    		public Optional<Gasto> buscarPorId(Long id) {
+    		    return gastoRepository.findById(id);
+    		} 
 
 }

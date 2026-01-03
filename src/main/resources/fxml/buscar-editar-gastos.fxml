@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.misgastos.controller.BuscarEditarGastosController"
+      spacing="20" style="-fx-background-color: #f7fafc;">
+    
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+    
+    <!-- TÍTULO -->
+    <HBox alignment="CENTER_LEFT" spacing="10">
+        <Label text="🔍 Buscar y Editar Gastos" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+    </HBox>
+    
+    <!-- PANEL DE BÚSQUEDA -->
+    <VBox spacing="15" style="-fx-background-color: white; -fx-background-radius: 10; -fx-padding: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);">
+        
+        <Label text="📅 Filtrar por Fecha" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
+        
+        <HBox spacing="15" alignment="CENTER_LEFT">
+            <VBox spacing="5">
+                <Label text="Fecha Inicio:" style="-fx-font-size: 12px; -fx-text-fill: #6b7280;"/>
+                <DatePicker fx:id="dpFechaInicio" prefWidth="150" promptText="Desde"/>
+            </VBox>
+            
+            <VBox spacing="5">
+                <Label text="Fecha Fin:" style="-fx-font-size: 12px; -fx-text-fill: #6b7280;"/>
+                <DatePicker fx:id="dpFechaFin" prefWidth="150" promptText="Hasta"/>
+            </VBox>
+            
+            <VBox spacing="5">
+                <Label text=" " style="-fx-font-size: 12px;"/>
+                <HBox spacing="10">
+                    <Button fx:id="btnBuscar" text="🔍 Buscar" onAction="#handleBuscar" 
+                            styleClass="primary-button"
+                            style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-padding: 8 20; -fx-font-size: 13px; -fx-cursor: hand;"/>
+                    
+                    <Button fx:id="btnLimpiar" text="🔄 Limpiar" onAction="#handleLimpiar"
+                            styleClass="secondary-button"
+                            style="-fx-background-color: #e5e7eb; -fx-text-fill: #374151; -fx-padding: 8 20; -fx-font-size: 13px; -fx-cursor: hand;"/>
+                </HBox>
+            </VBox>
+        </HBox>
+        
+        <Label fx:id="lblResultados" text="0 gasto(s) encontrado(s)" 
+               style="-fx-font-size: 12px; -fx-text-fill: #6b7280; -fx-font-style: italic;"/>
+    </VBox>
+    
+    <!-- TABLA DE RESULTADOS -->
+    <VBox VBox.vgrow="ALWAYS" spacing="10" 
+          style="-fx-background-color: white; -fx-background-radius: 10; -fx-padding: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);">
+        
+        <Label text="📋 Resultados de Búsqueda" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
+        
+        <TableView fx:id="tableGastos" VBox.vgrow="ALWAYS" 
+                   style="-fx-background-color: white;">
+            <columns>
+                <TableColumn fx:id="colId" text="ID" prefWidth="50" style="-fx-alignment: CENTER;"/>
+                <TableColumn fx:id="colFecha" text="Fecha" prefWidth="100" style="-fx-alignment: CENTER;"/>
+                <TableColumn fx:id="colHora" text="Hora" prefWidth="80" style="-fx-alignment: CENTER;"/>
+                <TableColumn fx:id="colCategoria" text="Categoría" prefWidth="120"/>
+                <TableColumn fx:id="colSubcategoria" text="Subcategoría" prefWidth="120"/>
+                <TableColumn fx:id="colProducto" text="Producto" prefWidth="180"/>
+                <TableColumn fx:id="colCantidad" text="Cant." prefWidth="60" style="-fx-alignment: CENTER;"/>
+                <TableColumn fx:id="colValorUnitario" text="Valor Unit." prefWidth="100" style="-fx-alignment: CENTER_RIGHT;"/>
+                <TableColumn fx:id="colTotal" text="Total" prefWidth="100" style="-fx-alignment: CENTER_RIGHT;"/>
+                <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="150" style="-fx-alignment: CENTER;"/>
+            </columns>
+            
+            <placeholder>
+                <VBox alignment="CENTER" spacing="10" style="-fx-padding: 40;">
+                    <Label text="📭" style="-fx-font-size: 48px;"/>
+                    <Label text="No se encontraron gastos" style="-fx-font-size: 14px; -fx-text-fill: #9ca3af;"/>
+                    <Label text="Intenta buscar con otras fechas" style="-fx-font-size: 12px; -fx-text-fill: #d1d5db;"/>
+                </VBox>
+            </placeholder>
+        </TableView>
+    </VBox>
+    
+</VBox>

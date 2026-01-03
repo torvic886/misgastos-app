@@ -3,7 +3,7 @@ import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import com.misgastos.MisGastosApplication;
-import com.misgastos.util.SceneManager;
+
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -51,26 +51,29 @@ public class DashboardController {
 
     private void cargarVistaConSubMenu() {
         try {
-            // Crear un VBox para contener botones y la vista
             VBox container = new VBox(10);
             container.setStyle("-fx-padding: 20; -fx-background-color: #f7fafc;");
             
-            // Botones de submenú
             HBox submenu = new HBox(15);
             submenu.setStyle("-fx-padding: 10;");
             
-            Button btnRegistrar = new Button("➕ Registrar Gasto");
-            btnRegistrar.getStyleClass().add("primary-button");
-            btnRegistrar.setOnAction(e -> cargarVista("/fxml/registro-gasto.fxml"));
+//            Button btnRegistrar = new Button("➕ Registrar Gasto");
+//            btnRegistrar.getStyleClass().add("primary-button");
+//            btnRegistrar.setOnAction(e -> cargarVista("/fxml/registro-gasto.fxml"));
             
             Button btnListar = new Button("📋 Ver Historial");
             btnListar.getStyleClass().add("secondary-button");
             btnListar.setOnAction(e -> cargarVista("/fxml/lista-gastos.fxml"));
             
-            submenu.getChildren().addAll(btnRegistrar, btnListar);
+            // ⭐ NUEVO BOTÓN
+            Button btnBuscarEditar = new Button("🔍 Buscar y Editar");
+            btnBuscarEditar.getStyleClass().add("search-button");
+            btnBuscarEditar.setOnAction(e -> cargarVista("/fxml/buscar-editar-gastos.fxml"));
+            
+            submenu.getChildren().addAll( btnListar, btnBuscarEditar);// btnRegistrar,
             container.getChildren().add(submenu);
             
-            // Cargar vista por defecto (registro)
+            // Vista por defecto
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/registro-gasto.fxml"));
             loader.setControllerFactory(springContext::getBean);
             Parent vista = loader.load();
@@ -99,17 +102,20 @@ public class DashboardController {
     private void handleCerrarSesion() {
         try {
             FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/fxml/login.fxml")
+                getClass().getResource("/fxml/login.fxml")
             );
             loader.setControllerFactory(
-                    MisGastosApplication.getSpringContext()::getBean
+                MisGastosApplication.getSpringContext()::getBean
             );
 
             Parent root = loader.load();
 
             // 👉 Scene NUEVA con tamaño del login
             Scene scene = new Scene(root, 500, 700);
-            SceneManager.applyStyles(scene);
+            
+            // 👉 Aplicar estilos directamente
+            String css = getClass().getResource("/css/styles.css").toExternalForm();
+            scene.getStylesheets().add(css);
 
             // 👉 Obtener el mismo Stage
             Stage stage = (Stage) lblUsuario.getScene().getWindow();
@@ -132,6 +138,12 @@ public class DashboardController {
         this.username = username;
         lblUsuario.setText("Usuario: " + username);
     }
+    
+    @FXML
+    public void handleBuscarEditar() {
+        System.out.println("Navegando a Buscar/Editar");
+        cargarVista("/fxml/buscar-editar-gastos.fxml");
+    }   
     
     private void cargarVista(String fxmlPath) {
         try {

@@ -32,7 +32,7 @@
    =============================== */
 .sidebar {
     -fx-background-color: -sidebar-bg;
-    -fx-padding: 20 12;
+    -fx-padding: 10 10;
 }
 
 .sidebar-title {
@@ -63,7 +63,7 @@
    CONTENT
    =============================== */
 .content {
-    -fx-padding: 30;
+    -fx-padding: 20;
 }
 
 .content-title {
@@ -78,8 +78,75 @@
 }
 
 /* ===============================
-   STAT CARDS - MEJORADAS
+   STAT CARDS - VERSIÓN COMPACTA CON FONDO Y BORDES VISIBLES
    =============================== */
+.stat-card-compact {
+    -fx-background-color: white;
+    -fx-background-radius: 10;
+    -fx-padding: 14 16;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 12, 0, 0, 3);
+    -fx-border-width: 0 0 3 0;
+}
+
+.stat-card-compact:hover {
+    -fx-translate-y: -2;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 16, 0, 0, 5);
+}
+
+.stat-card-compact.stat-card-today {
+    -fx-border-color: #3b82f6;
+    -fx-border-radius: 10;
+}
+
+.stat-card-compact.stat-card-week {
+    -fx-border-color: #8b5cf6;
+    -fx-border-radius: 10;
+}
+
+.stat-card-compact.stat-card-month {
+    -fx-border-color: #10b981;
+    -fx-border-radius: 10;
+}
+
+.stat-card-compact.stat-card-year {
+    -fx-border-color: #f59e0b;
+    -fx-border-radius: 10;
+}
+
+/* Estilos originales mantenidos */
+.stat-card-modern {
+    -fx-background-color: white;
+    -fx-background-radius: 16;
+    -fx-padding: 24 20;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 16, 0, 0, 4);
+    -fx-border-width: 0 0 4 0;
+}
+
+.stat-card-modern:hover {
+    -fx-translate-y: -3;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 24, 0, 0, 8);
+}
+
+.stat-card-today {
+    -fx-border-color: #3b82f6;
+    -fx-border-radius: 16;
+}
+
+.stat-card-week {
+    -fx-border-color: #8b5cf6;
+    -fx-border-radius: 16;
+}
+
+.stat-card-month {
+    -fx-border-color: #10b981;
+    -fx-border-radius: 16;
+}
+
+.stat-card-year {
+    -fx-border-color: #f59e0b;
+    -fx-border-radius: 16;
+}
+
 .stat-card {
     -fx-background-color: -card-bg;
     -fx-background-radius: 12;
@@ -93,31 +160,6 @@
 .stat-card:hover {
     -fx-translate-y: -2;
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.12), 16, 0, 0, 4);
-}
-
-/* Variantes de color para cada tarjeta */
-.stat-card-today {
-    -fx-border-color: #3b82f6;
-    -fx-border-width: 0 0 0 4;
-    -fx-border-radius: 12;
-}
-
-.stat-card-week {
-    -fx-border-color: #8b5cf6;
-    -fx-border-width: 0 0 0 4;
-    -fx-border-radius: 12;
-}
-
-.stat-card-month {
-    -fx-border-color: #10b981;
-    -fx-border-width: 0 0 0 4;
-    -fx-border-radius: 12;
-}
-
-.stat-card-year {
-    -fx-border-color: #f59e0b;
-    -fx-border-width: 0 0 0 4;
-    -fx-border-radius: 12;
 }
 
 .stat-label {
@@ -154,8 +196,49 @@
 }
 
 /* ===============================
-   INFO PANELS - MEJORADOS
+   INFO PANELS - VERSIÓN COMPACTA CON BORDES VISIBLES
    =============================== */
+.info-panel-compact {
+    -fx-background-color: white;
+    -fx-background-radius: 10;
+    -fx-padding: 14;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 12, 0, 0, 3);
+    -fx-border-color: #e5e7eb;
+    -fx-border-width: 1;
+    -fx-border-radius: 10;
+}
+
+.info-panel-modern {
+    -fx-background-color: white;
+    -fx-background-radius: 16;
+    -fx-padding: 24;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 16, 0, 0, 4);
+}
+
+.panel-item {
+    -fx-padding: 10 12;
+    -fx-background-radius: 6;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+}
+
+.panel-item:hover {
+    -fx-background-color: #f8fafc;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.04), 4, 0, 0, 1);
+}
+
+.item-label {
+    -fx-font-size: 13px;
+    -fx-text-fill: #374151;
+    -fx-font-weight: 500;
+}
+
+.item-value {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #6f6dd9;
+}
+
 .info-panel {
     -fx-background-color: -card-bg;
     -fx-background-radius: 12;
@@ -170,41 +253,61 @@
     -fx-text-fill: -text-main;
 }
 
-.panel-item {
-    -fx-padding: 8 0;
-    -fx-border-color: transparent transparent #e5e7eb transparent;
-    -fx-border-width: 0 0 1 0;
-}
-
-.panel-item:hover {
-    -fx-background-color: #f9fafb;
-    -fx-background-radius: 6;
-    -fx-padding: 8 8;
-}
-
-.item-label {
-    -fx-font-size: 14px;
-    -fx-text-fill: -text-main;
-}
-
-.item-value {
-    -fx-font-size: 14px;
-    -fx-font-weight: bold;
-    -fx-text-fill: -primary;
-}
-
 /* ===============================
-   GRÁFICOS
+   GRÁFICOS - VERSIÓN COMPACTA CON BORDES VISIBLES
    =============================== */
+.chart-container-compact {
+    -fx-background-color: white;
+    -fx-background-radius: 10;
+    -fx-padding: 14;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 12, 0, 0, 3);
+    -fx-border-color: #e5e7eb;
+    -fx-border-width: 1;
+    -fx-border-radius: 10;
+}
+
+.chart-container-modern {
+    -fx-background-color: white;
+    -fx-background-radius: 16;
+    -fx-padding: 24;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 16, 0, 0, 4);
+}
+
+.chart {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.chart-content {
+    -fx-padding: 8 0 0 0;
+}
+
+.chart-plot-background {
+    -fx-background-color: #fafbfc;
+    -fx-background-radius: 6;
+}
+
+.chart-legend {
+    -fx-background-color: transparent;
+    -fx-padding: 5 0 5 10;
+}
+
+.axis {
+    -fx-tick-label-fill: #6b7280;
+    -fx-font-size: 10px;
+}
+
+.axis-label {
+    -fx-text-fill: #4b5563;
+    -fx-font-size: 11px;
+    -fx-font-weight: 600;
+}
+
 .chart-container {
     -fx-background-color: -card-bg;
     -fx-background-radius: 12;
     -fx-padding: 20;
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 2);
-}
-
-.chart {
-    -fx-background-color: transparent;
 }
 
 .chart-title {
@@ -213,18 +316,44 @@
     -fx-text-fill: -text-main;
 }
 
-.chart-legend {
-    -fx-background-color: transparent;
-    -fx-padding: 10;
+/* ===============================
+   BAR CHART – ESTILO MODERNO CON GRADIENTE
+   =============================== */
+.chart-bar {
+    -fx-bar-fill: linear-gradient(to top, #667eea, #764ba2);
+    -fx-background-radius: 6 6 0 0;
+    -fx-effect: dropshadow(gaussian, rgba(103, 126, 234, 0.3), 6, 0, 0, 2);
 }
 
-/* Ocultar bordes de gráficos */
-.chart-plot-background {
-    -fx-background-color: transparent;
+.default-color0.chart-bar {
+    -fx-bar-fill: linear-gradient(to top, #667eea, #764ba2);
 }
 
-.chart-content {
-    -fx-padding: 10;
+/* Estilos para barras horizontales del gráfico de categorías */
+.chart-bar.default-color0 { -fx-bar-fill: #e91e63; }
+.chart-bar.default-color1 { -fx-bar-fill: #9c27b0; }
+.chart-bar.default-color2 { -fx-bar-fill: #3f51b5; }
+.chart-bar.default-color3 { -fx-bar-fill: #00bcd4; }
+.chart-bar.default-color4 { -fx-bar-fill: #4caf50; }
+.chart-bar.default-color5 { -fx-bar-fill: #ff9800; }
+.chart-bar.default-color6 { -fx-bar-fill: #f44336; }
+
+.tooltip {
+    -fx-background-color: #1f2937;
+    -fx-text-fill: white;
+    -fx-background-radius: 6;
+    -fx-padding: 8 10;
+    -fx-font-size: 11px;
+    -fx-font-weight: 600;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 6, 0, 0, 2);
+}
+
+.chart-pie-label {
+    -fx-opacity: 0;
+}
+
+.chart-pie-label-line {
+    -fx-stroke: transparent;
 }
 
 /* ===============================
@@ -252,10 +381,39 @@
     -fx-cursor: hand;
 }
 
+.search-button {
+    -fx-background-color: #3b82f6;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 10 20;
+    -fx-background-radius: 5;
+    -fx-cursor: hand;
+}
+
+.search-button:hover {
+    -fx-background-color: #2563eb;
+}
+
 .primary-button:hover {
     -fx-effect: dropshadow(gaussian, rgba(111,109,217,0.5), 10, 0, 0, 3);
 }
 
+.secondary-button {
+    -fx-background-color: #48bb78;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 10 20;
+    -fx-background-radius: 5;
+    -fx-cursor: hand;
+}
+
+.secondary-button:hover {
+    -fx-background-color: #38a169;
+}
+
+/* ===============================
+   OTROS ESTILOS
+   =============================== */
 .dashboard-root {
     -fx-background-color: #f7fafc;
 }
@@ -293,19 +451,6 @@
 
 .login-header .label {
     -fx-text-fill: white;
-}
-
-.secondary-button {
-    -fx-background-color: #48bb78;
-    -fx-text-fill: white;
-    -fx-font-weight: bold;
-    -fx-padding: 10 20;
-    -fx-background-radius: 5;
-    -fx-cursor: hand;
-}
-
-.secondary-button:hover {
-    -fx-background-color: #38a169;
 }
 
 .combo-box .text-field {

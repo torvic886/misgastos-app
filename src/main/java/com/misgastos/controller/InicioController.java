@@ -6,6 +6,7 @@ import javafx.scene.chart.BarChart;
 import javafx.scene.chart.PieChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,13 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Map;
+
+import javafx.application.Platform;
+import javafx.scene.Node;
+import javafx.scene.control.Label;
+import javafx.scene.layout.StackPane;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 
 @Component
 public class InicioController {
@@ -193,61 +201,125 @@ public class InicioController {
     
     private void cargarGraficoUltimosDias() {
         chartUltimosDias.getData().clear();
-        
+
         XYChart.Series<String, Number> series = new XYChart.Series<>();
-        series.setName("Gastos Diarios");
-        
+
         LocalDate hoy = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM");
-        
+
         for (int i = 6; i >= 0; i--) {
             LocalDate fecha = hoy.minusDays(i);
             BigDecimal total = gastoService.calcularTotalPorPeriodo(fecha, fecha);
-            
             String etiqueta = i == 0 ? "Hoy" : fecha.format(formatter);
             series.getData().add(new XYChart.Data<>(etiqueta, total.doubleValue()));
         }
-        
+
         chartUltimosDias.getData().add(series);
         chartUltimosDias.setLegendVisible(false);
-        
-        // Personalizar colores
-        chartUltimosDias.lookupAll(".default-color0.chart-bar")
-            .forEach(node -> node.setStyle("-fx-bar-fill: linear-gradient(to top, #6f6dd9, #8b7ce8);"));
+
+        Platform.runLater(() -> {
+            for (XYChart.Series<String, Number> serie : chartUltimosDias.getData()) {
+                for (XYChart.Data<String, Number> data : serie.getData()) {
+
+                    double valor = data.getYValue().doubleValue();
+                    if (valor <= 0) continue;
+
+                    Node node = data.getNode();
+                    if (node instanceof StackPane bar) {
+
+                        // Etiqueta compacta arriba de la barra
+                        Label label = new Label(
+                            formatearMonto(BigDecimal.valueOf(valor))
+                        );
+                        label.setMouseTransparent(true);
+                        StackPane.setAlignment(label, Pos.TOP_CENTER);
+                        StackPane.setMargin(label, new Insets(-18, 0, 0, 0));
+                        bar.getChildren().add(label);
+
+                        // 🔥 Tooltip con fecha + valor completo
+                        String textoTooltip =
+                                data.getXValue() + "\n" +
+                                formatearMontoCompleto(BigDecimal.valueOf(valor));
+
+                        Tooltip tooltip = new Tooltip(textoTooltip);
+                        tooltip.setStyle("""
+                            -fx-font-size: 12px;
+                            -fx-font-weight: bold;
+                        """);
+
+                        Tooltip.install(bar, tooltip);
+                    }
+                }
+            }
+        });
+
+
     }
+
+    private String formatearMontoCompleto(BigDecimal monto) {
+        return String.format("$%,.0f", monto.doubleValue());
+    }
+
     
     private void cargarGraficoCategorias() {
         chartCategorias.getData().clear();
-        
+
         Map<String, BigDecimal> categorias = gastoService.obtenerGastosPorCategoria();
-        
-        // Colores personalizados para el gráfico
+
+        BigDecimal totalGeneral = categorias.values().stream()
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Colores modernos y vibrantes para cada categoría
         String[] colores = {
-            "#6f6dd9", "#8b5cf6", "#ec4899", 
-            "#f59e0b", "#10b981", "#3b82f6"
+            "#e91e63",  // Rosa/magenta vibrante
+            "#9c27b0",  // Púrpura
+            "#3f51b5",  // Azul índigo
+            "#00bcd4",  // Cian
+            "#4caf50",  // Verde
+            "#ff9800",  // Naranja
+            "#f44336"   // Rojo
         };
         
-        int index = 0;
+        int colorIndex = 0;
+
         for (Map.Entry<String, BigDecimal> entry : categorias.entrySet()) {
+
             PieChart.Data slice = new PieChart.Data(
-                entry.getKey() + " (" + formatearMonto(entry.getValue()) + ")", 
-                entry.getValue().doubleValue()
+                    entry.getKey(),
+                    entry.getValue().doubleValue()
             );
+
             chartCategorias.getData().add(slice);
+
+            // Aplicar color personalizado a cada slice
+            final int currentIndex = colorIndex;
+            Platform.runLater(() -> {
+                slice.getNode().setStyle(
+                    "-fx-pie-color: " + colores[currentIndex % colores.length] + ";"
+                );
+            });
+
+            // Tooltip con valor + porcentaje
+            double porcentaje = totalGeneral.compareTo(BigDecimal.ZERO) == 0
+                    ? 0
+                    : entry.getValue()
+                            .multiply(BigDecimal.valueOf(100))
+                            .divide(totalGeneral, 1, RoundingMode.HALF_UP)
+                            .doubleValue();
+
+            Tooltip tooltip = new Tooltip(
+                    entry.getKey() + "\n" +
+                    formatearMontoCompleto(entry.getValue()) + "\n" +
+                    porcentaje + "%"
+            );
+
+            Tooltip.install(slice.getNode(), tooltip);
             
-            // Aplicar color personalizado
-            final String color = colores[index % colores.length];
-            slice.getNode().setStyle("-fx-pie-color: " + color + ";");
-            
-            index++;
-        }
-        
-        if (categorias.isEmpty()) {
-            PieChart.Data slice = new PieChart.Data("Sin datos", 1);
-            chartCategorias.getData().add(slice);
-            slice.getNode().setStyle("-fx-pie-color: #e5e7eb;");
+            colorIndex++;
         }
     }
+
+
     
     /**
      * Formatea montos grandes de forma compacta

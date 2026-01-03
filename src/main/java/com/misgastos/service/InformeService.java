@@ -47,10 +47,10 @@ public class InformeService {
     public String generarInformeGeneralMensual(LocalDate inicio, LocalDate fin) {
         StringBuilder sb = new StringBuilder();
         
-        sb.append("═══════════════════════════════════════════════════════════════════════\n");
+        sb.append("═══════════════════════════════════════════════════════════════════════════════\n");
         sb.append("                        INFORME DE GASTOS\n");
         sb.append("                    ").append(formatearFecha(inicio)).append(" - ").append(formatearFecha(fin)).append("\n");
-        sb.append("═══════════════════════════════════════════════════════════════════════\n\n");
+        sb.append("═══════════════════════════════════════════════════════════════════════════════\n\n");
 
         List<Gasto> gastos = gastoService.listarPorPeriodo(inicio, fin);
         
@@ -74,43 +74,73 @@ public class InformeService {
             .map(g -> g.getCategoria().getNombre())
             .collect(Collectors.toCollection(TreeSet::new));
 
-        sb.append(String.format("%-20s", "CATEGORÍA"));
-        for (YearMonth mes : datosPorMesCategoria.keySet()) {
-            sb.append(String.format("%15s", mes.getMonth().getDisplayName(TextStyle.SHORT, Locale.getDefault()).toUpperCase()));
-        }
-        sb.append(String.format("%15s", "TOTAL"));
-        sb.append("\n");
-        sb.append("─".repeat(95)).append("\n");
+        List<YearMonth> meses = new ArrayList<>(datosPorMesCategoria.keySet());
 
+        // ✅ ANCHO FIJO: 17 caracteres por columna de mes (incluye espacios y delimitador)
+        final int ANCHO_CATEGORIA = 24;
+        final int ANCHO_MES = 19;
+        final int ANCHO_TOTAL = 19;
+
+        // ✅ ENCABEZADO CON ALINEACIÓN PERFECTA
+        sb.append(String.format("%-" + ANCHO_CATEGORIA + "s", "CATEGORÍA"));
+        for (YearMonth mes : meses) {
+            String nombreMes = mes.getMonth().getDisplayName(TextStyle.SHORT, Locale.getDefault()).toUpperCase();
+            sb.append(String.format("│ %" + (ANCHO_MES - 2) + "s ", nombreMes));
+        }
+        sb.append(String.format("│ %" + (ANCHO_TOTAL - 2) + "s", "TOTAL"));
+        sb.append("\n");
+        
+        // Línea separadora
+        sb.append("─".repeat(ANCHO_CATEGORIA));
+        for (int i = 0; i < meses.size(); i++) {
+            sb.append("┼").append("─".repeat(ANCHO_MES));
+        }
+        sb.append("┼").append("─".repeat(ANCHO_TOTAL)).append("\n");
+
+        // ✅ DATOS CON COLUMNAS ALINEADAS
         for (String categoria : categorias) {
-            sb.append(String.format("%-20s", truncar(categoria, 20)));
+            sb.append(String.format("%-" + ANCHO_CATEGORIA + "s", truncar(categoria, ANCHO_CATEGORIA)));
+            
             BigDecimal totalCategoria = BigDecimal.ZERO;
             
-            for (YearMonth mes : datosPorMesCategoria.keySet()) {
+            for (YearMonth mes : meses) {
                 BigDecimal monto = datosPorMesCategoria.get(mes).getOrDefault(categoria, BigDecimal.ZERO);
-                sb.append(String.format("%15s", formatearMoneda(monto)));
+                String montoStr = formatearMoneda(monto);
+                sb.append(String.format("│ %" + (ANCHO_MES - 2) + "s ", montoStr));
                 totalCategoria = totalCategoria.add(monto);
             }
             
-            sb.append(String.format("%15s", formatearMoneda(totalCategoria)));
+            String totalStr = formatearMoneda(totalCategoria);
+            sb.append(String.format("│ %" + (ANCHO_TOTAL - 2) + "s", totalStr));
             sb.append("\n");
         }
 
-        sb.append("─".repeat(95)).append("\n");
-        sb.append(String.format("%-20s", "TOTAL MES"));
+        // Línea separadora antes de totales (más gruesa)
+        sb.append("═".repeat(ANCHO_CATEGORIA));
+        for (int i = 0; i < meses.size(); i++) {
+            sb.append("╪").append("═".repeat(ANCHO_MES));
+        }
+        sb.append("╪").append("═".repeat(ANCHO_TOTAL)).append("\n");
+        
+        // ✅ FILA DE TOTALES
+        sb.append(String.format("%-" + ANCHO_CATEGORIA + "s", "TOTAL MES"));
         
         BigDecimal totalGeneral = BigDecimal.ZERO;
-        for (YearMonth mes : datosPorMesCategoria.keySet()) {
+        for (YearMonth mes : meses) {
             BigDecimal totalMes = datosPorMesCategoria.get(mes).values().stream()
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-            sb.append(String.format("%15s", formatearMoneda(totalMes)));
+            String totalMesStr = formatearMoneda(totalMes);
+            sb.append(String.format("│ %" + (ANCHO_MES - 2) + "s ", totalMesStr));
             totalGeneral = totalGeneral.add(totalMes);
         }
-        sb.append(String.format("%15s", formatearMoneda(totalGeneral)));
+        
+        String totalGeneralStr = formatearMoneda(totalGeneral);
+        sb.append(String.format("│ %" + (ANCHO_TOTAL - 2) + "s", totalGeneralStr));
         sb.append("\n\n");
 
+        // ESTADÍSTICAS
         sb.append("📊 ESTADÍSTICAS\n");
-        sb.append("─".repeat(95)).append("\n");
+        sb.append("─".repeat(80)).append("\n");
         sb.append(String.format("💰 Total gastado: %s\n", formatearMoneda(totalGeneral)));
         sb.append(String.format("📅 Período: %d meses\n", datosPorMesCategoria.size()));
         
@@ -130,10 +160,10 @@ public class InformeService {
     public String generarInformePorCategoria(String nombreCategoria, LocalDate inicio, LocalDate fin) {
         StringBuilder sb = new StringBuilder();
         
-        sb.append("═══════════════════════════════════════════════════════════════════════\n");
-        sb.append("                  INFORME POR CATEGORÍA: ").append(nombreCategoria.toUpperCase()).append("\n");
+        sb.append("═══════════════════════════════════════════════════════════════════════════════\n");
+        sb.append("              INFORME POR CATEGORÍA: ").append(nombreCategoria.toUpperCase()).append("\n");
         sb.append("                    ").append(formatearFecha(inicio)).append(" - ").append(formatearFecha(fin)).append("\n");
-        sb.append("═══════════════════════════════════════════════════════════════════════\n\n");
+        sb.append("═══════════════════════════════════════════════════════════════════════════════\n\n");
 
         List<Gasto> gastos = gastoService.listarPorPeriodo(inicio, fin).stream()
             .filter(g -> g.getCategoria().getNombre().equalsIgnoreCase(nombreCategoria))
@@ -152,12 +182,14 @@ public class InformeService {
             BigDecimal.valueOf(gastos.size()), 2, RoundingMode.HALF_UP
         );
 
-        sb.append("📊 RESUMEN GENERAL\n");
+        // ═══ RESUMEN GENERAL ═══
+        sb.append("📋 RESUMEN GENERAL\n");
         sb.append("─".repeat(80)).append("\n");
         sb.append(String.format("   Total gastado: %s\n", formatearMoneda(totalGastado)));
         sb.append(String.format("   Número de compras: %d\n", gastos.size()));
         sb.append(String.format("   Promedio por compra: %s\n\n", formatearMoneda(promedioCompra)));
 
+        // ═══ POR SUBCATEGORÍA ═══
         Map<String, BigDecimal> porSubcategoria = gastos.stream()
             .collect(Collectors.groupingBy(
                 g -> g.getSubcategoria().getNombre(),
@@ -166,9 +198,28 @@ public class InformeService {
 
         sb.append("📂 POR SUBCATEGORÍA\n");
         sb.append("─".repeat(80)).append("\n");
-        sb.append(String.format("%-30s %15s %15s %15s\n", "SUBCATEGORÍA", "MONTO", "COMPRAS", "% CATEGORÍA"));
-        sb.append("─".repeat(80)).append("\n");
 
+        // ✅ ANCHOS FIJOS PARA LA TABLA
+        final int ANCHO_SUBCAT = 32;
+        final int ANCHO_MONTO = 18;
+        final int ANCHO_COMPRAS = 10;
+        final int ANCHO_PORC = 12;
+
+        // Encabezado
+        sb.append(String.format("%-" + ANCHO_SUBCAT + "s", "SUBCATEGORÍA"));
+        sb.append(String.format("│ %" + (ANCHO_MONTO - 2) + "s ", "MONTO"));
+        sb.append(String.format("│ %" + (ANCHO_COMPRAS - 2) + "s ", "COMPRAS"));
+        sb.append(String.format("│ %" + (ANCHO_PORC - 2) + "s", "% CATEGORÍA"));
+        sb.append("\n");
+
+        // Línea separadora
+        sb.append("─".repeat(ANCHO_SUBCAT));
+        sb.append("┼").append("─".repeat(ANCHO_MONTO));
+        sb.append("┼").append("─".repeat(ANCHO_COMPRAS));
+        sb.append("┼").append("─".repeat(ANCHO_PORC));
+        sb.append("\n");
+
+        // Datos
         for (Map.Entry<String, BigDecimal> entry : porSubcategoria.entrySet()) {
             long compras = gastos.stream()
                 .filter(g -> g.getSubcategoria().getNombre().equals(entry.getKey()))
@@ -179,15 +230,15 @@ public class InformeService {
                 .multiply(BigDecimal.valueOf(100))
                 .doubleValue();
 
-            sb.append(String.format("%-30s %15s %15d %14.1f%%\n", 
-                truncar(entry.getKey(), 30), 
-                formatearMoneda(entry.getValue()),
-                compras,
-                porcentaje
-            ));
+            sb.append(String.format("%-" + ANCHO_SUBCAT + "s", truncar(entry.getKey(), ANCHO_SUBCAT)));
+            sb.append(String.format("│ %" + (ANCHO_MONTO - 2) + "s ", formatearMoneda(entry.getValue())));
+            sb.append(String.format("│ %" + (ANCHO_COMPRAS - 2) + "d ", compras));
+            sb.append(String.format("│ %" + (ANCHO_PORC - 3) + ".1f%%", porcentaje));
+            sb.append("\n");
         }
         sb.append("\n");
 
+        // ═══ TOP 5 PRODUCTOS ═══
         Map<String, BigDecimal> porProducto = gastos.stream()
             .collect(Collectors.groupingBy(
                 Gasto::getProducto,
@@ -199,18 +250,21 @@ public class InformeService {
             .limit(5)
             .collect(Collectors.toList());
 
-        sb.append("🔝 TOP 5 PRODUCTOS\n");
+        sb.append("🏆 TOP 5 PRODUCTOS\n");
         sb.append("─".repeat(80)).append("\n");
+        
         int pos = 1;
         for (Map.Entry<String, BigDecimal> entry : top5) {
             long veces = gastos.stream()
                 .filter(g -> g.getProducto().equals(entry.getKey()))
                 .count();
             
-            sb.append(String.format("   %d. %-40s (%d veces) %s\n", 
+            String vecesTexto = veces == 1 ? "(1 vez)" : String.format("(%d veces)", veces);
+            
+            sb.append(String.format("   %d. %-45s %-12s %s\n", 
                 pos++, 
-                truncar(entry.getKey(), 40), 
-                veces,
+                truncar(entry.getKey(), 45), 
+                vecesTexto,
                 formatearMoneda(entry.getValue())
             ));
         }
