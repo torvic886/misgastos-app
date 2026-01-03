@@ -79,7 +79,7 @@
 
                     <Button text="📊 Exportar Excel" 
                             onAction="#handleExportarExcel"
-                            style="-fx-background-color: #48bb78; -fx-text-fill: white; -fx-font-weight: bold;"
+                            styleClass="secondary-button"
                             prefHeight="30"
                             HBox.hgrow="ALWAYS"/>
                 </HBox>

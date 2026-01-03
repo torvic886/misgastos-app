@@ -458,3 +458,7 @@
     -fx-border-color: #cbd5e0;
     -fx-border-radius: 6;
 }
+.login-icon {
+    -fx-font-size: 42px;      /* tamaño del emoji */
+    -fx-alignment: center;
+}

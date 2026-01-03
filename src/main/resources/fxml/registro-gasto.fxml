@@ -46,33 +46,46 @@
                       promptText="Ej: Arroz"
                       GridPane.rowIndex="2"
                       GridPane.columnIndex="1"/>
+                      
+            <!-- ✅ NUEVO: Cédula (oculto por defecto) - rowIndex="3" -->
+            <Label fx:id="lblCedula" 
+                   text="Cédula:" 
+                   GridPane.rowIndex="3"
+                   visible="false"
+                   managed="false"/>
+            <TextField fx:id="txtCedula"
+                       promptText="Solo números"
+                       GridPane.rowIndex="3"
+                       GridPane.columnIndex="1"
+                       visible="false"
+                       managed="false"/>
 
-            <!-- Cantidad -->
-            <Label text="Cantidad:" GridPane.rowIndex="3"/>
+            <!-- ✅ CORREGIDO: Cantidad ahora en rowIndex="4" -->
+            <Label text="Cantidad:" GridPane.rowIndex="4"/>
             <TextField fx:id="txtCantidad"
                        text="1"
-                       GridPane.rowIndex="3"
-                       GridPane.columnIndex="1"/>
-
-            <!-- Valor Unitario -->
-            <Label text="Valor Unitario:" GridPane.rowIndex="4"/>
-            <TextField fx:id="txtValorUnitario"
-                       promptText="0.00"
                        GridPane.rowIndex="4"
                        GridPane.columnIndex="1"/>
 
-            <!-- Total -->
-            <Label text="Total:" GridPane.rowIndex="5"/>
-            <TextField fx:id="txtValorTotal"
-                       editable="false"
+            <!-- ✅ CORREGIDO: Valor Unitario en rowIndex="5" -->
+            <Label text="Valor Unitario:" GridPane.rowIndex="5"/>
+            <TextField fx:id="txtValorUnitario"
+                       promptText="0.00"
                        GridPane.rowIndex="5"
                        GridPane.columnIndex="1"/>
 
-            <!-- Notas -->
-            <Label text="Notas:" GridPane.rowIndex="6"/>
+            <!-- ✅ CORREGIDO: Total en rowIndex="6" -->
+            <Label text="Total:" GridPane.rowIndex="6"/>
+            <TextField fx:id="txtValorTotal"
+                       editable="false"
+                       GridPane.rowIndex="6"
+                       GridPane.columnIndex="1"/>
+
+            <!-- ✅ CORREGIDO: Notas en rowIndex="7" -->
+            <Label text="Notas:" GridPane.rowIndex="7"/>
             <TextArea fx:id="txtNotas"
                       prefRowCount="3"
-                      GridPane.rowIndex="6"
+                      GridPane.rowIndex="7"
                       GridPane.columnIndex="1"/>
         </GridPane>
 
@@ -93,19 +106,19 @@
 
         <Label text="📋 Últimos gastos registrados" styleClass="content-title"/>
 
-		<TableView fx:id="tblUltimosGastos"
-		           prefHeight="500"
-		           VBox.vgrow="ALWAYS"
-		           maxWidth="Infinity">
-		    <columns>
-		        <TableColumn fx:id="colFecha" text="Fecha"/>
-		        <TableColumn fx:id="colCategoria" text="Categoría"/>
-		        <TableColumn fx:id="colProducto" text="Producto"/>
-		        <TableColumn fx:id="colCantidad" text="Cant"/>
-		        <TableColumn fx:id="colValorUnitario" text="V. Unit"/>
-		        <TableColumn fx:id="colTotal" text="Total"/>
-		    </columns>
-		</TableView>
+        <TableView fx:id="tblUltimosGastos"
+                   prefHeight="500"
+                   VBox.vgrow="ALWAYS"
+                   maxWidth="Infinity">
+            <columns>
+                <TableColumn fx:id="colFecha" text="Fecha"/>
+                <TableColumn fx:id="colCategoria" text="Categoría"/>
+                <TableColumn fx:id="colProducto" text="Producto"/>
+                <TableColumn fx:id="colCantidad" text="Cant"/>
+                <TableColumn fx:id="colValorUnitario" text="V. Unit"/>
+                <TableColumn fx:id="colTotal" text="Total"/>
+            </columns>
+        </TableView>
 
     </VBox>
 

@@ -1,10 +1,8 @@
 package com.misgastos.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import java.time.LocalDateTime;
 
-@Data
 @Entity
 @Table(name = "auditoria_logs")
 public class AuditoriaLog {
@@ -26,45 +24,44 @@ public class AuditoriaLog {
     @Column(length = 500)
     private String detalles;
 
-	public Long getId() {
-		return id;
-	}
+    // Getters y Setters
+    public Long getId() {
+        return id;
+    }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	public Usuario getUsuario() {
-		return usuario;
-	}
+    public Usuario getUsuario() {
+        return usuario;
+    }
 
-	public void setUsuario(Usuario usuario) {
-		this.usuario = usuario;
-	}
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
+    }
 
-	public String getAccion() {
-		return accion;
-	}
+    public String getAccion() {
+        return accion;
+    }
 
-	public void setAccion(String accion) {
-		this.accion = accion;
-	}
+    public void setAccion(String accion) {
+        this.accion = accion;
+    }
 
-	public LocalDateTime getFecha() {
-		return fecha;
-	}
+    public LocalDateTime getFecha() {
+        return fecha;
+    }
 
-	public void setFecha(LocalDateTime fecha) {
-		this.fecha = fecha;
-	}
+    public void setFecha(LocalDateTime fecha) {
+        this.fecha = fecha;
+    }
 
-	public String getDetalles() {
-		return detalles;
-	}
+    public String getDetalles() {
+        return detalles;
+    }
 
-	public void setDetalles(String detalles) {
-		this.detalles = detalles;
-	}
-    
-    
+    public void setDetalles(String detalles) {
+        this.detalles = detalles;
+    }
 }

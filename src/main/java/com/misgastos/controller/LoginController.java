@@ -47,6 +47,10 @@ public class LoginController {
     
     private void abrirDashboard(String username) {
         try {
+            // ✅ Obtener el usuario con su rol
+            com.misgastos.model.Usuario usuario = usuarioService.buscarPorUsername(username)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/dashboard.fxml"));
             loader.setControllerFactory(springContext::getBean);
             
@@ -54,6 +58,7 @@ public class LoginController {
             
             DashboardController controller = loader.getController();
             controller.setUsuario(username);
+            controller.setRol(usuario.getRol()); // ✅ NUEVO
             
             Stage stage = (Stage) txtUsername.getScene().getWindow();
             
@@ -68,7 +73,7 @@ public class LoginController {
             stage.setMaximized(true);
             stage.centerOnScreen();
             
-            System.out.println("✅ Dashboard abierto para usuario: " + username);
+            System.out.println("✅ Dashboard abierto para usuario: " + username + " | Rol: " + usuario.getRol());
             
         } catch (Exception e) {
             e.printStackTrace();

@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.misgastos.controller.GestionUsuariosController"
+            styleClass="content">
+
+    <padding>
+        <Insets top="15" right="15" bottom="15" left="15"/>
+    </padding>
+
+    <!-- PANEL IZQUIERDO: FORMULARIO -->
+    <left>
+        <VBox spacing="15" styleClass="info-panel" 
+              prefWidth="380" maxWidth="380"
+              style="-fx-padding: 20;">
+            
+            <BorderPane.margin>
+                <Insets right="15"/>
+            </BorderPane.margin>
+
+            <Label text="👤 Gestión de Usuarios" 
+                   style="-fx-font-weight: bold; -fx-font-size: 16px;"/>
+
+            <Separator/>
+
+            <!-- Username -->
+            <VBox spacing="5">
+                <Label text="Usuario:" style="-fx-font-size: 11px;"/>
+                <TextField fx:id="txtUsername" 
+                           promptText="Ingrese nombre de usuario"/>
+            </VBox>
+
+            <!-- Contraseña -->
+            <VBox spacing="5">
+                <Label text="Contraseña:" style="-fx-font-size: 11px;"/>
+                <PasswordField fx:id="txtPassword" 
+                               promptText="Ingrese contraseña"/>
+            </VBox>
+
+            <!-- Rol -->
+            <VBox spacing="5">
+                <Label text="Rol:" style="-fx-font-size: 11px;"/>
+                <ComboBox fx:id="cmbRol" 
+                          maxWidth="Infinity"
+                          promptText="Seleccione rol"/>
+            </VBox>
+
+            <!-- Activo -->
+            <CheckBox fx:id="chkActivo" 
+                      text="Usuario activo" 
+                      selected="true"/>
+
+            <Separator/>
+
+            <!-- Botones de acción -->
+            <VBox spacing="10">
+                <Button text="➕ Crear Usuario" 
+                        onAction="#handleCrear"
+                        styleClass="primary-button"
+                        maxWidth="Infinity"
+                        prefHeight="36"/>
+
+                <Button text="💾 Guardar Cambios" 
+                        onAction="#handleActualizar"
+                        styleClass="secondary-button"
+                        maxWidth="Infinity"
+                        prefHeight="32"/>
+
+                <Button text="🔐 Cambiar Contraseña" 
+                        onAction="#handleCambiarPassword"
+                        style="-fx-background-color: #f59e0b; -fx-text-fill: white;"
+                        maxWidth="Infinity"
+                        prefHeight="32"/>
+
+                <Button text="🗑️ Eliminar Usuario" 
+                        onAction="#handleEliminar"
+                        style="-fx-background-color: #dc2626; -fx-text-fill: white;"
+                        maxWidth="Infinity"
+                        prefHeight="32"/>
+
+                <Button text="🔄 Limpiar Formulario" 
+                        onAction="#handleLimpiar"
+                        style="-fx-background-color: #e5e7eb; -fx-text-fill: #374151;"
+                        maxWidth="Infinity"
+                        prefHeight="28"/>
+            </VBox>
+
+        </VBox>
+    </left>
+
+    <!-- PANEL DERECHO: TABLA DE USUARIOS -->
+    <center>
+        <VBox spacing="15" styleClass="info-panel" style="-fx-padding: 20;">
+
+            <HBox alignment="CENTER_LEFT" spacing="15">
+                <Label text="📋 Lista de Usuarios" 
+                       style="-fx-font-size: 14px; -fx-font-weight: bold;"
+                       HBox.hgrow="ALWAYS"/>
+                
+                <Button text="🔄 Actualizar" 
+                        onAction="#handleRefrescar"
+                        style="-fx-background-color: transparent; -fx-text-fill: #667eea; -fx-cursor: HAND;"/>
+            </HBox>
+
+            <TableView fx:id="tblUsuarios" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colId" text="ID" prefWidth="50"/>
+                    <TableColumn fx:id="colUsername" text="Usuario" prefWidth="150"/>
+                    <TableColumn fx:id="colRol" text="Rol" prefWidth="120"/>
+                    <TableColumn fx:id="colActivo" text="Activo" prefWidth="80"/>
+                    <TableColumn fx:id="colFechaCreacion" text="Fecha Creación" prefWidth="150"/>
+                </columns>
+            </TableView>
+
+            <HBox spacing="15" alignment="CENTER" 
+                  style="-fx-background-color: #f7fafc; -fx-padding: 10; -fx-background-radius: 6;">
+                
+                <Label text="Total de usuarios:" 
+                       style="-fx-font-size: 11px; -fx-text-fill: #718096;"/>
+                <Label fx:id="lblTotalUsuarios" 
+                       text="0" 
+                       style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #667eea;"/>
+            </HBox>
+
+        </VBox>
+    </center>
+
+</BorderPane>

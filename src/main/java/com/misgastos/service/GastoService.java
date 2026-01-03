@@ -38,8 +38,8 @@ public class GastoService {
     private SubcategoriaRepository subcategoriaRepository;
     
     public Gasto registrarGasto(Long usuarioId, Long categoriaId, Long subcategoriaId,
-                                String producto, Integer cantidad, BigDecimal valorUnitario,
-                                String notas) {
+            String producto, Integer cantidad, BigDecimal valorUnitario,
+            String notas, String cedula) {
         
         Usuario usuario = usuarioRepository.findById(usuarioId)
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -61,6 +61,7 @@ public class GastoService {
         gasto.setValorUnitario(valorUnitario);
         gasto.setValorTotal(valorUnitario.multiply(BigDecimal.valueOf(cantidad)));
         gasto.setNotas(notas);
+        gasto.setCedula(cedula);
         
         return gastoRepository.save(gasto);
     }

@@ -28,7 +28,7 @@
 
                 <StackPane prefHeight="80" prefWidth="80">
                     <Circle radius="40" styleClass="login-icon-bg"/>
-                    <Label text="💰" styleClass="login-icon"/>
+                    <Label text="💎" styleClass="login-icon"/>
                 </StackPane>
 
                 <Label text="ExpenseFlow" styleClass="login-title"/>
@@ -74,13 +74,13 @@
                         styleClass="login-button"/>
 
                 <VBox spacing="8" styleClass="login-hint">
-                    <Label text="🔥 Credenciales de prueba:" styleClass="hint-title"/>
-                    <Label text="Admin: admin / admin123"/>
-                    <Label text="Usuario: usuario / usuario123"/>
+                    <!-- <Label text="🔥 Credenciales de prueba:" styleClass="hint-title"/>-->
+					<!-- <Label text="Admin: admin / admin123"/> -->
+					<!-- <Label text="Usuario: usuario / usuario123"/> -->
                 </VBox>
             </VBox>
 
-            <Label text="© 2024 ExpenseFlow - v1.0.0"
+            <Label text="© 2026 ExpenseFlow - v1.0.0"
                    styleClass="login-footer"/>
 
             <padding>

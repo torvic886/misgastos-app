@@ -47,6 +47,9 @@ public class Gasto {
     
     @Column(length = 500)
     private String notas;
+    
+    @Column(length = 20)
+    private String cedula;
 
     // Tus getters y setters existentes...
     public Long getId() { return id; }
@@ -71,4 +74,6 @@ public class Gasto {
     public void setValorTotal(BigDecimal valorTotal) { this.valorTotal = valorTotal; }
     public String getNotas() { return notas; }
     public void setNotas(String notas) { this.notas = notas; }
+    public String getCedula() { return cedula; }
+    public void setCedula(String cedula) { this.cedula = cedula; }
 }

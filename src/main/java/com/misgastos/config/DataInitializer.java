@@ -17,14 +17,14 @@ public class DataInitializer implements CommandLineRunner {
     
     @Override
     public void run(String... args) {
-        // Crear usuarios
+        // ✅ Crear usuarios (con "SYSTEM" como creador)
         if (usuarioService.buscarPorUsername("admin").isEmpty()) {
-            usuarioService.crearUsuario("admin", "admin123", "ADMIN");
+            usuarioService.crearUsuario("admin", "admin123", "ADMINISTRADOR", "SYSTEM");
             System.out.println("✅ Usuario admin creado");
         }
         
         if (usuarioService.buscarPorUsername("usuario").isEmpty()) {
-            usuarioService.crearUsuario("usuario", "usuario123", "USER");
+            usuarioService.crearUsuario("usuario", "usuario123", "USUARIO", "SYSTEM");
             System.out.println("✅ Usuario normal creado");
         }
         
@@ -171,5 +171,4 @@ public class DataInitializer implements CommandLineRunner {
 
         System.out.println("✅ Categorías y subcategorías creadas correctamente");
     }
-
 }

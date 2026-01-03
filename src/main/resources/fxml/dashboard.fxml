@@ -8,7 +8,7 @@
 <?import javafx.scene.layout.VBox?>
 
 <BorderPane fx:id="mainBorderPane" 
-			prefWidth="1200"
+            prefWidth="1200"
             prefHeight="700"
             xmlns="http://javafx.com/javafx/25"
             xmlns:fx="http://javafx.com/fxml/1"
@@ -24,11 +24,12 @@
     </top>
 
     <left>
-        <VBox styleClass="sidebar" spacing="10">
+        <VBox fx:id="sidebar" styleClass="sidebar" spacing="10">
             <Label text="MENÚ PRINCIPAL" styleClass="sidebar-title"/>
             <Button text="🏠 Inicio" styleClass="menu-button" onAction="#handleInicio" maxWidth="Infinity"/>
             <Button text="💳 Mis Gastos" styleClass="menu-button" onAction="#handleGastos" maxWidth="Infinity"/>
             <Button text="📊 Informes" styleClass="menu-button" onAction="#handleInformes" maxWidth="Infinity"/>
+            <Button text="👥 Usuarios" styleClass="menu-button" onAction="#handleUsuarios" maxWidth="Infinity"/>
         </VBox>
     </left>
 

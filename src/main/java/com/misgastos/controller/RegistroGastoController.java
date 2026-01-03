@@ -42,6 +42,8 @@ public class RegistroGastoController {
     @FXML private TableColumn<Gasto, Integer> colCantidad;
     @FXML private TableColumn<Gasto, BigDecimal> colValorUnitario;
     @FXML private TableColumn<Gasto, BigDecimal> colTotal;
+    @FXML private Label lblCedula;
+    @FXML private TextField txtCedula;
     
     @Autowired private CategoriaService categoriaService;
     @Autowired private GastoService gastoService;
@@ -58,6 +60,8 @@ public class RegistroGastoController {
         configurarGuardarConEnter();
         configurarTabla();
         cargarUltimosGastos();
+        configurarValidacionCedula();
+        configurarCampoCedula();
         
         Platform.runLater(() -> cmbProducto.requestFocus());
     }
@@ -111,7 +115,7 @@ public class RegistroGastoController {
             if (newVal != null && !newVal.isBlank()) {
                 System.out.println("✅ Producto seleccionado del autocomplete: '" + newVal + "'");
                 autocompletarDatosPorProducto(newVal);
-                Platform.runLater(() -> txtCantidad.requestFocus());
+                // ✅ El focus ya se maneja dentro de autocompletarDatosPorProducto
             }
         });
     }
@@ -138,14 +142,22 @@ public class RegistroGastoController {
                 txtCantidad.setText("");
                 
                 calcularTotal();
-                
+
                 Platform.runLater(() -> {
                     cmbProducto.setValue(textoProducto);
                     cmbProducto.getEditor().setText(textoProducto);
                     cmbProducto.getEditor().positionCaret(textoProducto.length());
+                    
+                    // ✅ NUEVO: Ir a Cédula si está visible, sino a Cantidad
+                    if (txtCedula.isVisible()) {
+                        txtCedula.requestFocus();
+                        System.out.println("   → Foco en Cédula");
+                    } else {
+                        txtCantidad.requestFocus();
+                        System.out.println("   → Foco en Cantidad");
+                    }
                 });
-                
-                // ✅ NUEVO: Marcar que el producto ya existe (no es nuevo)
+
                 productoNuevoYaConfigurado = true;
             },
             () -> {
@@ -155,6 +167,14 @@ public class RegistroGastoController {
     }
     
     private void configurarGuardarConEnter() {
+        // ✅ NUEVO: Enter en Cédula va a Cantidad
+        txtCedula.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                txtCantidad.requestFocus();
+                event.consume();
+            }
+        });
+        
         txtCantidad.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.ENTER) {
                 txtValorUnitario.requestFocus();
@@ -174,7 +194,6 @@ public class RegistroGastoController {
     public void handleGuardar() {
         System.out.println("🟢 handleGuardar() ejecutado");
         
-        // ========== OBTENER PRODUCTO ==========
         String producto = obtenerProductoSeleccionado();
         
         if (producto == null || producto.trim().isBlank()) {
@@ -185,7 +204,6 @@ public class RegistroGastoController {
         producto = producto.trim();
         
         try {
-            // ========== ✅ NUEVA LÓGICA: Solo verificar si NO está configurado ==========
             if (!productoNuevoYaConfigurado) {
                 boolean productoExiste = gastoService.existeProducto(producto);
                 System.out.println("📦 Producto: " + producto);
@@ -201,23 +219,19 @@ public class RegistroGastoController {
                         return;
                     }
                     
-                    // ✅ Recargar y seleccionar categorías
                     cargarCategoriasIniciales();
                     cmbCategoria.setValue(resultado.categoria);
                     cargarSubcategorias(resultado.categoria.getId());
                     cmbSubcategoria.setValue(resultado.subcategoria);
                     
-                    // ✅ CRÍTICO: Marcar que ya configuramos este producto
                     productoNuevoYaConfigurado = true;
                     
                     System.out.println("✅ Popup completado:");
                     System.out.println("   → Categoría: " + resultado.categoria.getNombre());
                     System.out.println("   → Subcategoría: " + resultado.subcategoria.getNombre());
                     
-                    // ✅ NUEVO: Limpiar cantidad para que el usuario la ingrese
                     txtCantidad.setText("");
                     
-                    // ✅ Si falta cantidad o valor, enfocar y NO guardar todavía
                     if (txtCantidad.getText() == null || txtCantidad.getText().trim().isEmpty()) {
                         mostrarAlerta("Validación", "Ingrese la cantidad", Alert.AlertType.WARNING);
                         txtCantidad.requestFocus();
@@ -234,7 +248,6 @@ public class RegistroGastoController {
                 System.out.println("✅ Producto ya configurado anteriormente, omitiendo popup");
             }
             
-            // ========== VALIDAR CAMPOS ==========
             if (cmbCategoria.getValue() == null) {
                 mostrarAlerta("Validación", "Seleccione una categoría", Alert.AlertType.WARNING);
                 cmbCategoria.requestFocus();
@@ -259,7 +272,16 @@ public class RegistroGastoController {
                 return;
             }
             
-            // ========== GUARDAR ==========
+            // ============================================================
+            // ✅ AGREGAR ESTAS LÍNEAS AQUÍ (después de las validaciones)
+            // ============================================================
+            String cedula = null;
+            if (txtCedula.isVisible() && txtCedula.getText() != null && !txtCedula.getText().trim().isEmpty()) {
+                cedula = txtCedula.getText().trim();
+                System.out.println("📋 Cédula ingresada: " + cedula);
+            }
+            
+            // ✅ MODIFICAR ESTA LLAMADA (agregar cedula al final)
             gastoService.registrarGasto(
                 usuarioId,
                 cmbCategoria.getValue().getId(),
@@ -267,7 +289,8 @@ public class RegistroGastoController {
                 producto,
                 Integer.parseInt(txtCantidad.getText().trim()),
                 new BigDecimal(txtValorUnitario.getText().trim()),
-                txtNotas.getText()
+                txtNotas.getText(),
+                cedula  // ✅ Este es el nuevo parámetro
             );
             
             System.out.println("✅ Gasto guardado exitosamente");
@@ -545,4 +568,57 @@ public class RegistroGastoController {
             this.subcategoria = s;
         }
     }
+    
+ // ✅ NUEVO: Validar que solo se ingresen números en cédula
+    private void configurarValidacionCedula() {
+        txtCedula.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && !newVal.matches("\\d*")) {
+                txtCedula.setText(oldVal);
+            }
+        });
+    }
+
+    // ✅ NUEVO: Mostrar/ocultar campo de cédula según categoría y subcategoría
+    private void configurarCampoCedula() {
+        // Listener cuando cambia la categoría
+        cmbCategoria.valueProperty().addListener((obs, oldVal, newVal) -> {
+            verificarMostrarCampoCedula();
+        });
+        
+        // Listener cuando cambia la subcategoría
+        cmbSubcategoria.valueProperty().addListener((obs, oldVal, newVal) -> {
+            verificarMostrarCampoCedula();
+        });
+    }
+
+    // ✅ NUEVO: Verificar si se debe mostrar el campo de cédula
+    private void verificarMostrarCampoCedula() {
+        boolean mostrar = false;
+        
+        Categoria categoria = cmbCategoria.getValue();
+        Subcategoria subcategoria = cmbSubcategoria.getValue();
+        
+        if (categoria != null && subcategoria != null) {
+            // Verificar si es "Beneficios Clientes" Y la subcategoría contiene "Bono"
+            String nombreCategoria = categoria.getNombre();
+            String nombreSubcategoria = subcategoria.getNombre();
+            
+            mostrar = nombreCategoria.equalsIgnoreCase("Beneficios Clientes") 
+                      && nombreSubcategoria.toLowerCase().contains("bono");
+        }
+        
+        // Mostrar u ocultar el campo
+        lblCedula.setVisible(mostrar);
+        lblCedula.setManaged(mostrar);
+        txtCedula.setVisible(mostrar);
+        txtCedula.setManaged(mostrar);
+        
+        // Limpiar el campo si se oculta
+        if (!mostrar) {
+            txtCedula.clear();
+        }
+        
+        System.out.println("🔍 Campo cedula: " + (mostrar ? "VISIBLE" : "OCULTO"));
+    }
+    
 }
