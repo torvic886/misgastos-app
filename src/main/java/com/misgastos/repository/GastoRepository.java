@@ -53,14 +53,6 @@ public interface GastoRepository extends JpaRepository<Gasto, Long> {
     """)
     List<String> buscarProductos(@Param("texto") String texto);
     
-    /**
-     * ✅ VERIFICACIÓN MEJORADA DE EXISTENCIA
-     * 
-     * Normaliza espacios antes de comparar:
-     * - TRIM elimina espacios al inicio/final
-     * - REPLACE elimina espacios múltiples
-     * - UPPER hace comparación case-insensitive
-     */
     @Query("""
         SELECT CASE WHEN COUNT(g) > 0 THEN true ELSE false END
         FROM Gasto g
@@ -69,9 +61,6 @@ public interface GastoRepository extends JpaRepository<Gasto, Long> {
     """)
     boolean existeProducto(@Param("producto") String producto);
 
-    /**
-     * ✅ BÚSQUEDA MEJORADA DE ÚLTIMOS GASTOS POR PRODUCTO
-     */
     @Query("""
         SELECT g
         FROM Gasto g
@@ -81,16 +70,30 @@ public interface GastoRepository extends JpaRepository<Gasto, Long> {
     """)
     List<Gasto> ultimosGastosPorProducto(@Param("producto") String producto);
 
- // Buscar gastos por una fecha específica
     @Query("SELECT g FROM Gasto g WHERE g.fecha = :fecha ORDER BY g.hora DESC")
     List<Gasto> findByFechaExacta(@Param("fecha") LocalDate fecha);
 
-    // Buscar gastos por usuario y rango de fechas
     @Query("SELECT g FROM Gasto g WHERE g.usuario.id = :usuarioId AND g.fecha BETWEEN :inicio AND :fin ORDER BY g.fecha DESC, g.hora DESC")
     List<Gasto> findByUsuarioAndFechaBetween(
         @Param("usuarioId") Long usuarioId,
         @Param("inicio") LocalDate inicio,
         @Param("fin") LocalDate fin
     );
+    
+    // ✅ SUMA TOTAL POR RANGO DE FECHAS
+    @Query("SELECT COALESCE(SUM(g.valorTotal), 0) FROM Gasto g WHERE g.fecha BETWEEN :inicio AND :fin")
+    BigDecimal sumByFechaBetween(@Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
+
+ // ✅ SUMA POR RANGO DE FECHAS Y CATEGORÍA (CORREGIDO PARA SQLITE)
+    @Query(value = "SELECT COALESCE(SUM(valor_total), 0) FROM gastos WHERE fecha BETWEEN :inicio AND :fin AND categoria_id = :categoriaId", nativeQuery = true)
+    BigDecimal sumByFechaBetweenAndCategoriaId(@Param("inicio") String inicio, @Param("fin") String fin, @Param("categoriaId") Long categoriaId);
+
+    // ✅ SUMA TOTAL POR FECHA EXACTA
+    @Query("SELECT COALESCE(SUM(g.valorTotal), 0) FROM Gasto g WHERE g.fecha = :fecha")
+    BigDecimal sumByFecha(@Param("fecha") LocalDate fecha);
+
+ // ✅ SUMA POR FECHA EXACTA Y CATEGORÍA (CORREGIDO PARA SQLITE)
+    @Query(value = "SELECT COALESCE(SUM(valor_total), 0) FROM gastos WHERE fecha = :fecha AND categoria_id = :categoriaId", nativeQuery = true)
+    BigDecimal sumByFechaAndCategoriaId(@Param("fecha") String fecha, @Param("categoriaId") Long categoriaId);
 
 }

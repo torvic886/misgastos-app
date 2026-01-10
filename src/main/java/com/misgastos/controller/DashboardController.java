@@ -5,6 +5,9 @@ import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import com.misgastos.MisGastosApplication;
+import com.misgastos.service.SesionRecordadaService;  // ✅ AGREGAR IMPORT
+import com.misgastos.service.UsuarioService;  // ✅ AGREGAR IMPORT
+import com.misgastos.model.Usuario;  // ✅ AGREGAR IMPORT
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -18,6 +21,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;  // ✅ AGREGAR IMPORT
+
 @Component
 public class DashboardController {
     
@@ -27,6 +32,12 @@ public class DashboardController {
     
     @Autowired
     private ApplicationContext springContext;
+    
+    @Autowired
+    private SesionRecordadaService sesionService;
+    
+    @Autowired
+    private UsuarioService usuarioService;  // ✅ AGREGAR
     
     private String username;
     private String rol;
@@ -160,8 +171,22 @@ public class DashboardController {
     }
     
     @FXML
+    public void handleBilleteros() {
+        System.out.println("Navegando a Gestión de Billeteros");
+        cargarVista("/fxml/gestion-billeteros.fxml");
+    }    
+    
+    @FXML
     private void handleCerrarSesion() {
         try {
+            // ✅ NUEVO: Eliminar sesión "Recordarme" si existe
+            Optional<Usuario> usuarioOpt = usuarioService.buscarPorUsername(this.username);
+            if (usuarioOpt.isPresent()) {
+                sesionService.eliminarSesion(usuarioOpt.get().getId());
+                System.out.println("🗑️ Sesión 'Recordarme' eliminada para: " + this.username);
+            }
+            
+            // Cargar vista de login
             FXMLLoader loader = new FXMLLoader(
                 getClass().getResource("/fxml/login.fxml")
             );
@@ -215,4 +240,10 @@ public class DashboardController {
         alert.setContentText(mensaje);
         alert.showAndWait();
     }
+    
+    @FXML
+    public void handleReportesBilleteros() {
+        System.out.println("Navegando a Reportes de Billeteros");
+        cargarVista("/fxml/reportes-billeteros.fxml");
+    }   
 }

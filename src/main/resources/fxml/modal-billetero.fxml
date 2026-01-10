@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/25"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.misgastos.controller.ModalBilleteroController"
+      spacing="20"
+      styleClass="modal-container"
+      prefWidth="500"
+      prefHeight="400">
+
+    <!-- Título del modal -->
+    <HBox styleClass="modal-header">
+        <padding>
+            <Insets top="15" right="15" bottom="15" left="15"/>
+        </padding>
+        <Label fx:id="lblTitulo" text="Nuevo Billetero" styleClass="modal-title"/>
+    </HBox>
+
+    <!-- Formulario -->
+    <GridPane hgap="15" vgap="15" styleClass="form-container">
+        <padding>
+            <Insets top="20" right="20" bottom="20" left="20"/>
+        </padding>
+        
+        <!-- Fecha -->
+        <Label text="Fecha:" GridPane.columnIndex="0" GridPane.rowIndex="0"
+               styleClass="form-label"/>
+        <DatePicker fx:id="dpFecha" promptText="Seleccione fecha"
+                   GridPane.columnIndex="1" GridPane.rowIndex="0"
+                   prefWidth="300"/>
+        
+        <!-- Billetero -->
+        <Label text="Billetero:" GridPane.columnIndex="0" GridPane.rowIndex="1"
+               styleClass="form-label"/>
+        <TextField fx:id="txtBilletero" promptText="0.00"
+                  GridPane.columnIndex="1" GridPane.rowIndex="1"
+                  prefWidth="300"/>
+        
+        <!-- Premios -->
+        <Label text="Premios:" GridPane.columnIndex="0" GridPane.rowIndex="2"
+               styleClass="form-label"/>
+        <TextField fx:id="txtPremios" promptText="0.00"
+                  GridPane.columnIndex="1" GridPane.rowIndex="2"
+                  prefWidth="300"/>
+        
+        <!-- Diferencia (solo lectura) -->
+        <Label text="Diferencia:" GridPane.columnIndex="0" GridPane.rowIndex="3"
+               styleClass="form-label"/>
+        <TextField fx:id="txtDiferencia" promptText="0.00" disable="true"
+                  GridPane.columnIndex="1" GridPane.rowIndex="3"
+                  prefWidth="300" styleClass="readonly-field"/>
+    </GridPane>
+
+    <!-- Mensaje de error -->
+    <Label fx:id="lblError" text="" styleClass="error-message" 
+           managed="false" visible="false"/>
+
+    <!-- Botones de acción -->
+    <HBox spacing="15" alignment="CENTER">
+        <padding>
+            <Insets bottom="15"/>
+        </padding>
+        <Button text="✖ Cancelar" styleClass="secondary-button" 
+                onAction="#handleCancelar" prefWidth="150"/>
+        <Button text="💾 Guardar" styleClass="primary-button" 
+                onAction="#handleGuardar" prefWidth="150"/>
+    </HBox>
+
+</VBox>

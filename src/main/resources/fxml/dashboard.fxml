@@ -30,6 +30,8 @@
             <Button text="💳 Mis Gastos" styleClass="menu-button" onAction="#handleGastos" maxWidth="Infinity"/>
             <Button text="📊 Informes" styleClass="menu-button" onAction="#handleInformes" maxWidth="Infinity"/>
             <Button text="👥 Usuarios" styleClass="menu-button" onAction="#handleUsuarios" maxWidth="Infinity"/>
+        	<Button text="💼 Billeteros" styleClass="menu-button" onAction="#handleBilleteros" maxWidth="Infinity"/>
+        	<Button text="📋 Reportes Billeteros" styleClass="menu-button" onAction="#handleReportesBilleteros" maxWidth="Infinity"/>
         </VBox>
     </left>
 

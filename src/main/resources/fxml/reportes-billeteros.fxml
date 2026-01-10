@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx" 
+      xmlns:fx="http://javafx.com/fxml" 
+      fx:controller="com.misgastos.controller.ReportesBilleterosController"
+      spacing="20"
+      styleClass="content">
+    
+    <padding>
+        <Insets top="30" right="30" bottom="30" left="30"/>
+    </padding>
+
+    <!-- Título Principal -->
+    <VBox spacing="5">
+        <Label text="📊 Reportes de Billeteros" styleClass="content-title"/>
+        <Label text="Genera reportes completos con análisis financiero detallado" styleClass="content-subtitle"/>
+    </VBox>
+
+    <!-- Grid Principal: 2 Columnas -->
+    <GridPane hgap="25" vgap="20" VBox.vgrow="ALWAYS">
+        
+        <!-- COLUMNA IZQUIERDA: Reportes -->
+        <VBox spacing="20" GridPane.columnIndex="0" GridPane.rowIndex="0">
+            
+            <!-- Reporte Mensual -->
+            <VBox spacing="15" styleClass="info-panel-modern">
+                <Label text="📅 Reporte Mensual" styleClass="panel-title"/>
+                <Label text="Agrupa datos por mes con totales acumulados" style="-fx-text-fill: #718096; -fx-font-size: 12px;"/>
+                
+                <HBox spacing="15">
+                    <VBox spacing="5">
+                        <Label text="Fecha Inicio:" style="-fx-font-weight: bold; -fx-text-fill: #374151; -fx-font-size: 12px;"/>
+                        <DatePicker fx:id="dpMensualInicio" prefWidth="180"/>
+                    </VBox>
+
+                    <VBox spacing="5">
+                        <Label text="Fecha Fin:" style="-fx-font-weight: bold; -fx-text-fill: #374151; -fx-font-size: 12px;"/>
+                        <DatePicker fx:id="dpMensualFin" prefWidth="180"/>
+                    </VBox>
+                </HBox>
+
+                <HBox spacing="12">
+                    <Button text="📊 Excel" onAction="#handleMensualExcel" styleClass="primary-button" prefWidth="120"/>
+                    <Button text="📄 PDF" onAction="#handleMensualPDF" styleClass="secondary-button" prefWidth="120"/>
+                </HBox>
+            </VBox>
+
+            <!-- Reporte Diario -->
+            <VBox spacing="15" styleClass="info-panel-modern">
+                <Label text="📆 Reporte Diario" styleClass="panel-title"/>
+                <Label text="Detalle día por día con utilidades" style="-fx-text-fill: #718096; -fx-font-size: 12px;"/>
+
+                <HBox spacing="15">
+                    <VBox spacing="5">
+                        <Label text="Fecha Inicio:" style="-fx-font-weight: bold; -fx-text-fill: #374151; -fx-font-size: 12px;"/>
+                        <DatePicker fx:id="dpDiarioInicio" prefWidth="180"/>
+                    </VBox>
+
+                    <VBox spacing="5">
+                        <Label text="Fecha Fin:" style="-fx-font-weight: bold; -fx-text-fill: #374151; -fx-font-size: 12px;"/>
+                        <DatePicker fx:id="dpDiarioFin" prefWidth="180"/>
+                    </VBox>
+                </HBox>
+
+                <HBox spacing="12">
+                    <Button text="📊 Excel" onAction="#handleDiarioExcel" styleClass="primary-button" prefWidth="120"/>
+                    <Button text="📄 PDF" onAction="#handleDiarioPDF" styleClass="secondary-button" prefWidth="120"/>
+                </HBox>
+            </VBox>
+        </VBox>
+
+        <!-- COLUMNA DERECHA: Información -->
+        <VBox spacing="15" GridPane.columnIndex="1" GridPane.rowIndex="0" 
+              style="-fx-background-color: #f0fdf4; -fx-background-radius: 12; -fx-padding: 20; -fx-border-color: #86efac; -fx-border-width: 1; -fx-border-radius: 12;">
+            
+            <Label text="ℹ️ Columnas del Reporte" style="-fx-font-weight: bold; -fx-text-fill: #065f46; -fx-font-size: 14px;"/>
+            
+            <VBox spacing="10">
+                <!-- Columna 1 -->
+                <HBox spacing="8">
+                    <Label text="1." style="-fx-font-weight: bold; -fx-text-fill: #047857; -fx-min-width: 20; -fx-font-size: 11px;"/>
+                    <VBox spacing="2">
+                        <Label text="Periodo/Fecha" style="-fx-font-weight: bold; -fx-text-fill: #047857; -fx-font-size: 11px;"/>
+                        <Label text="Mes o fecha del registro" style="-fx-text-fill: #065f46; -fx-font-size: 10px;"/>
+                    </VBox>
+                </HBox>
+                
+                <!-- Columna 2 -->
+                <HBox spacing="8">
+                    <Label text="2." style="-fx-font-weight: bold; -fx-text-fill: #047857; -fx-min-width: 20; -fx-font-size: 11px;"/>
+                    <VBox spacing="2">
+                        <Label text="Acumulado Billetero" style="-fx-font-weight: bold; -fx-text-fill: #047857; -fx-font-size: 11px;"/>
+                        <Label text="Suma acumulada de billeteros" style="-fx-text-fill: #065f46; -fx-font-size: 10px;"/>
+                    </VBox>
+                </HBox>
+                
+                <!-- Columna 3 -->
+                <HBox spacing="8">
+                    <Label text="3." style="-fx-font-weight: bold; -fx-text-fill: #047857; -fx-min-width: 20; -fx-font-size: 11px;"/>
+                    <VBox spacing="2">
+                        <Label text="Acumulado Premios" style="-fx-font-weight: bold; -fx-text-fill: #047857; -fx-font-size: 11px;"/>
+                        <Label text="Suma acumulada de premios" style="-fx-text-fill: #065f46; -fx-font-size: 10px;"/>
+                    </VBox>
+                </HBox>
+                
+                <!-- Columna 4 -->
+                <HBox spacing="8">
+                    <Label text="4." style="-fx-font-weight: bold; -fx-text-fill: #047857; -fx-min-width: 20; -fx-font-size: 11px;"/>
+                    <VBox spacing="2">
+                        <Label text="Diferencia" style="-fx-font-weight: bold; -fx-text-fill: #047857; -fx-font-size: 11px;"/>
+                        <Label text="Billetero - Premios" style="-fx-text-fill: #065f46; -fx-font-size: 10px;"/>
+                    </VBox>
+                </HBox>
+                
+                <!-- Columna 5 -->
+                <HBox spacing="8">
+                    <Label text="5." style="-fx-font-weight: bold; -fx-text-fill: #047857; -fx-min-width: 20; -fx-font-size: 11px;"/>
+                    <VBox spacing="2">
+                        <Label text="Gastos Local" style="-fx-font-weight: bold; -fx-text-fill: #047857; -fx-font-size: 11px;"/>
+                        <Label text="Gastos operacionales" style="-fx-text-fill: #065f46; -fx-font-size: 10px;"/>
+                    </VBox>
+                </HBox>
+                
+                <!-- Columna 6 -->
+                <HBox spacing="8">
+                    <Label text="6." style="-fx-font-weight: bold; -fx-text-fill: #047857; -fx-min-width: 20; -fx-font-size: 11px;"/>
+                    <VBox spacing="2">
+                        <Label text="Pagos Manuel" style="-fx-font-weight: bold; -fx-text-fill: #047857; -fx-font-size: 11px;"/>
+                        <Label text="Categoría 14" style="-fx-text-fill: #065f46; -fx-font-size: 10px;"/>
+                    </VBox>
+                </HBox>
+                
+                <!-- Columna 7 -->
+                <HBox spacing="8">
+                    <Label text="7." style="-fx-font-weight: bold; -fx-text-fill: #047857; -fx-min-width: 20; -fx-font-size: 11px;"/>
+                    <VBox spacing="2">
+                        <Label text="Inversión" style="-fx-font-weight: bold; -fx-text-fill: #047857; -fx-font-size: 11px;"/>
+                        <Label text="Categoría 10" style="-fx-text-fill: #065f46; -fx-font-size: 10px;"/>
+                    </VBox>
+                </HBox>
+                
+                <!-- Columna 8 -->
+                <HBox spacing="8">
+                    <Label text="8." style="-fx-font-weight: bold; -fx-text-fill: #047857; -fx-min-width: 20; -fx-font-size: 11px;"/>
+                    <VBox spacing="2">
+                        <Label text="Gasto Total" style="-fx-font-weight: bold; -fx-text-fill: #047857; -fx-font-size: 11px;"/>
+                        <Label text="Suma de gastos" style="-fx-text-fill: #065f46; -fx-font-size: 10px;"/>
+                    </VBox>
+                </HBox>
+                
+                <!-- Columna 9 -->
+                <HBox spacing="8">
+                    <Label text="9." style="-fx-font-weight: bold; -fx-text-fill: #047857; -fx-min-width: 20; -fx-font-size: 11px;"/>
+                    <VBox spacing="2">
+                        <Label text="Utilidad Neta" style="-fx-font-weight: bold; -fx-text-fill: #047857; -fx-font-size: 11px;"/>
+                        <Label text="Ganancia final" style="-fx-text-fill: #065f46; -fx-font-size: 10px;"/>
+                    </VBox>
+                </HBox>
+            </VBox>
+        </VBox>
+
+    </GridPane>
+
+</VBox>

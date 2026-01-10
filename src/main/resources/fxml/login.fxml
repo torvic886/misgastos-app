@@ -66,7 +66,7 @@
                     </HBox>
                 </VBox>
 
-                <CheckBox text="Recordarme"/>
+                <CheckBox fx:id="checkRecordarme" text="Recordarme"/>
 
                 <Button text="🔓 Iniciar Sesión"
                         maxWidth="Infinity"

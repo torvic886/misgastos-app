@@ -462,3 +462,279 @@
     -fx-font-size: 42px;      /* tamaño del emoji */
     -fx-alignment: center;
 }
+
+/* ===============================
+   GESTIÃ"N DE BILLETEROS
+   Agregar estas reglas al final de styles.css
+   =============================== */
+
+/* Header de la página de billeteros */
+.header-box {
+    -fx-background-color: white;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 5, 0, 0, 2);
+    -fx-background-radius: 8;
+}
+
+.page-title {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1e293b;
+}
+
+/* Panel de búsqueda */
+.search-box {
+    -fx-background-color: white;
+    -fx-padding: 15;
+    -fx-background-radius: 8;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 3, 0, 0, 1);
+}
+
+/* Contenido principal */
+.main-content {
+    -fx-background-color: transparent;
+}
+
+/* Botones de acción en tabla */
+.action-button-edit {
+    -fx-background-color: #f59e0b;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-padding: 5 10;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.action-button-edit:hover {
+    -fx-background-color: #d97706;
+    -fx-effect: dropshadow(gaussian, rgba(245,158,11,0.4), 8, 0, 0, 2);
+}
+
+.action-button-delete {
+    -fx-background-color: #ef4444;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-padding: 5 10;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.action-button-delete:hover {
+    -fx-background-color: #dc2626;
+    -fx-effect: dropshadow(gaussian, rgba(239,68,68,0.4), 8, 0, 0, 2);
+}
+
+/* Panel de resumen */
+.summary-panel {
+    -fx-background-color: linear-gradient(to bottom right, #f8fafc, #e2e8f0);
+    -fx-background-radius: 10;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 8, 0, 0, 2);
+    -fx-border-color: #cbd5e1;
+    -fx-border-width: 1;
+    -fx-border-radius: 10;
+}
+
+.summary-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1e293b;
+}
+
+.summary-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: #64748b;
+    -fx-font-weight: normal;
+}
+
+.summary-value {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1e293b;
+}
+
+.summary-value-total {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+}
+
+/* Tabla personalizada */
+.table-view {
+    -fx-background-color: white;
+    -fx-background-radius: 8;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 3, 0, 0, 1);
+}
+
+.table-view .column-header {
+    -fx-background-color: #f1f5f9;
+    -fx-font-weight: bold;
+    -fx-text-fill: #334155;
+    -fx-padding: 12 8;
+}
+
+.table-view .column-header .label {
+    -fx-font-weight: bold;
+}
+
+.table-row-cell {
+    -fx-background-color: white;
+    -fx-border-color: transparent;
+}
+
+.table-row-cell:odd {
+    -fx-background-color: #f9fafb;
+}
+
+.table-row-cell:hover {
+    -fx-background-color: #f0f4ff;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #dbeafe;
+    -fx-text-fill: #1e293b;
+}
+
+.table-cell {
+    -fx-padding: 10 8;
+}
+
+/* Info label */
+.info-label {
+    -fx-font-size: 13px;
+    -fx-text-fill: #64748b;
+    -fx-font-weight: 500;
+}
+
+/* Paginación */
+.pagination-button {
+    -fx-background-color: #e2e8f0;
+    -fx-text-fill: #334155;
+    -fx-padding: 5 15;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+    -fx-font-weight: 600;
+}
+
+.pagination-button:hover {
+    -fx-background-color: #cbd5e1;
+}
+
+.pagination-button:disabled {
+    -fx-opacity: 0.5;
+    -fx-cursor: default;
+}
+
+/* ===============================
+   MODAL DE BILLETEROS
+   =============================== */
+
+.modal-container {
+    -fx-background-color: #f9fafb;
+}
+
+.modal-header {
+    -fx-background-color: linear-gradient(to right, #3b82f6, #8b5cf6);
+    -fx-background-radius: 0;
+}
+
+.modal-title {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.form-container {
+    -fx-background-color: white;
+    -fx-background-radius: 8;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 3, 0, 0, 1);
+}
+
+.form-label {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #334155;
+}
+
+/* TextField y DatePicker en formularios */
+.text-field, .date-picker {
+    -fx-background-color: white;
+    -fx-border-color: #cbd5e1;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 8;
+    -fx-font-size: 14px;
+}
+
+.text-field:focused, .date-picker:focused {
+    -fx-border-color: #3b82f6;
+    -fx-border-width: 2;
+    -fx-effect: dropshadow(gaussian, rgba(59,130,246,0.2), 4, 0, 0, 0);
+}
+
+.text-field:hover, .date-picker:hover {
+    -fx-border-color: #94a3b8;
+}
+
+/* Campo de solo lectura */
+.readonly-field {
+    -fx-background-color: #f1f5f9;
+    -fx-border-color: #cbd5e1;
+    -fx-opacity: 1;
+    -fx-text-fill: #334155;
+}
+
+/* Mensaje de error en modal */
+.error-message {
+    -fx-text-fill: #ef4444;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 10;
+    -fx-background-color: #fee2e2;
+    -fx-background-radius: 6;
+    -fx-border-color: #fca5a5;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+}
+
+/* ===============================
+   AJUSTES ADICIONALES PARA BILLETEROS
+   =============================== */
+
+/* TextField con prompt text mejorado */
+.text-field {
+    -fx-prompt-text-fill: #9ca3af;
+}
+
+/* DatePicker personalizado */
+.date-picker .text-field {
+    -fx-background-color: white;
+    -fx-border-color: #cbd5e1;
+}
+
+.date-picker-popup {
+    -fx-background-color: white;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 10, 0, 0, 3);
+}
+
+/* Botón de refresh */
+.secondary-button.refresh {
+    -fx-background-color: #64748b;
+}
+
+.secondary-button.refresh:hover {
+    -fx-background-color: #475569;
+}
+
+/* Estilos de colores para diferencia */
+.text-positive {
+    -fx-text-fill: #22c55e;
+    -fx-font-weight: bold;
+}
+
+.text-negative {
+    -fx-text-fill: #ef4444;
+    -fx-font-weight: bold;
+}
+
+.text-neutral {
+    -fx-text-fill: #6b7280;
+}

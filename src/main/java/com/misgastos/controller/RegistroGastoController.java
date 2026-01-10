@@ -1,6 +1,7 @@
 package com.misgastos.controller;
 
 import javafx.application.Platform;
+
 import javafx.collections.FXCollections;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
@@ -24,6 +25,9 @@ import java.util.List;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.control.cell.PropertyValueFactory;
+import java.text.NumberFormat;
+import java.util.Locale;
+
 
 @Component
 public class RegistroGastoController {
@@ -354,20 +358,33 @@ public class RegistroGastoController {
     }
     
     private void configurarTabla() {
+        NumberFormat formatoPeso = NumberFormat.getCurrencyInstance(new Locale("es", "CO"));
+        
         tblUltimosGastos.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         
-        colFecha.setCellValueFactory(data -> 
-            new SimpleObjectProperty<>(data.getValue().getFecha())
-        );
-        colCategoria.setCellValueFactory(data -> 
-            new SimpleStringProperty(data.getValue().getCategoria().getNombre())
-        );
-        colProducto.setCellValueFactory(data -> 
-            new SimpleStringProperty(data.getValue().getProducto())
-        );
+        colFecha.setCellValueFactory(data -> new SimpleObjectProperty<>(data.getValue().getFecha()));
+        colCategoria.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getCategoria().getNombre()));
+        colProducto.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getProducto()));
         colCantidad.setCellValueFactory(new PropertyValueFactory<>("cantidad"));
+        
+        // ✅ FORMATO PESO COLOMBIANO
         colValorUnitario.setCellValueFactory(new PropertyValueFactory<>("valorUnitario"));
+        colValorUnitario.setCellFactory(col -> new TableCell<Gasto, BigDecimal>() {
+            @Override
+            protected void updateItem(BigDecimal item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "" : formatoPeso.format(item));
+            }
+        });
+        
         colTotal.setCellValueFactory(new PropertyValueFactory<>("valorTotal"));
+        colTotal.setCellFactory(col -> new TableCell<Gasto, BigDecimal>() {
+            @Override
+            protected void updateItem(BigDecimal item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "" : formatoPeso.format(item));
+            }
+        });
     }
     
     private void cargarUltimosGastos() {

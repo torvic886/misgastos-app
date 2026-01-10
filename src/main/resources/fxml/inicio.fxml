@@ -78,10 +78,18 @@
             </VBox>
             
             <!-- Gráfico de Torta - Más ancho -->
-            <VBox spacing="6" styleClass="chart-container" prefWidth="420" style="-fx-padding: 14;">
-                <Label text="🍰 Distribución por Categoría" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1f2937;"/>
-                <PieChart fx:id="chartCategorias" legendVisible="true" animated="true" prefHeight="140" maxHeight="140" legendSide="RIGHT"/>
-            </VBox>
+			<!-- Gráfico de Torta -->
+			<VBox spacing="6" styleClass="chart-container" prefWidth="420" style="-fx-padding: 14;">
+			    <Label text="🍰 Distribución por Categoría" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1f2937;"/>
+			    <PieChart fx:id="chartCategorias" 
+			              legendVisible="true" 
+			              animated="true" 
+			              prefHeight="140" 
+			              maxHeight="140" 
+			              legendSide="BOTTOM"
+			              labelLineLength="10"
+			              labelsVisible="false"/>
+			</VBox>
         </HBox>
         
         <!-- Sección de detalles - Aprovechando todo el ancho -->

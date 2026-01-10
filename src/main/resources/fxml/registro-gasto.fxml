@@ -4,7 +4,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 
-<HBox spacing="20"
+<HBox spacing="15"
       styleClass="content"
       xmlns="http://javafx.com/javafx/17"
       xmlns:fx="http://javafx.com/fxml/1"
@@ -14,109 +14,71 @@
         <Insets top="20" right="20" bottom="20" left="20"/>
     </padding>
 
-    <!-- ================= IZQUIERDA: FORMULARIO ================= -->
-    <VBox spacing="15" HBox.hgrow="ALWAYS">
+    <!-- IZQUIERDA: FORMULARIO -->
+    <VBox spacing="12" HBox.hgrow="NEVER" prefWidth="420" maxWidth="420">
 
-        <Label text="➕ Registrar Gasto" styleClass="content-title"/>
+        <Label text="➕ Registrar Gasto" styleClass="content-title" style="-fx-font-size: 20px;"/>
 
-        <GridPane hgap="10" vgap="10">
+        <GridPane hgap="10" vgap="8">
             <columnConstraints>
-                <ColumnConstraints prefWidth="120"/>
+                <ColumnConstraints prefWidth="110" minWidth="110"/>
                 <ColumnConstraints hgrow="ALWAYS"/>
             </columnConstraints>
 
-            <!-- Categoría -->
             <Label text="Categoría:" GridPane.rowIndex="0"/>
-            <ComboBox fx:id="cmbCategoria"
-                      promptText="Seleccione"
-                      GridPane.rowIndex="0"
-                      GridPane.columnIndex="1"/>
+            <ComboBox fx:id="cmbCategoria" promptText="Seleccione" 
+                      GridPane.rowIndex="0" GridPane.columnIndex="1" maxWidth="Infinity"/>
 
-            <!-- Subcategoría -->
             <Label text="Subcategoría:" GridPane.rowIndex="1"/>
-            <ComboBox fx:id="cmbSubcategoria"
-                      promptText="Seleccione"
-                      GridPane.rowIndex="1"
-                      GridPane.columnIndex="1"/>
+            <ComboBox fx:id="cmbSubcategoria" promptText="Seleccione"
+                      GridPane.rowIndex="1" GridPane.columnIndex="1" maxWidth="Infinity"/>
 
-            <!-- Producto -->
             <Label text="Producto:" GridPane.rowIndex="2"/>
-            <ComboBox fx:id="cmbProducto"
-                      editable="true"
-                      promptText="Ej: Arroz"
-                      GridPane.rowIndex="2"
-                      GridPane.columnIndex="1"/>
-                      
-            <!-- ✅ NUEVO: Cédula (oculto por defecto) - rowIndex="3" -->
-            <Label fx:id="lblCedula" 
-                   text="Cédula:" 
-                   GridPane.rowIndex="3"
-                   visible="false"
-                   managed="false"/>
-            <TextField fx:id="txtCedula"
-                       promptText="Solo números"
-                       GridPane.rowIndex="3"
-                       GridPane.columnIndex="1"
-                       visible="false"
-                       managed="false"/>
+            <ComboBox fx:id="cmbProducto" editable="true" promptText="Ej: Arroz"
+                      GridPane.rowIndex="2" GridPane.columnIndex="1" maxWidth="Infinity"/>
 
-            <!-- ✅ CORREGIDO: Cantidad ahora en rowIndex="4" -->
+            <Label fx:id="lblCedula" text="Cédula:" GridPane.rowIndex="3" 
+                   visible="false" managed="false"/>
+            <TextField fx:id="txtCedula" promptText="Solo números"
+                       GridPane.rowIndex="3" GridPane.columnIndex="1"
+                       visible="false" managed="false"/>
+
             <Label text="Cantidad:" GridPane.rowIndex="4"/>
-            <TextField fx:id="txtCantidad"
-                       text="1"
-                       GridPane.rowIndex="4"
-                       GridPane.columnIndex="1"/>
+            <TextField fx:id="txtCantidad" text="1" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
 
-            <!-- ✅ CORREGIDO: Valor Unitario en rowIndex="5" -->
-            <Label text="Valor Unitario:" GridPane.rowIndex="5"/>
-            <TextField fx:id="txtValorUnitario"
-                       promptText="0.00"
-                       GridPane.rowIndex="5"
-                       GridPane.columnIndex="1"/>
+            <Label text="Valor Unit.:" GridPane.rowIndex="5"/>
+            <TextField fx:id="txtValorUnitario" promptText="0.00"
+                       GridPane.rowIndex="5" GridPane.columnIndex="1"/>
 
-            <!-- ✅ CORREGIDO: Total en rowIndex="6" -->
             <Label text="Total:" GridPane.rowIndex="6"/>
-            <TextField fx:id="txtValorTotal"
-                       editable="false"
-                       GridPane.rowIndex="6"
-                       GridPane.columnIndex="1"/>
+            <TextField fx:id="txtValorTotal" editable="false"
+                       GridPane.rowIndex="6" GridPane.columnIndex="1"/>
 
-            <!-- ✅ CORREGIDO: Notas en rowIndex="7" -->
             <Label text="Notas:" GridPane.rowIndex="7"/>
-            <TextArea fx:id="txtNotas"
-                      prefRowCount="3"
-                      GridPane.rowIndex="7"
-                      GridPane.columnIndex="1"/>
+            <TextArea fx:id="txtNotas" prefRowCount="2"
+                      GridPane.rowIndex="7" GridPane.columnIndex="1"/>
         </GridPane>
 
-        <!-- Botones -->
         <HBox spacing="10">
-            <Button text="💾 Guardar"
-                    styleClass="primary-button"
-                    onAction="#handleGuardar"/>
-            <Button text="🧹 Limpiar"
-                    styleClass="secondary-button"
-                    onAction="#handleLimpiar"/>
+            <Button text="💾 Guardar" styleClass="primary-button" onAction="#handleGuardar"/>
+            <Button text="🧹 Limpiar" styleClass="secondary-button" onAction="#handleLimpiar"/>
         </HBox>
 
     </VBox>
 
-    <!-- ================= DERECHA: TABLA ================= -->
+    <!-- DERECHA: TABLA -->
     <VBox spacing="10" HBox.hgrow="ALWAYS">
 
-        <Label text="📋 Últimos gastos registrados" styleClass="content-title"/>
+        <Label text="📋 Últimos gastos registrados" styleClass="content-title" style="-fx-font-size: 20px;"/>
 
-        <TableView fx:id="tblUltimosGastos"
-                   prefHeight="500"
-                   VBox.vgrow="ALWAYS"
-                   maxWidth="Infinity">
+        <TableView fx:id="tblUltimosGastos" VBox.vgrow="ALWAYS" prefHeight="600">
             <columns>
-                <TableColumn fx:id="colFecha" text="Fecha"/>
-                <TableColumn fx:id="colCategoria" text="Categoría"/>
-                <TableColumn fx:id="colProducto" text="Producto"/>
-                <TableColumn fx:id="colCantidad" text="Cant"/>
-                <TableColumn fx:id="colValorUnitario" text="V. Unit"/>
-                <TableColumn fx:id="colTotal" text="Total"/>
+                <TableColumn fx:id="colFecha" text="Fecha" prefWidth="100" minWidth="90"/>
+                <TableColumn fx:id="colCategoria" text="Categoría" prefWidth="130" minWidth="100"/>
+                <TableColumn fx:id="colProducto" text="Producto" prefWidth="150" minWidth="120"/>
+                <TableColumn fx:id="colCantidad" text="Cant" prefWidth="60" minWidth="50"/>
+                <TableColumn fx:id="colValorUnitario" text="V. Unit" prefWidth="110" minWidth="100"/>
+                <TableColumn fx:id="colTotal" text="Total" prefWidth="110" minWidth="100"/>
             </columns>
         </TableView>
 
