@@ -24,7 +24,7 @@
             </BorderPane.margin>
 
             <!-- Configuración (sin título grande) -->
-            <Label text="⚙️ Configuración del Informe" 
+            <Label text="⚙ Configuración del Informe" 
                    style="-fx-font-weight: bold; -fx-font-size: 13px;"/>
 
             <!-- Tipo de Informe -->
@@ -59,7 +59,7 @@
             <VBox spacing="5">
                 <Label text="Producto (opcional):" style="-fx-font-size: 11px;"/>
                 <TextField fx:id="txtProducto" 
-                           promptText="Buscar producto..."/>
+                           promptText="Buscar producto..." styleClass="search-field"/>
             </VBox>
 
             <!-- Botones de Acción -->

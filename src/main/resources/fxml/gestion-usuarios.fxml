@@ -7,7 +7,7 @@
 <BorderPane xmlns="http://javafx.com/javafx/17"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.misgastos.controller.GestionUsuariosController"
-            styleClass="content">
+            style="-fx-background-color: #f1f5f9;">
 
     <padding>
         <Insets top="15" right="15" bottom="15" left="15"/>
@@ -15,116 +15,179 @@
 
     <!-- PANEL IZQUIERDO: FORMULARIO -->
     <left>
-        <VBox spacing="15" styleClass="info-panel" 
-              prefWidth="380" maxWidth="380"
-              style="-fx-padding: 20;">
-            
-            <BorderPane.margin>
-                <Insets right="15"/>
-            </BorderPane.margin>
+        <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: transparent;">
+            <VBox spacing="10" 
+                  prefWidth="320" maxWidth="320"
+                  style="-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 16; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.12), 15, 0, 0, 3); -fx-border-color: #cbd5e1; -fx-border-width: 1.5; -fx-border-radius: 12;">
+                
+                <VBox.margin>
+                    <Insets right="12"/>
+                </VBox.margin>
 
-            <Label text="👤 Gestión de Usuarios" 
-                   style="-fx-font-weight: bold; -fx-font-size: 16px;"/>
+            <!-- Header del formulario -->
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label text="👤" style="-fx-font-size: 22px;"/>
+                <VBox spacing="1">
+                    <Label text="Gestión de Usuarios" 
+                           style="-fx-font-weight: bold; -fx-font-size: 15px; -fx-text-fill: #1e293b;"/>
+                    <Label text="Administra usuarios del sistema" 
+                           style="-fx-font-size: 11px; -fx-text-fill: #64748b;"/>
+                </VBox>
+            </HBox>
 
-            <Separator/>
+            <Separator style="-fx-background-color: #e2e8f0;"/>
 
             <!-- Username -->
             <VBox spacing="5">
-                <Label text="Usuario:" style="-fx-font-size: 11px;"/>
+                <Label text="Usuario:" 
+                       style="-fx-font-size: 11px; -fx-font-weight: 600; -fx-text-fill: #334155;"/>
                 <TextField fx:id="txtUsername" 
-                           promptText="Ingrese nombre de usuario"/>
+                           promptText="Nombre de usuario"
+                           style="-fx-background-color: white; -fx-border-color: #cbd5e1; -fx-border-width: 1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 6 8; -fx-font-size: 12px;"/>
             </VBox>
 
             <!-- Contraseña -->
             <VBox spacing="5">
-                <Label text="Contraseña:" style="-fx-font-size: 11px;"/>
+                <Label text="Contraseña:" 
+                       style="-fx-font-size: 11px; -fx-font-weight: 600; -fx-text-fill: #334155;"/>
                 <PasswordField fx:id="txtPassword" 
-                               promptText="Ingrese contraseña"/>
+                               promptText="Contraseña"
+                               style="-fx-background-color: white; -fx-border-color: #cbd5e1; -fx-border-width: 1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 6 8; -fx-font-size: 12px;"/>
             </VBox>
 
             <!-- Rol -->
             <VBox spacing="5">
-                <Label text="Rol:" style="-fx-font-size: 11px;"/>
+                <Label text="Rol:" 
+                       style="-fx-font-size: 11px; -fx-font-weight: 600; -fx-text-fill: #334155;"/>
                 <ComboBox fx:id="cmbRol" 
                           maxWidth="Infinity"
-                          promptText="Seleccione rol"/>
+                          promptText="Seleccione rol"
+                          style="-fx-background-color: white; -fx-border-color: #cbd5e1; -fx-border-width: 1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 5;"/>
             </VBox>
 
-            <!-- Activo -->
-            <CheckBox fx:id="chkActivo" 
-                      text="Usuario activo" 
-                      selected="true"/>
+            <!-- Usuario Activo -->
+            <HBox spacing="8" alignment="CENTER_LEFT" 
+                  style="-fx-background-color: #f8fafc; -fx-padding: 8 10; -fx-background-radius: 6; -fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 6;">
+                <CheckBox fx:id="chkActivo" 
+                          selected="true"
+                          style="-fx-font-size: 12px;"/>
+                <Label text="Usuario activo" 
+                       style="-fx-font-size: 12px; -fx-text-fill: #475569; -fx-font-weight: 500;"/>
+            </HBox>
 
-            <Separator/>
+            <Separator style="-fx-background-color: #e2e8f0;"/>
 
             <!-- Botones de acción -->
-            <VBox spacing="10">
-                <Button text="➕ Crear Usuario" 
+            <VBox spacing="8">
+                <!-- Crear Usuario -->
+                <Button text="✓ Crear Usuario" 
                         onAction="#handleCrear"
-                        styleClass="primary-button"
                         maxWidth="Infinity"
-                        prefHeight="36"/>
+                        prefHeight="34"
+                        style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 12px; -fx-background-radius: 6; -fx-cursor: hand;"/>
 
+                <!-- Guardar Cambios -->
                 <Button text="💾 Guardar Cambios" 
                         onAction="#handleActualizar"
-                        styleClass="secondary-button"
                         maxWidth="Infinity"
-                        prefHeight="32"/>
+                        prefHeight="32"
+                        style="-fx-background-color: #059669; -fx-text-fill: white; -fx-font-weight: 600; -fx-font-size: 11px; -fx-background-radius: 6; -fx-cursor: hand;"/>
 
-                <Button text="🔐 Cambiar Contraseña" 
+                <!-- Cambiar Contraseña -->
+                <Button text="🔑 Cambiar Contraseña" 
                         onAction="#handleCambiarPassword"
-                        style="-fx-background-color: #f59e0b; -fx-text-fill: white;"
                         maxWidth="Infinity"
-                        prefHeight="32"/>
+                        prefHeight="32"
+                        style="-fx-background-color: #d97706; -fx-text-fill: white; -fx-font-weight: 600; -fx-font-size: 11px; -fx-background-radius: 6; -fx-cursor: hand;"/>
 
-                <Button text="🗑️ Eliminar Usuario" 
+                <!-- Eliminar Usuario -->
+                <Button text="✕ Eliminar Usuario" 
                         onAction="#handleEliminar"
-                        style="-fx-background-color: #dc2626; -fx-text-fill: white;"
                         maxWidth="Infinity"
-                        prefHeight="32"/>
+                        prefHeight="32"
+                        style="-fx-background-color: #dc2626; -fx-text-fill: white; -fx-font-weight: 600; -fx-font-size: 11px; -fx-background-radius: 6; -fx-cursor: hand;"/>
 
-                <Button text="🔄 Limpiar Formulario" 
+                <Separator style="-fx-background-color: #e2e8f0;"/>
+
+                <!-- Limpiar Formulario -->
+                <Button text="⟲ Limpiar Formulario" 
                         onAction="#handleLimpiar"
-                        style="-fx-background-color: #e5e7eb; -fx-text-fill: #374151;"
                         maxWidth="Infinity"
-                        prefHeight="28"/>
+                        prefHeight="30"
+                        style="-fx-background-color: #64748b; -fx-text-fill: white; -fx-font-weight: 600; -fx-font-size: 11px; -fx-background-radius: 6; -fx-cursor: hand;"/>
+            </VBox>
+
+            <Separator style="-fx-background-color: #e2e8f0;"/>
+
+            <!-- Panel de información adicional -->
+            <VBox spacing="8" style="-fx-background-color: #f0f9ff; -fx-padding: 12; -fx-background-radius: 8; -fx-border-color: #bae6fd; -fx-border-width: 1; -fx-border-radius: 8;">
+                <Label text="ℹ️ Información" 
+                       style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #0369a1;"/>
+                
+                <VBox spacing="4">
+                    <Label text="• Al crear un usuario, asigne un rol apropiado" 
+                           style="-fx-font-size: 10px; -fx-text-fill: #475569; -fx-wrap-text: true;"/>
+                    <Label text="• Las contraseñas deben ser seguras" 
+                           style="-fx-font-size: 10px; -fx-text-fill: #475569; -fx-wrap-text: true;"/>
+                    <Label text="• Usuarios inactivos no pueden ingresar" 
+                           style="-fx-font-size: 10px; -fx-text-fill: #475569; -fx-wrap-text: true;"/>
+                </VBox>
             </VBox>
 
         </VBox>
+        </ScrollPane>
     </left>
 
     <!-- PANEL DERECHO: TABLA DE USUARIOS -->
     <center>
-        <VBox spacing="15" styleClass="info-panel" style="-fx-padding: 20;">
+        <VBox spacing="12" 
+              style="-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 16; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.12), 15, 0, 0, 3); -fx-border-color: #cbd5e1; -fx-border-width: 1.5; -fx-border-radius: 12;">
 
-            <HBox alignment="CENTER_LEFT" spacing="15">
-                <Label text="📋 Lista de Usuarios" 
-                       style="-fx-font-size: 14px; -fx-font-weight: bold;"
-                       HBox.hgrow="ALWAYS"/>
+            <!-- Header de la tabla -->
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <HBox alignment="CENTER_LEFT" spacing="10" HBox.hgrow="ALWAYS">
+                    <Label text="📋" style="-fx-font-size: 20px;"/>
+                    <VBox spacing="1">
+                        <Label text="Lista de Usuarios" 
+                               style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                        <Label text="Visualiza y gestiona usuarios" 
+                               style="-fx-font-size: 11px; -fx-text-fill: #64748b;"/>
+                    </VBox>
+                </HBox>
                 
                 <Button text="🔄 Actualizar" 
                         onAction="#handleRefrescar"
-                        style="-fx-background-color: transparent; -fx-text-fill: #667eea; -fx-cursor: HAND;"/>
+                        style="-fx-background-color: #e0e7ff; -fx-text-fill: #4f46e5; -fx-font-weight: 600; -fx-padding: 6 12; -fx-background-radius: 6; -fx-cursor: hand; -fx-font-size: 11px;"/>
             </HBox>
 
-            <TableView fx:id="tblUsuarios" VBox.vgrow="ALWAYS">
+            <Separator style="-fx-background-color: #e2e8f0;"/>
+
+            <!-- Tabla -->
+            <TableView fx:id="tblUsuarios" VBox.vgrow="ALWAYS"
+                       style="-fx-background-color: transparent; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 8;">
                 <columns>
-                    <TableColumn fx:id="colId" text="ID" prefWidth="50"/>
-                    <TableColumn fx:id="colUsername" text="Usuario" prefWidth="150"/>
-                    <TableColumn fx:id="colRol" text="Rol" prefWidth="120"/>
-                    <TableColumn fx:id="colActivo" text="Activo" prefWidth="80"/>
+                    <TableColumn fx:id="colId" text="ID" prefWidth="60" 
+                                 style="-fx-alignment: CENTER;"/>
+                    <TableColumn fx:id="colUsername" text="Usuario" prefWidth="160"/>
+                    <TableColumn fx:id="colRol" text="Rol" prefWidth="130"/>
+                    <TableColumn fx:id="colActivo" text="Estado" prefWidth="90" 
+                                 style="-fx-alignment: CENTER;"/>
                     <TableColumn fx:id="colFechaCreacion" text="Fecha Creación" prefWidth="150"/>
                 </columns>
             </TableView>
 
-            <HBox spacing="15" alignment="CENTER" 
-                  style="-fx-background-color: #f7fafc; -fx-padding: 10; -fx-background-radius: 6;">
+            <!-- Footer con totales -->
+            <HBox spacing="8" alignment="CENTER" 
+                  style="-fx-background-color: linear-gradient(to right, #f8fafc, #f1f5f9); -fx-padding: 10; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 8;">
                 
-                <Label text="Total de usuarios:" 
-                       style="-fx-font-size: 11px; -fx-text-fill: #718096;"/>
-                <Label fx:id="lblTotalUsuarios" 
-                       text="0" 
-                       style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #667eea;"/>
+                <HBox spacing="6" alignment="CENTER">
+                    <Label text="👥" style="-fx-font-size: 16px;"/>
+                    <Label text="Total:" 
+                           style="-fx-font-size: 12px; -fx-text-fill: #64748b; -fx-font-weight: 500;"/>
+                    <Label fx:id="lblTotalUsuarios" 
+                           text="0" 
+                           style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2563eb;"/>
+                </HBox>
             </HBox>
 
         </VBox>

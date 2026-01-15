@@ -5,9 +5,10 @@ import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import com.misgastos.MisGastosApplication;
-import com.misgastos.service.SesionRecordadaService;  // ✅ AGREGAR IMPORT
-import com.misgastos.service.UsuarioService;  // ✅ AGREGAR IMPORT
-import com.misgastos.model.Usuario;  // ✅ AGREGAR IMPORT
+import com.misgastos.service.SesionRecordadaService;
+import com.misgastos.service.UsuarioService;
+import com.misgastos.model.Usuario;
+import javafx.application.Platform;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -21,14 +22,27 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-import java.util.Optional;  // ✅ AGREGAR IMPORT
+import java.util.Optional;
 
 @Component
 public class DashboardController {
     
-    @FXML private Label lblUsuario;
+    // ✅ Labels del usuario en la top bar
+    @FXML private Label lblUsuario;  // Mantener por compatibilidad
+    @FXML private Label lblUsuarioNombre;
+    @FXML private Label lblUsuarioRol;
+    @FXML private Label lblAvatar;
+    
     @FXML private BorderPane mainBorderPane;
     @FXML private VBox sidebar;
+    
+    // Referencias a los botones del menú
+    @FXML private Button btnInicio;
+    @FXML private Button btnGastos;
+    @FXML private Button btnInformes;
+    @FXML private Button btnUsuarios;
+    @FXML private Button btnBilleteros;
+    @FXML private Button btnReportesBilleteros;
     
     @Autowired
     private ApplicationContext springContext;
@@ -37,20 +51,26 @@ public class DashboardController {
     private SesionRecordadaService sesionService;
     
     @Autowired
-    private UsuarioService usuarioService;  // ✅ AGREGAR
+    private UsuarioService usuarioService;
     
     private String username;
     private String rol;
+    private Button botonActivo = null;
     
     @FXML
     public void initialize() {
         System.out.println("📊 Dashboard inicializado");
         cargarVista("/fxml/inicio.fxml");
+        
+        if (btnInicio != null) {
+            establecerBotonActivo(btnInicio);
+        }
     }
     
     public void setUsuario(String username) {
         this.username = username;
         actualizarLabelUsuario();
+        actualizarAvatar();
     }
     
     public void setRol(String rol) {
@@ -63,7 +83,40 @@ public class DashboardController {
     private void actualizarLabelUsuario() {
         if (username != null && rol != null) {
             String rolMostrar = normalizarRol(rol);
-            lblUsuario.setText("Usuario: " + username + " (" + rolMostrar + ")");
+            
+            // ✅ NUEVO: Actualizar los labels individuales de la top bar
+            if (lblUsuarioNombre != null) {
+                lblUsuarioNombre.setText(username);
+            }
+            
+            if (lblUsuarioRol != null) {
+                lblUsuarioRol.setText(rolMostrar);
+            }
+            
+            // Mantener compatibilidad con el label original
+            if (lblUsuario != null) {
+                lblUsuario.setText("Usuario: " + username + " (" + rolMostrar + ")");
+            }
+        }
+    }
+    
+    // ✅ NUEVO: Método para actualizar el avatar con las iniciales del usuario
+    private void actualizarAvatar() {
+        if (lblAvatar != null && username != null && !username.isEmpty()) {
+            // Obtener la primera letra del username en mayúscula
+            String inicial = username.substring(0, 1).toUpperCase();
+            lblAvatar.setText(inicial);
+            
+            // Opcional: Cambiar color del avatar según el rol
+            if (esAdministrador()) {
+                lblAvatar.setStyle(
+                    "-fx-background-color: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);"
+                );
+            } else {
+                lblAvatar.setStyle(
+                    "-fx-background-color: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);"
+                );
+            }
         }
     }
     
@@ -73,7 +126,18 @@ public class DashboardController {
         return rol;
     }
     
-    // ✅ MÉTODOS AUXILIARES PARA VERIFICAR ROL
+    private void establecerBotonActivo(Button nuevoBotonActivo) {
+        if (botonActivo != null) {
+            botonActivo.getStyleClass().remove("active");
+        }
+        
+        if (nuevoBotonActivo != null && !nuevoBotonActivo.getStyleClass().contains("active")) {
+            nuevoBotonActivo.getStyleClass().add("active");
+        }
+        
+        botonActivo = nuevoBotonActivo;
+    }
+    
     private boolean esAdministrador() {
         return "ADMINISTRADOR".equals(rol) || "ADMIN".equals(rol);
     }
@@ -101,12 +165,14 @@ public class DashboardController {
     @FXML
     public void handleInicio() {
         System.out.println("Navegando a Inicio");
+        establecerBotonActivo(btnInicio);
         cargarVista("/fxml/inicio.fxml");
     }
     
     @FXML
     public void handleGastos() {
         System.out.println("Navegando a Gastos");
+        establecerBotonActivo(btnGastos);
         cargarVistaConSubMenu();
     }
 
@@ -118,13 +184,11 @@ public class DashboardController {
             HBox submenu = new HBox(15);
             submenu.setStyle("-fx-padding: 10;");
             
-            // ✅ Botón Ver Historial (TODOS los usuarios)
             Button btnListar = new Button("📋 Ver Historial");
             btnListar.getStyleClass().add("secondary-button");
             btnListar.setOnAction(e -> cargarVista("/fxml/lista-gastos.fxml"));
             submenu.getChildren().add(btnListar);
             
-            // ✅ CRÍTICO: Solo agregar "Buscar y Editar" si es ADMINISTRADOR
             if (esAdministrador()) {
                 System.out.println("✅ Mostrando 'Buscar y Editar' (es administrador)");
                 Button btnBuscarEditar = new Button("🔍 Buscar y Editar");
@@ -137,7 +201,6 @@ public class DashboardController {
             
             container.getChildren().add(submenu);
             
-            // Vista por defecto: Registro de gastos
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/registro-gasto.fxml"));
             loader.setControllerFactory(springContext::getBean);
             Parent vista = loader.load();
@@ -157,6 +220,7 @@ public class DashboardController {
             return;
         }
         System.out.println("Navegando a Informes");
+        establecerBotonActivo(btnInformes);
         cargarVista("/fxml/informes.fxml");
     }
     
@@ -167,49 +231,84 @@ public class DashboardController {
             return;
         }
         System.out.println("Navegando a Gestión de Usuarios");
+        establecerBotonActivo(btnUsuarios);
         cargarVista("/fxml/gestion-usuarios.fxml");
     }
     
     @FXML
     public void handleBilleteros() {
         System.out.println("Navegando a Gestión de Billeteros");
+        establecerBotonActivo(btnBilleteros);
         cargarVista("/fxml/gestion-billeteros.fxml");
     }    
     
     @FXML
+    public void handleReportesBilleteros() {
+        System.out.println("Navegando a Reportes de Billeteros");
+        establecerBotonActivo(btnReportesBilleteros);
+        cargarVista("/fxml/reportes-billeteros.fxml");
+    }
+    
+    @FXML
     private void handleCerrarSesion() {
         try {
-            // ✅ NUEVO: Eliminar sesión "Recordarme" si existe
+            // Obtener Stage actual ANTES de cualquier cambio
+            Stage stage = (Stage) mainBorderPane.getScene().getWindow();
+            
+            // Limpiar sesión "Recordarme"
             Optional<Usuario> usuarioOpt = usuarioService.buscarPorUsername(this.username);
             if (usuarioOpt.isPresent()) {
                 sesionService.eliminarSesion(usuarioOpt.get().getId());
                 System.out.println("🗑️ Sesión 'Recordarme' eliminada para: " + this.username);
             }
             
-            // Cargar vista de login
-            FXMLLoader loader = new FXMLLoader(
-                getClass().getResource("/fxml/login.fxml")
-            );
-            loader.setControllerFactory(
-                MisGastosApplication.getSpringContext()::getBean
-            );
-
-            Parent root = loader.load();
-            Scene scene = new Scene(root, 500, 700);
+            // Cargar vista de Login
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/login.fxml"));
+            loader.setControllerFactory(springContext::getBean);
             
-            String css = getClass().getResource("/css/styles.css").toExternalForm();
-            scene.getStylesheets().add(css);
-
-            Stage stage = (Stage) lblUsuario.getScene().getWindow();
+            Parent root = loader.load();
+            LoginController loginController = loader.getController();
+            
+            // Calcular tamaño del login (55% ancho, 80% alto)
+            javafx.geometry.Rectangle2D screenBounds = 
+                javafx.stage.Screen.getPrimary().getVisualBounds();
+            double loginWidth = screenBounds.getWidth() * 0.55;
+            double loginHeight = screenBounds.getHeight() * 0.80;
+            
+            // Crear nueva escena con estilos
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(
+                getClass().getResource("/css/styles.css").toExternalForm()
+            );
+            
+            // 🔥 SOLUCIÓN: Primero desmaximizar, LUEGO cambiar escena y tamaño
+            stage.setMaximized(false);
+            
+            // Cambiar escena
             stage.setTitle("ExpenseFlow - Login");
             stage.setScene(scene);
-            stage.setResizable(false);
-            stage.setWidth(500);
-            stage.setHeight(700);
-            stage.centerOnScreen();
-
+            
+            // Usar Platform.runLater para que el cambio de escena se complete primero
+            Platform.runLater(() -> {
+                // Establecer tamaño calculado del login
+                stage.setWidth(loginWidth);
+                stage.setHeight(loginHeight);
+                stage.centerOnScreen();
+                
+                System.out.println("✅ Login restaurado (" + 
+                                  (int)loginWidth + "x" + (int)loginHeight + ")");
+                
+                // Limpiar campos del login
+                if (loginController != null) {
+                    loginController.restaurarVentana();
+                }
+            });
+            
+            System.out.println("🚪 Sesión cerrada correctamente");
+            
         } catch (Exception e) {
             e.printStackTrace();
+            mostrarAlerta("Error Crítico", "No se pudo cerrar la sesión correctamente");
         }
     }
     
@@ -238,12 +337,12 @@ public class DashboardController {
         alert.setTitle(titulo);
         alert.setHeaderText(null);
         alert.setContentText(mensaje);
+        
+        // Aplicar estilos consistentes
+        alert.getDialogPane().getStylesheets().add(
+            getClass().getResource("/css/styles.css").toExternalForm()
+        );
+        
         alert.showAndWait();
     }
-    
-    @FXML
-    public void handleReportesBilleteros() {
-        System.out.println("Navegando a Reportes de Billeteros");
-        cargarVista("/fxml/reportes-billeteros.fxml");
-    }   
 }

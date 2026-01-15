@@ -6,6 +6,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.Region?>
 
 <BorderPane fx:id="mainBorderPane" 
             prefWidth="1200"
@@ -15,23 +16,75 @@
             fx:controller="com.misgastos.controller.DashboardController">
 
     <top>
-        <HBox styleClass="top-bar" spacing="20" alignment="CENTER_LEFT">
+        <!-- OPCIÓN 1: Top Bar Oscura Moderna -->
+        <HBox styleClass="top-bar" spacing="15" alignment="CENTER_LEFT">
+            
+            <!-- Logo/Título -->
             <Label text="💰 ExpenseFlow" styleClass="title"/>
-            <Label HBox.hgrow="ALWAYS"/>
-            <Label fx:id="lblUsuario"/>
-            <Button text="Cerrar Sesión" onAction="#handleCerrarSesion"/>
+            
+            <!-- Espaciador flexible -->
+            <Region HBox.hgrow="ALWAYS"/>
+            
+            <!-- Información del usuario con mejor diseño -->
+            <HBox styleClass="user-info-container" spacing="10" alignment="CENTER">
+                <!-- Avatar del usuario (iniciales) -->
+                <Label fx:id="lblAvatar" styleClass="user-avatar" text="A"/>
+                
+                <!-- Contenedor de texto -->
+                <VBox spacing="2" alignment="CENTER_LEFT">
+                    <Label fx:id="lblUsuarioNombre" styleClass="user-name" text="admin"/>
+                    <Label fx:id="lblUsuarioRol" styleClass="user-role" text="ADMINISTRADOR"/>
+                </VBox>
+            </HBox>
+            
+            <!-- Separador visual -->
+            <Region styleClass="top-bar-separator" prefWidth="1" prefHeight="30"/>
+            
+            <!-- Botón de cerrar sesión mejorado -->
+            <Button text="🚪 Cerrar Sesión" onAction="#handleCerrarSesion"/>
+            
         </HBox>
     </top>
 
     <left>
         <VBox fx:id="sidebar" styleClass="sidebar" spacing="10">
             <Label text="MENÚ PRINCIPAL" styleClass="sidebar-title"/>
-            <Button text="🏠 Inicio" styleClass="menu-button" onAction="#handleInicio" maxWidth="Infinity"/>
-            <Button text="💳 Mis Gastos" styleClass="menu-button" onAction="#handleGastos" maxWidth="Infinity"/>
-            <Button text="📊 Informes" styleClass="menu-button" onAction="#handleInformes" maxWidth="Infinity"/>
-            <Button text="👥 Usuarios" styleClass="menu-button" onAction="#handleUsuarios" maxWidth="Infinity"/>
-        	<Button text="💼 Billeteros" styleClass="menu-button" onAction="#handleBilleteros" maxWidth="Infinity"/>
-        	<Button text="📋 Reportes Billeteros" styleClass="menu-button" onAction="#handleReportesBilleteros" maxWidth="Infinity"/>
+            
+            <Button fx:id="btnInicio" 
+                    text="🏠 Inicio" 
+                    styleClass="menu-button" 
+                    onAction="#handleInicio" 
+                    maxWidth="Infinity"/>
+            
+            <Button fx:id="btnGastos" 
+                    text="💳 Mis Gastos" 
+                    styleClass="menu-button" 
+                    onAction="#handleGastos" 
+                    maxWidth="Infinity"/>
+            
+            <Button fx:id="btnInformes" 
+                    text="📊 Informes" 
+                    styleClass="menu-button" 
+                    onAction="#handleInformes" 
+                    maxWidth="Infinity"/>
+            
+            <Button fx:id="btnUsuarios" 
+                    text="👥 Usuarios" 
+                    styleClass="menu-button" 
+                    onAction="#handleUsuarios" 
+                    maxWidth="Infinity"/>
+            
+            <Button fx:id="btnBilleteros" 
+                    text="💼 Billeteros" 
+                    styleClass="menu-button" 
+                    onAction="#handleBilleteros" 
+                    maxWidth="Infinity"/>
+            
+            <Button fx:id="btnReportesBilleteros" 
+                    text="📋 Reportes Billeteros" 
+                    styleClass="menu-button" 
+                    onAction="#handleReportesBilleteros" 
+                    maxWidth="Infinity"/>
         </VBox>
     </left>
 

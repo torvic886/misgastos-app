@@ -3,13 +3,17 @@ package com.misgastos.controller;
 import com.misgastos.model.Usuario;
 import com.misgastos.service.SesionRecordadaService;
 import com.misgastos.service.UsuarioService;
-import javafx.application.Platform;  // ✅ AGREGAR
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -30,6 +34,9 @@ public class LoginController implements Initializable {
     @FXML
     private CheckBox checkRecordarme;
     
+    @FXML
+    private Button btnLogin;
+    
     @Autowired
     private UsuarioService usuarioService;
     
@@ -41,8 +48,95 @@ public class LoginController implements Initializable {
     
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        // ✅ CORRECCIÓN: Usar Platform.runLater para esperar a que la Scene esté lista
-        Platform.runLater(this::verificarSesionGuardada);
+        Platform.runLater(() -> {
+            configurarEventosEnter();
+            configurarNavegacionTab();
+            configurarVentanaLogin(); // 🔥 NUEVO: Configurar ventana de login
+            verificarSesionGuardada();
+            txtUsername.requestFocus();
+        });
+    }
+    
+    /**
+     * 🔥 NUEVO: Configura el tamaño de la ventana de login
+     */
+    private void configurarVentanaLogin() {
+        try {
+            // Usar Platform.runLater para asegurar que el Stage esté completamente inicializado
+            Platform.runLater(() -> {
+                Stage stage = obtenerStageActual();
+                if (stage != null) {
+                    // Asegurar que NO esté maximizado
+                    if (stage.isMaximized()) {
+                        stage.setMaximized(false);
+                    }
+                    
+                    // Calcular tamaño más grande (75% ancho, 90% alto)
+                    Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
+                    double loginWidth = screenBounds.getWidth() * 0.75;
+                    double loginHeight = screenBounds.getHeight() * 0.90;
+                    
+                    // Establecer tamaño del login
+                    stage.setWidth(loginWidth);
+                    stage.setHeight(loginHeight);
+                    stage.centerOnScreen();
+                    
+                    System.out.println("✅ Ventana de login configurada (" + 
+                                      (int)loginWidth + "x" + (int)loginHeight + ")");
+                }
+            });
+        } catch (Exception e) {
+            System.err.println("⚠️ No se pudo configurar ventana de login: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Configura Enter para login rápido
+     */
+    private void configurarEventosEnter() {
+        txtUsername.setOnKeyPressed(this::handleKeyPressed);
+        txtPassword.setOnKeyPressed(this::handleKeyPressed);
+        checkRecordarme.setOnKeyPressed(this::handleKeyPressed);
+    }
+    
+    /**
+     * Configura navegación con Tab
+     */
+    private void configurarNavegacionTab() {
+        txtUsername.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.TAB) {
+                event.consume();
+                txtPassword.requestFocus();
+            } else if (event.getCode() == KeyCode.ENTER) {
+                handleLogin();
+            }
+        });
+        
+        txtPassword.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.TAB) {
+                event.consume();
+                checkRecordarme.requestFocus();
+            } else if (event.getCode() == KeyCode.ENTER) {
+                handleLogin();
+            }
+        });
+        
+        checkRecordarme.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.TAB) {
+                event.consume();
+                if (btnLogin != null) {
+                    btnLogin.requestFocus();
+                }
+            } else if (event.getCode() == KeyCode.ENTER) {
+                handleLogin();
+            }
+        });
+    }
+    
+    private void handleKeyPressed(KeyEvent event) {
+        if (event.getCode() == KeyCode.ENTER) {
+            handleLogin();
+        }
     }
     
     /**
@@ -53,8 +147,6 @@ public class LoginController implements Initializable {
         
         if (usuarioIdOpt.isPresent()) {
             Long usuarioId = usuarioIdOpt.get();
-            
-            // Buscar usuario por ID
             Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(usuarioId);
             
             if (usuarioOpt.isPresent()) {
@@ -67,7 +159,7 @@ public class LoginController implements Initializable {
     
     @FXML
     public void handleLogin() {
-        String username = txtUsername.getText();
+        String username = txtUsername.getText().trim();
         String password = txtPassword.getText();
         
         if (username.isEmpty() || password.isEmpty()) {
@@ -76,18 +168,20 @@ public class LoginController implements Initializable {
         }
         
         if (usuarioService.autenticar(username, password)) {
-            // Obtener usuario completo
             Usuario usuario = usuarioService.buscarPorUsername(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
             
-            // ✅ Si "Recordarme" está activado, crear sesión
             if (checkRecordarme.isSelected()) {
                 sesionService.crearSesionRecordada(usuario.getId());
             }
             
             abrirDashboard(usuario.getUsername(), usuario.getRol());
         } else {
-            mostrarAlerta("Error", "Usuario o contraseña incorrectos", Alert.AlertType.ERROR);
+            mostrarAlerta("Error de Autenticación", 
+                         "Usuario o contraseña incorrectos. Por favor intente nuevamente.", 
+                         Alert.AlertType.ERROR);
+            txtPassword.clear();
+            txtPassword.requestFocus();
         }
     }
     
@@ -102,46 +196,104 @@ public class LoginController implements Initializable {
             controller.setUsuario(username);
             controller.setRol(rol);
             
-            // ✅ CORRECCIÓN: Obtener Stage de forma segura
-            Stage stage = null;
-            
-            // Intentar obtener desde txtUsername si ya está montado
-            if (txtUsername.getScene() != null) {
-                stage = (Stage) txtUsername.getScene().getWindow();
-            } 
-            // Si no, buscar el Stage activo
-            else {
-                stage = Stage.getWindows().stream()
-                    .filter(window -> window instanceof Stage)
-                    .map(window -> (Stage) window)
-                    .filter(Stage::isShowing)
-                    .findFirst()
-                    .orElse(null);
-            }
-            
-            // Si no se encuentra ningún Stage, crear uno nuevo
-            if (stage == null) {
-                stage = new Stage();
-            }
+            Stage stage = obtenerStageActual();
             
             Scene scene = new Scene(root);
             scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
             
+            // 🔥 CONFIGURACIÓN CORRECTA PARA DASHBOARD
             stage.setScene(scene);
             stage.setTitle("ExpenseFlow - Dashboard");
-            stage.setWidth(1200);
-            stage.setHeight(700);
-            stage.setResizable(true);
+            
+            // Establecer tamaños mínimos para el dashboard
+            stage.setMinWidth(1200);
+            stage.setMinHeight(700);
+            
+            // 🔥 NUEVO: Listener para controlar la desmaximización
+            stage.maximizedProperty().addListener((obs, wasMaximized, isNowMaximized) -> {
+                if (!isNowMaximized) {
+                    // Cuando se desmaximiza, establecer un tamaño más grande
+                    Platform.runLater(() -> {
+                        // Obtener dimensiones de la pantalla
+                        javafx.geometry.Rectangle2D screenBounds = 
+                            javafx.stage.Screen.getPrimary().getVisualBounds();
+                        
+                        // Usar 85% del ancho y alto de la pantalla
+                        double width = screenBounds.getWidth() * 0.85;
+                        double height = screenBounds.getHeight() * 0.85;
+                        
+                        stage.setWidth(width);
+                        stage.setHeight(height);
+                        stage.centerOnScreen();
+                        System.out.println("✅ Ventana restaurada: " + (int)width + "x" + (int)height);
+                    });
+                }
+            });
+            
+            // Maximizar después de configurar los límites
             stage.setMaximized(true);
-            stage.centerOnScreen();
-            stage.show();  // ✅ AGREGAR show() por si es un Stage nuevo
+            
+            if (!stage.isShowing()) {
+                stage.show();
+            }
             
             System.out.println("✅ Dashboard abierto para: " + username + " | Rol: " + rol);
             
         } catch (Exception e) {
             e.printStackTrace();
-            mostrarAlerta("Error", "No se pudo abrir el dashboard", Alert.AlertType.ERROR);
+            mostrarAlerta("Error Crítico", 
+                         "No se pudo abrir el dashboard. Contacte al administrador.", 
+                         Alert.AlertType.ERROR);
         }
+    }
+    
+    /**
+     * Obtiene el Stage actual de forma robusta
+     */
+    private Stage obtenerStageActual() {
+        // Prioridad 1: Desde txtUsername
+        if (txtUsername != null && txtUsername.getScene() != null && txtUsername.getScene().getWindow() != null) {
+            return (Stage) txtUsername.getScene().getWindow();
+        }
+        
+        // Prioridad 2: Desde txtPassword
+        if (txtPassword != null && txtPassword.getScene() != null && txtPassword.getScene().getWindow() != null) {
+            return (Stage) txtPassword.getScene().getWindow();
+        }
+        
+        // Prioridad 3: Buscar Stage activo
+        Optional<Stage> stageOpt = Stage.getWindows().stream()
+            .filter(window -> window instanceof Stage)
+            .map(window -> (Stage) window)
+            .filter(Stage::isShowing)
+            .findFirst();
+        
+        if (stageOpt.isPresent()) {
+            return stageOpt.get();
+        }
+        
+        // Si no hay Stage, crear uno nuevo
+        Stage newStage = new Stage();
+        return newStage;
+    }
+    
+    /**
+     * 🔥 Método público para restaurar ventana al cerrar sesión
+     */
+    public void restaurarVentana() {
+        Platform.runLater(() -> {
+            try {
+                // Solo limpiar campos, el tamaño ya fue ajustado por DashboardController
+                txtUsername.clear();
+                txtPassword.clear();
+                checkRecordarme.setSelected(false);
+                txtUsername.requestFocus();
+                
+                System.out.println("✅ Campos de login limpiados");
+            } catch (Exception e) {
+                System.err.println("⚠️ Error al limpiar campos: " + e.getMessage());
+            }
+        });
     }
     
     private void mostrarAlerta(String titulo, String mensaje, Alert.AlertType tipo) {
@@ -149,6 +301,12 @@ public class LoginController implements Initializable {
         alert.setTitle(titulo);
         alert.setHeaderText(null);
         alert.setContentText(mensaje);
+        
+        DialogPane dialogPane = alert.getDialogPane();
+        dialogPane.getStylesheets().add(
+            getClass().getResource("/css/styles.css").toExternalForm()
+        );
+        
         alert.showAndWait();
     }
 }

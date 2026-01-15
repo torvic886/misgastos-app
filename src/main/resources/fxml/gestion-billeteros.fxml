@@ -38,7 +38,7 @@
                 </padding>
                 <Label text="Buscar:"/>
                 <TextField fx:id="txtBuscar" promptText="Buscar en la tabla..." 
-                          prefWidth="200"/>
+                          prefWidth="200" styleClass="search-field"/>
                 
                 <Region prefWidth="20"/>
                 

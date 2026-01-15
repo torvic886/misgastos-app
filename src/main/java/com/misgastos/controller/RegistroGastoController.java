@@ -1,7 +1,6 @@
 package com.misgastos.controller;
 
 import javafx.application.Platform;
-
 import javafx.collections.FXCollections;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
@@ -20,14 +19,15 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.control.cell.PropertyValueFactory;
 import java.text.NumberFormat;
 import java.util.Locale;
-
 
 @Component
 public class RegistroGastoController {
@@ -54,8 +54,12 @@ public class RegistroGastoController {
     
     private Long usuarioId = 1L;
     
-    // ✅ NUEVO: Flag para evitar abrir el popup múltiples veces
+    // ✅ Flags de control
     private boolean productoNuevoYaConfigurado = false;
+    private String ultimoProductoAutocompletado = null;
+    private boolean formateandoMoneda = false;
+    private boolean ignorarCambioTexto = false;
+    private Set<String> productosYaUsados = new HashSet<>();
     
     @FXML
     public void initialize() {
@@ -64,8 +68,10 @@ public class RegistroGastoController {
         configurarGuardarConEnter();
         configurarTabla();
         cargarUltimosGastos();
+        cargarUltimosGastos();
         configurarValidacionCedula();
         configurarCampoCedula();
+        configurarFormatoMoneda(); // ✅ NUEVO
         
         Platform.runLater(() -> cmbProducto.requestFocus());
     }
@@ -77,12 +83,24 @@ public class RegistroGastoController {
     
     private void calcularTotal() {
         try {
+            // Obtener cantidad
             int cantidad = Integer.parseInt(txtCantidad.getText());
-            BigDecimal valorUnit = new BigDecimal(txtValorUnitario.getText());
+            
+            // Obtener valor unitario (quitar formato si existe)
+            String valorTexto = txtValorUnitario.getText().replaceAll("[^0-9]", "");
+            if (valorTexto.isEmpty()) {
+                txtValorTotal.setText("0.00");
+                return;
+            }
+            
+            BigDecimal valorUnit = new BigDecimal(valorTexto);
             BigDecimal total = valorUnit.multiply(BigDecimal.valueOf(cantidad));
-            txtValorTotal.setText(total.toString());
+            
+            // Formatear el total
+            NumberFormat formatoPeso = NumberFormat.getInstance(new Locale("es", "CO"));
+            txtValorTotal.setText("$ " + formatoPeso.format(total));
         } catch (Exception e) {
-            txtValorTotal.setText("0.00");
+            txtValorTotal.setText("$ 0");
         }
     }
     
@@ -90,23 +108,58 @@ public class RegistroGastoController {
         cmbProducto.setEditable(true);
         TextField editor = cmbProducto.getEditor();
         
+        // ✅ EventFilter para capturar Enter ANTES que el ComboBox lo procese
+        cmbProducto.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                String textoActual = editor.getText();
+                // Si hay texto, avanzar al siguiente campo
+                if (textoActual != null && !textoActual.trim().isEmpty()) {
+                    event.consume(); // Consumir el evento para que no lo procese el ComboBox
+                    Platform.runLater(() -> {
+                        if (txtCedula.isVisible()) {
+                            txtCedula.requestFocus();
+                        } else {
+                            txtCantidad.requestFocus();
+                        }
+                    });
+                }
+            }
+        });
+        
         editor.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.DOWN) {
                 cmbProducto.show();
             }
         });
         
+        // ✅ Este listener se dispara cuando el usuario ESCRIBE
         editor.textProperty().addListener((obs, oldText, newText) -> {
-            // ✅ NUEVO: Resetear flag cuando se cambia el producto
-            productoNuevoYaConfigurado = false;
+            // ✅ Ignorar cambios programáticos
+            if (ignorarCambioTexto) {
+                return;
+            }
+            
+            System.out.println("🔍 textProperty cambió: '" + oldText + "' -> '" + newText + "'");
+            
+            // ✅ Si el texto cambió y es diferente al último autocompletado, resetear
+            if (newText == null || !newText.equals(ultimoProductoAutocompletado)) {
+                productoNuevoYaConfigurado = false;
+                System.out.println("   🔄 Flag reseteado (producto diferente)");
+            }
             
             if (newText == null || newText.isBlank()) {
-                cmbProducto.hide();
+                // ✅ Cerrar dropdown, limpiar selección Y LUEGO limpiar items
+                Platform.runLater(() -> {
+                    cmbProducto.hide();
+                    cmbProducto.getSelectionModel().clearSelection();
+                    cmbProducto.getItems().clear();
+                });
                 return;
             }
             
             List<String> productos = gastoService.buscarProductos(newText);
             if (productos.isEmpty()) {
+                // ✅ NO limpiar el ComboBox aquí, solo cerrar el dropdown
                 cmbProducto.hide();
                 return;
             }
@@ -115,11 +168,15 @@ public class RegistroGastoController {
             cmbProducto.show();
         });
         
+        // ✅ Este listener se dispara cuando se SELECCIONA del dropdown
         cmbProducto.valueProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null && !newVal.isBlank()) {
                 System.out.println("✅ Producto seleccionado del autocomplete: '" + newVal + "'");
+                
+                // ✅ SIEMPRE autocompletar, NUNCA saltar automáticamente
                 autocompletarDatosPorProducto(newVal);
-                // ✅ El focus ya se maneja dentro de autocompletarDatosPorProducto
+                productosYaUsados.add(newVal.trim());
+                ultimoProductoAutocompletado = newVal;
             }
         });
     }
@@ -148,30 +205,27 @@ public class RegistroGastoController {
                 calcularTotal();
 
                 Platform.runLater(() -> {
+                    ignorarCambioTexto = true;
                     cmbProducto.setValue(textoProducto);
                     cmbProducto.getEditor().setText(textoProducto);
                     cmbProducto.getEditor().positionCaret(textoProducto.length());
+                    ignorarCambioTexto = false;
                     
-                    // ✅ NUEVO: Ir a Cédula si está visible, sino a Cantidad
-                    if (txtCedula.isVisible()) {
-                        txtCedula.requestFocus();
-                        System.out.println("   → Foco en Cédula");
-                    } else {
-                        txtCantidad.requestFocus();
-                        System.out.println("   → Foco en Cantidad");
-                    }
+                    // ✅ SIEMPRE mantener foco en producto
+                    cmbProducto.requestFocus();
+                    System.out.println("   → Foco mantenido en Producto");
                 });
 
                 productoNuevoYaConfigurado = true;
             },
             () -> {
                 System.out.println("   ⚠️ No se encontró gasto anterior para este producto");
+                productoNuevoYaConfigurado = false;
             }
         );
     }
     
     private void configurarGuardarConEnter() {
-        // ✅ NUEVO: Enter en Cédula va a Cantidad
         txtCedula.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.ENTER) {
                 txtCantidad.requestFocus();
@@ -229,6 +283,8 @@ public class RegistroGastoController {
                     cmbSubcategoria.setValue(resultado.subcategoria);
                     
                     productoNuevoYaConfigurado = true;
+                    ultimoProductoAutocompletado = producto;
+                    productosYaUsados.add(producto); // ✅ Agregar al historial
                     
                     System.out.println("✅ Popup completado:");
                     System.out.println("   → Categoría: " + resultado.categoria.getNombre());
@@ -276,25 +332,24 @@ public class RegistroGastoController {
                 return;
             }
             
-            // ============================================================
-            // ✅ AGREGAR ESTAS LÍNEAS AQUÍ (después de las validaciones)
-            // ============================================================
             String cedula = null;
             if (txtCedula.isVisible() && txtCedula.getText() != null && !txtCedula.getText().trim().isEmpty()) {
                 cedula = txtCedula.getText().trim();
                 System.out.println("📋 Cédula ingresada: " + cedula);
             }
             
-            // ✅ MODIFICAR ESTA LLAMADA (agregar cedula al final)
+            // ✅ Limpiar formato de moneda antes de guardar
+            String valorUnitarioLimpio = txtValorUnitario.getText().replaceAll("[^0-9]", "");
+            
             gastoService.registrarGasto(
                 usuarioId,
                 cmbCategoria.getValue().getId(),
                 cmbSubcategoria.getValue().getId(),
                 producto,
                 Integer.parseInt(txtCantidad.getText().trim()),
-                new BigDecimal(txtValorUnitario.getText().trim()),
+                new BigDecimal(valorUnitarioLimpio), // ✅ Usar valor limpio
                 txtNotas.getText(),
-                cedula  // ✅ Este es el nuevo parámetro
+                cedula
             );
             
             System.out.println("✅ Gasto guardado exitosamente");
@@ -320,8 +375,9 @@ public class RegistroGastoController {
     }
     
     private void limpiarFormulario() {
-        // ✅ Resetear el flag
         productoNuevoYaConfigurado = false;
+        // ✅ NO resetear productosYaUsados ni ultimoProductoAutocompletado
+        // Esto permite que el historial se mantenga durante toda la sesión
         
         cmbProducto.getEditor().clear();
         cmbProducto.setValue(null);
@@ -331,12 +387,15 @@ public class RegistroGastoController {
         cmbSubcategoria.setValue(null);
         cmbSubcategoria.getItems().clear();
         
-        txtCantidad.clear(); // ✅ CAMBIADO: Dejar vacío en lugar de "1"
+        txtCantidad.clear();
         txtValorUnitario.clear();
-        txtValorTotal.setText("0.00");
+        txtValorTotal.setText("$ 0");
         txtNotas.clear();
+        txtCedula.clear();
         
         Platform.runLater(() -> cmbProducto.requestFocus());
+        
+        System.out.println("🧹 Formulario limpiado (historial de productos preservado)");
     }
     
     private void cargarCategoriasIniciales() {
@@ -367,7 +426,6 @@ public class RegistroGastoController {
         colProducto.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getProducto()));
         colCantidad.setCellValueFactory(new PropertyValueFactory<>("cantidad"));
         
-        // ✅ FORMATO PESO COLOMBIANO
         colValorUnitario.setCellValueFactory(new PropertyValueFactory<>("valorUnitario"));
         colValorUnitario.setCellFactory(col -> new TableCell<Gasto, BigDecimal>() {
             @Override
@@ -388,8 +446,55 @@ public class RegistroGastoController {
     }
     
     private void cargarUltimosGastos() {
-        List<Gasto> gastos = gastoService.obtenerUltimosGastos(usuarioId, 10);
-        tblUltimosGastos.setItems(FXCollections.observableArrayList(gastos));
+        System.out.println("\n═══════════════════════════════════════");
+        System.out.println("🔍 CARGANDO ÚLTIMOS GASTOS");
+        System.out.println("═══════════════════════════════════════");
+        System.out.println("👤 Usuario ID: " + usuarioId);
+        
+        try {
+            List<Gasto> gastos = gastoService.obtenerUltimosGastos(usuarioId, 10);
+            
+            System.out.println("📊 Total de gastos obtenidos: " + gastos.size());
+            System.out.println("───────────────────────────────────────");
+            
+            if (gastos.isEmpty()) {
+                System.out.println("⚠️  NO HAY GASTOS REGISTRADOS");
+                System.out.println("    Verifica que:");
+                System.out.println("    1. Existen registros en la tabla 'gastos'");
+                System.out.println("    2. El usuario_id = " + usuarioId + " tiene gastos");
+                System.out.println("    3. La consulta SQL está funcionando");
+            } else {
+                System.out.println("✅ GASTOS ENCONTRADOS:");
+                int contador = 1;
+                for (Gasto g : gastos) {
+                    System.out.println(String.format(
+                        "  %d. ID: %-3d | %s | %-20s | Cant: %-2d | $%s",
+                        contador++,
+                        g.getId(),
+                        g.getFecha(),
+                        g.getProducto(),
+                        g.getCantidad(),
+                        g.getValorTotal()
+                    ));
+                }
+            }
+            
+            System.out.println("───────────────────────────────────────");
+            System.out.println("🔄 Actualizando tabla en UI...");
+            
+            tblUltimosGastos.setItems(FXCollections.observableArrayList(gastos));
+            
+            System.out.println("✅ Tabla actualizada correctamente");
+            System.out.println("   Items en tabla: " + tblUltimosGastos.getItems().size());
+            
+        } catch (Exception e) {
+            System.err.println("❌ ERROR AL CARGAR GASTOS:");
+            System.err.println("   Mensaje: " + e.getMessage());
+            System.err.println("   Tipo: " + e.getClass().getName());
+            e.printStackTrace();
+        }
+        
+        System.out.println("═══════════════════════════════════════\n");
     }
     
     private SeleccionProductoNueva mostrarPopupProductoNuevo(String producto) {
@@ -576,6 +681,129 @@ public class RegistroGastoController {
         return producto;
     }
     
+    private void configurarValidacionCedula() {
+        txtCedula.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && !newVal.matches("\\d*")) {
+                txtCedula.setText(oldVal);
+            }
+        });
+    }
+    
+    // ✅ NUEVO: Configurar formato de moneda en tiempo real
+    private void configurarFormatoMoneda() {
+        NumberFormat formatoPeso = NumberFormat.getInstance(new Locale("es", "CO"));
+        formatoPeso.setGroupingUsed(true);
+        
+        // Formateador en tiempo real para Valor Unitario
+        txtValorUnitario.textProperty().addListener((obs, oldVal, newVal) -> {
+            // Evitar loop infinito
+            if (formateandoMoneda) {
+                return;
+            }
+            
+            if (newVal == null || newVal.isEmpty()) {
+                return;
+            }
+            
+            // Quitar todo excepto números
+            String soloNumeros = newVal.replaceAll("[^0-9]", "");
+            
+            if (soloNumeros.isEmpty()) {
+                formateandoMoneda = true;
+                txtValorUnitario.setText("");
+                formateandoMoneda = false;
+                return;
+            }
+            
+            // Formatear el número
+            try {
+                long numero = Long.parseLong(soloNumeros);
+                String formateado = "$ " + formatoPeso.format(numero);
+                
+                // Solo actualizar si el formato es diferente
+                if (!newVal.equals(formateado)) {
+                    formateandoMoneda = true;
+                    
+                    // Guardar posición del cursor relativa al final
+                    int posicionCursor = txtValorUnitario.getCaretPosition();
+                    int distanciaDelFinal = newVal.length() - posicionCursor;
+                    
+                    // Actualizar texto
+                    txtValorUnitario.setText(formateado);
+                    
+                    // Restaurar cursor
+                    int nuevaPosicion = formateado.length() - distanciaDelFinal;
+                    nuevaPosicion = Math.max(2, Math.min(nuevaPosicion, formateado.length())); // Mínimo después de "$ "
+                    
+                    txtValorUnitario.positionCaret(nuevaPosicion);
+                    
+                    formateandoMoneda = false;
+                }
+                
+            } catch (NumberFormatException e) {
+                // Si hay error, no hacer nada
+                System.err.println("Error formateando: " + e.getMessage());
+            }
+        });
+        
+        System.out.println("✅ Formato de moneda configurado");
+    }
+    
+    // ✅ NUEVO: Contar separadores de miles en una cadena
+    private int contarSeparadores(String texto, int hastaIndex) {
+        if (texto == null || texto.isEmpty()) {
+            return 0;
+        }
+        
+        int count = 0;
+        int limite = Math.min(hastaIndex, texto.length());
+        
+        for (int i = 0; i < limite; i++) {
+            char c = texto.charAt(i);
+            if (c == '.' || c == ',') {
+                count++;
+            }
+        }
+        
+        return count;
+    }
+
+    private void configurarCampoCedula() {
+        cmbCategoria.valueProperty().addListener((obs, oldVal, newVal) -> {
+            verificarMostrarCampoCedula();
+        });
+        
+        cmbSubcategoria.valueProperty().addListener((obs, oldVal, newVal) -> {
+            verificarMostrarCampoCedula();
+        });
+    }
+
+    private void verificarMostrarCampoCedula() {
+        boolean mostrar = false;
+        
+        Categoria categoria = cmbCategoria.getValue();
+        Subcategoria subcategoria = cmbSubcategoria.getValue();
+        
+        if (categoria != null && subcategoria != null) {
+            String nombreCategoria = categoria.getNombre();
+            String nombreSubcategoria = subcategoria.getNombre();
+            
+            mostrar = nombreCategoria.equalsIgnoreCase("Beneficios Clientes") 
+                      && nombreSubcategoria.toLowerCase().contains("bono");
+        }
+        
+        lblCedula.setVisible(mostrar);
+        lblCedula.setManaged(mostrar);
+        txtCedula.setVisible(mostrar);
+        txtCedula.setManaged(mostrar);
+        
+        if (!mostrar) {
+            txtCedula.clear();
+        }
+        
+        System.out.println("🔍 Campo cedula: " + (mostrar ? "VISIBLE" : "OCULTO"));
+    }
+    
     private static class SeleccionProductoNueva {
         final Categoria categoria;
         final Subcategoria subcategoria;
@@ -585,57 +813,4 @@ public class RegistroGastoController {
             this.subcategoria = s;
         }
     }
-    
- // ✅ NUEVO: Validar que solo se ingresen números en cédula
-    private void configurarValidacionCedula() {
-        txtCedula.textProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null && !newVal.matches("\\d*")) {
-                txtCedula.setText(oldVal);
-            }
-        });
-    }
-
-    // ✅ NUEVO: Mostrar/ocultar campo de cédula según categoría y subcategoría
-    private void configurarCampoCedula() {
-        // Listener cuando cambia la categoría
-        cmbCategoria.valueProperty().addListener((obs, oldVal, newVal) -> {
-            verificarMostrarCampoCedula();
-        });
-        
-        // Listener cuando cambia la subcategoría
-        cmbSubcategoria.valueProperty().addListener((obs, oldVal, newVal) -> {
-            verificarMostrarCampoCedula();
-        });
-    }
-
-    // ✅ NUEVO: Verificar si se debe mostrar el campo de cédula
-    private void verificarMostrarCampoCedula() {
-        boolean mostrar = false;
-        
-        Categoria categoria = cmbCategoria.getValue();
-        Subcategoria subcategoria = cmbSubcategoria.getValue();
-        
-        if (categoria != null && subcategoria != null) {
-            // Verificar si es "Beneficios Clientes" Y la subcategoría contiene "Bono"
-            String nombreCategoria = categoria.getNombre();
-            String nombreSubcategoria = subcategoria.getNombre();
-            
-            mostrar = nombreCategoria.equalsIgnoreCase("Beneficios Clientes") 
-                      && nombreSubcategoria.toLowerCase().contains("bono");
-        }
-        
-        // Mostrar u ocultar el campo
-        lblCedula.setVisible(mostrar);
-        lblCedula.setManaged(mostrar);
-        txtCedula.setVisible(mostrar);
-        txtCedula.setManaged(mostrar);
-        
-        // Limpiar el campo si se oculta
-        if (!mostrar) {
-            txtCedula.clear();
-        }
-        
-        System.out.println("🔍 Campo cedula: " + (mostrar ? "VISIBLE" : "OCULTO"));
-    }
-    
 }

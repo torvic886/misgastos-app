@@ -5,91 +5,134 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.Circle?>
 
-<StackPane prefHeight="700.0"
-           prefWidth="500.0"
-		   maxHeight="Infinity"
-		   maxWidth="Infinity"           
-           styleClass="login-root"
+<!-- StackPane que se adapta a cualquier tamaño de ventana -->
+<StackPane styleClass="login-root"
            xmlns="http://javafx.com/javafx/17"
            xmlns:fx="http://javafx.com/fxml/1"
            fx:controller="com.misgastos.controller.LoginController">
 
     <children>
-        <VBox alignment="TOP_CENTER"
-              maxHeight="650.0"
-              maxWidth="440.0"
-              spacing="30.0"
+        <!-- Card MÁS COMPACTO pero ventana grande -->
+        <VBox alignment="CENTER"
+              prefHeight="540.0"
+              prefWidth="400.0"
+              maxHeight="540.0"
+              maxWidth="400.0"
+              minHeight="500.0"
+              minWidth="360.0"
+              spacing="14.0"
               styleClass="login-card">
 
-            <!-- HEADER -->
-            <VBox alignment="CENTER"
-                  spacing="15.0"
-                  styleClass="login-header">
-
-                <StackPane prefHeight="80" prefWidth="80">
-                    <Circle radius="40" styleClass="login-icon-bg"/>
-                    <Label text="💎" styleClass="login-icon"/>
+            <!-- HEADER MÁS COMPACTO -->
+            <VBox alignment="CENTER" spacing="10.0" styleClass="login-header">
+                
+                <!-- Icono más pequeño -->
+                <StackPane prefHeight="70" prefWidth="70">
+                    <Circle radius="35" styleClass="login-icon-bg"/>
+                    <Label text="💎" styleClass="login-icon" style="-fx-font-size: 32px;"/>
                 </StackPane>
 
-                <Label text="ExpenseFlow" styleClass="login-title"/>
-                <Label text="Control Inteligente de Gastos Personales"
-                       styleClass="login-subtitle"/>
+                <!-- Título más pequeño -->
+                <Label text="ExpenseFlow" styleClass="login-title" style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
+                
+                <!-- Subtítulo más pequeño -->
+                <Label text="Control Inteligente de Gastos"
+                       styleClass="login-subtitle"
+                       style="-fx-font-size: 12px;"
+                       textAlignment="CENTER"
+                       maxWidth="320"/>
 
                 <padding>
-                    <Insets top="40" right="40" bottom="30" left="40"/>
+                    <Insets top="18" bottom="12"/>
                 </padding>
             </VBox>
 
-            <!-- FORM -->
-            <VBox spacing="20">
+            <!-- FORMULARIO MÁS COMPACTO -->
+            <VBox spacing="15" VBox.vgrow="NEVER">
                 <padding>
-                    <Insets left="40" right="40"/>
+                    <Insets left="36" right="36"/>
                 </padding>
 
-                <VBox spacing="8">
-                    <Label text="Usuario" styleClass="form-label"/>
-                    <HBox spacing="10" alignment="CENTER_LEFT" styleClass="input-box">
-                        <Label text="👤" styleClass="input-icon"/>
+                <!-- Campo Usuario -->
+                <VBox spacing="7">
+                    <Label text="Usuario" styleClass="form-label" style="-fx-font-size: 12px;"/>
+                    <HBox spacing="9" 
+                          alignment="CENTER_LEFT" 
+                          styleClass="input-box"
+                          minHeight="42"
+                          prefHeight="42">
+                        <Label text="👤" styleClass="input-icon" style="-fx-font-size: 15px;"/>
                         <TextField fx:id="txtUsername"
                                    promptText="Ingrese su usuario"
-                                   HBox.hgrow="ALWAYS"/>
+                                   styleClass="input-field"
+                                   style="-fx-font-size: 12.5px;"
+                                   HBox.hgrow="ALWAYS"
+                                   focusTraversable="true"/>
                     </HBox>
                 </VBox>
 
-                <VBox spacing="8">
-                    <Label text="Contraseña" styleClass="form-label"/>
-                    <HBox spacing="10" alignment="CENTER_LEFT" styleClass="input-box">
-                        <Label text="🔒" styleClass="input-icon"/>
+                <!-- Campo Contraseña -->
+                <VBox spacing="7">
+                    <Label text="Contraseña" styleClass="form-label" style="-fx-font-size: 12px;"/>
+                    <HBox spacing="9" 
+                          alignment="CENTER_LEFT" 
+                          styleClass="input-box"
+                          minHeight="42"
+                          prefHeight="42">
+                        <Label text="🔒" styleClass="input-icon" style="-fx-font-size: 15px;"/>
                         <PasswordField fx:id="txtPassword"
                                        promptText="Ingrese su contraseña"
-                                       HBox.hgrow="ALWAYS"/>
+                                       styleClass="input-field"
+                                       style="-fx-font-size: 12.5px;"
+                                       HBox.hgrow="ALWAYS"
+                                       focusTraversable="true"/>
                     </HBox>
                 </VBox>
 
-                <CheckBox fx:id="checkRecordarme" text="Recordarme"/>
+                <!-- Checkbox Recordarme -->
+                <HBox alignment="CENTER_LEFT" spacing="7" style="-fx-padding: 3 0 0 2;">
+                    <CheckBox fx:id="checkRecordarme" 
+                              styleClass="custom-checkbox"
+                              focusTraversable="true"/>
+                    <Label text="Recordar mi sesión" 
+                           styleClass="checkbox-label"
+                           style="-fx-font-size: 12px;"/>
+                </HBox>
 
-                <Button text="🔓 Iniciar Sesión"
+                <!-- Botón Iniciar Sesión -->
+                <Button fx:id="btnLogin"
+                        text="🔓 Iniciar Sesión"
                         maxWidth="Infinity"
+                        minHeight="44"
+                        prefHeight="44"
                         onAction="#handleLogin"
-                        styleClass="login-button"/>
-
-                <VBox spacing="8" styleClass="login-hint">
-                    <!-- <Label text="🔥 Credenciales de prueba:" styleClass="hint-title"/>-->
-					<!-- <Label text="Admin: admin / admin123"/> -->
-					<!-- <Label text="Usuario: usuario / usuario123"/> -->
-                </VBox>
+                        styleClass="login-button"
+                        style="-fx-font-size: 13.5px;"
+                        defaultButton="true"
+                        focusTraversable="true">
+                    <VBox.margin>
+                        <Insets top="5"/>
+                    </VBox.margin>
+                </Button>
             </VBox>
 
-            <Label text="© 2026 ExpenseFlow - v1.0.0"
-                   styleClass="login-footer"/>
+            <!-- Espaciador flexible -->
+            <Region VBox.vgrow="ALWAYS" minHeight="14" maxHeight="24"/>
 
+            <!-- Footer -->
+            <VBox alignment="CENTER" spacing="2">
+                <Label text="© 2026 ExpenseFlow" 
+                       styleClass="login-footer"
+                       style="-fx-font-size: 10.5px;"/>
+                <Label text="v1.0.0" 
+                       styleClass="login-footer" 
+                       style="-fx-font-size: 9.5px; -fx-opacity: 0.6;"/>
+            </VBox>
+
+            <!-- Padding del card reducido -->
             <padding>
-                <Insets bottom="30"/>
+                <Insets top="18" right="22" bottom="22" left="22"/>
             </padding>
-
-            <StackPane.margin>
-                <Insets top="40" right="40" bottom="40" left="40"/>
-            </StackPane.margin>
 
         </VBox>
     </children>

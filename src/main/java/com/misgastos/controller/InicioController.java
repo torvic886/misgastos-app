@@ -9,6 +9,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.Rectangle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -19,10 +20,10 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javafx.application.Platform;
 import javafx.scene.Node;
-import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -47,6 +48,7 @@ public class InicioController {
     
     @FXML private VBox vboxTopProductos;
     @FXML private VBox vboxCategorias;
+    @FXML private VBox vboxLeyendaCategorias;
     
     @FXML private BarChart<String, Number> chartUltimosDias;
     @FXML private PieChart chartCategorias;
@@ -157,6 +159,8 @@ public class InicioController {
             
             Label lblTotal = new Label(formatearMonto(total));
             lblTotal.getStyleClass().add("item-value");
+            // ✅ AGREGAR NEGRITA AL VALOR
+            lblTotal.setStyle("-fx-font-weight: bold; -fx-text-fill: #1e293b;");
             
             itemBox.getChildren().addAll(lblPosicion, lblProducto, lblTotal);
             vboxTopProductos.getChildren().add(itemBox);
@@ -175,10 +179,17 @@ public class InicioController {
         Map<String, BigDecimal> categorias = gastoService.obtenerGastosPorCategoria();
         vboxCategorias.getChildren().clear();
         
+        // ✅ AGREGAR NUMERACIÓN
+        int posicion = 1;
+        
         for (Map.Entry<String, BigDecimal> entry : categorias.entrySet()) {
             HBox itemBox = new HBox(10);
             itemBox.getStyleClass().add("panel-item");
             itemBox.setStyle("-fx-alignment: center-left;");
+            
+            // ✅ AGREGAR NÚMERO DE POSICIÓN
+            Label lblPosicion = new Label(posicion + ".");
+            lblPosicion.setStyle("-fx-font-weight: bold; -fx-text-fill: #9ca3af; -fx-min-width: 25;");
             
             Label lblCategoria = new Label(entry.getKey());
             lblCategoria.getStyleClass().add("item-label");
@@ -187,9 +198,14 @@ public class InicioController {
             
             Label lblTotal = new Label(formatearMonto(entry.getValue()));
             lblTotal.getStyleClass().add("item-value");
+            // ✅ AGREGAR NEGRITA AL VALOR
+            lblTotal.setStyle("-fx-font-weight: bold; -fx-text-fill: #1e293b;");
             
-            itemBox.getChildren().addAll(lblCategoria, lblTotal);
+            // ✅ AGREGAR POSICIÓN AL INICIO
+            itemBox.getChildren().addAll(lblPosicion, lblCategoria, lblTotal);
             vboxCategorias.getChildren().add(itemBox);
+            
+            posicion++;
         }
         
         if (categorias.isEmpty()) {
@@ -227,16 +243,25 @@ public class InicioController {
                     Node node = data.getNode();
                     if (node instanceof StackPane bar) {
 
-                        // Etiqueta compacta arriba de la barra
+                        // Etiqueta compacta arriba de la barra con mejor posicionamiento
                         Label label = new Label(
                             formatearMonto(BigDecimal.valueOf(valor))
                         );
+                        label.setStyle(
+                            "-fx-font-size: 10px; " +
+                            "-fx-font-weight: bold; " +
+                            "-fx-text-fill: #334155; " +
+                            "-fx-background-color: rgba(255, 255, 255, 0.95); " +
+                            "-fx-background-radius: 4; " +
+                            "-fx-padding: 3 8;"
+                        );
                         label.setMouseTransparent(true);
                         StackPane.setAlignment(label, Pos.TOP_CENTER);
-                        StackPane.setMargin(label, new Insets(-18, 0, 0, 0));
+                        // Ajustar margen para que no tape la barra
+                        StackPane.setMargin(label, new Insets(-22, 0, 0, 0));
                         bar.getChildren().add(label);
 
-                        // 🔥 Tooltip con fecha + valor completo
+                        // Tooltip con fecha + valor completo
                         String textoTooltip =
                                 data.getXValue() + "\n" +
                                 formatearMontoCompleto(BigDecimal.valueOf(valor));
@@ -252,17 +277,18 @@ public class InicioController {
                 }
             }
         });
-
-
     }
 
     private String formatearMontoCompleto(BigDecimal monto) {
-        return String.format("$%,.0f", monto.doubleValue());
+        return String.format("%,.0f", monto.doubleValue());
     }
 
     
     private void cargarGraficoCategorias() {
         chartCategorias.getData().clear();
+        if (vboxLeyendaCategorias != null) {
+            vboxLeyendaCategorias.getChildren().clear();
+        }
 
         Map<String, BigDecimal> categorias = gastoService.obtenerGastosPorCategoria();
 
@@ -280,9 +306,14 @@ public class InicioController {
             "#f44336"   // Rojo
         };
         
+        // Ordenar categorías por monto descendente
+        List<Map.Entry<String, BigDecimal>> categoriasOrdenadas = categorias.entrySet().stream()
+            .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
+            .collect(Collectors.toList());
+        
         int colorIndex = 0;
 
-        for (Map.Entry<String, BigDecimal> entry : categorias.entrySet()) {
+        for (Map.Entry<String, BigDecimal> entry : categoriasOrdenadas) {
 
             PieChart.Data slice = new PieChart.Data(
                     entry.getKey(),
@@ -293,13 +324,15 @@ public class InicioController {
 
             // Aplicar color personalizado a cada slice
             final int currentIndex = colorIndex;
+            final String colorActual = colores[colorIndex % colores.length];
+            
             Platform.runLater(() -> {
                 slice.getNode().setStyle(
-                    "-fx-pie-color: " + colores[currentIndex % colores.length] + ";"
+                    "-fx-pie-color: " + colorActual + ";"
                 );
             });
 
-            // Tooltip con valor + porcentaje
+            // Tooltip con valor + porcentaje (sin símbolo $)
             double porcentaje = totalGeneral.compareTo(BigDecimal.ZERO) == 0
                     ? 0
                     : entry.getValue()
@@ -310,12 +343,59 @@ public class InicioController {
             Tooltip tooltip = new Tooltip(
                     entry.getKey() + "\n" +
                     formatearMontoCompleto(entry.getValue()) + "\n" +
-                    porcentaje + "%"
+                    String.format("%.1f%%", porcentaje)
             );
 
             Tooltip.install(slice.getNode(), tooltip);
             
+            // Crear leyenda personalizada lateral para las primeras 5 categorías
+            if (colorIndex < 5 && vboxLeyendaCategorias != null) {
+                HBox leyendaItem = new HBox(8);
+                leyendaItem.setAlignment(Pos.CENTER_LEFT);
+                
+                // Cuadro de color más grande para mejor visibilidad
+                Rectangle colorBox = new Rectangle(12, 12);
+                colorBox.setFill(javafx.scene.paint.Color.web(colorActual));
+                colorBox.setArcWidth(3);
+                colorBox.setArcHeight(3);
+                
+                // VBox para nombre y porcentaje
+                VBox infoBox = new VBox(2);
+                
+                // Nombre de categoría
+                Label lblNombre = new Label(entry.getKey());
+                lblNombre.setStyle("-fx-font-size: 11px; -fx-text-fill: #334155; -fx-font-weight: 600;");
+                lblNombre.setMaxWidth(130);
+                lblNombre.setWrapText(false);
+                
+                // Porcentaje con monto
+                Label lblDetalle = new Label(String.format("%.1f%% - %s", porcentaje, formatearMonto(entry.getValue())));
+                lblDetalle.setStyle("-fx-font-size: 9px; -fx-text-fill: #64748b; -fx-font-weight: 500;");
+                
+                infoBox.getChildren().addAll(lblNombre, lblDetalle);
+                
+                leyendaItem.getChildren().addAll(colorBox, infoBox);
+                vboxLeyendaCategorias.getChildren().add(leyendaItem);
+            }
+            
             colorIndex++;
+        }
+        
+        // Si hay más de 5 categorías, agregar indicador "Otras"
+        if (categoriasOrdenadas.size() > 5 && vboxLeyendaCategorias != null) {
+            HBox otrasBox = new HBox(8);
+            otrasBox.setAlignment(Pos.CENTER_LEFT);
+            
+            Rectangle colorBox = new Rectangle(12, 12);
+            colorBox.setFill(javafx.scene.paint.Color.web("#e2e8f0"));
+            colorBox.setArcWidth(3);
+            colorBox.setArcHeight(3);
+            
+            Label lblOtras = new Label("... y " + (categoriasOrdenadas.size() - 5) + " mas");
+            lblOtras.setStyle("-fx-font-size: 10px; -fx-text-fill: #94a3b8; -fx-font-style: italic;");
+            
+            otrasBox.getChildren().addAll(colorBox, lblOtras);
+            vboxLeyendaCategorias.getChildren().add(otrasBox);
         }
     }
 
@@ -324,19 +404,19 @@ public class InicioController {
     /**
      * Formatea montos grandes de forma compacta
      * Ejemplos: 
-     * - 1,234.56 → $1.2K
-     * - 1,234,567.89 → $1.2M
-     * - 999.99 → $1.0K
+     * - 1,234.56 -> 1.2K
+     * - 1,234,567.89 -> 1.2M
+     * - 999.99 -> 1.0K
      */
     private String formatearMonto(BigDecimal monto) {
         double valor = monto.doubleValue();
         
         if (valor >= 1_000_000) {
-            return String.format("$%.1fM", valor / 1_000_000);
+            return String.format("%.1fM", valor / 1_000_000);
         } else if (valor >= 1_000) {
-            return String.format("$%.1fK", valor / 1_000);
+            return String.format("%.1fK", valor / 1_000);
         } else {
-            return String.format("$%.0f", valor);
+            return String.format("%.0f", valor);
         }
     }
 }
