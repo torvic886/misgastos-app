@@ -2,6 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
@@ -17,6 +18,15 @@
     <children>
         <Label text="📋 Historial de Gastos" styleClass="content-title"/>
         <Label text="Visualiza y gestiona todos tus gastos registrados" styleClass="content-subtitle"/>
+        
+        <!-- Filtros de fecha para exportación -->
+        <HBox spacing="15" alignment="CENTER_LEFT">
+            <Label text="Fecha Inicio:"/>
+            <DatePicker fx:id="dpFechaInicio" promptText="Desde..."/>
+            <Label text="Fecha Fin:"/>
+            <DatePicker fx:id="dpFechaFin" promptText="Hasta..."/>
+            <Button text="📊 Exportar Excel" onAction="#handleExportarExcel" styleClass="primary-button"/>
+        </HBox>
         
         <!-- Barra de búsqueda y acciones -->
         <HBox spacing="15" alignment="CENTER_LEFT">

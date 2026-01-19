@@ -136,14 +136,18 @@ public class GestionBilleterosController {
         
         // Columna Acciones
         colAcciones.setCellFactory(column -> new TableCell<Billetero, Void>() {
-            private final Button btnEditar = new Button("✎");
-            private final Button btnEliminar = new Button("✖");
-            private final HBox container = new HBox(10, btnEditar, btnEliminar);
+            private final Button btnEditar = new Button("✏ Editar");
+            private final Button btnEliminar = new Button("🗑");
+            private final HBox container = new HBox(5, btnEditar, btnEliminar);
             
             {
-                btnEditar.getStyleClass().add("action-button-edit");
-                btnEliminar.getStyleClass().add("action-button-delete");
-                container.setAlignment(Pos.CENTER);
+                btnEditar.getStyleClass().add("secondary-button");
+                btnEditar.setStyle("-fx-font-size: 11px; -fx-padding: 5 10;");
+                
+                btnEliminar.getStyleClass().add("danger-button");
+                btnEliminar.setStyle("-fx-font-size: 11px; -fx-padding: 5 10; -fx-background-color: #ef4444; -fx-text-fill: white;");
+                
+               // container.setAlignment(Pos.CENTER);
                 
                 btnEditar.setOnAction(event -> {
                     Billetero billetero = getTableView().getItems().get(getIndex());

@@ -68,7 +68,7 @@ public class RegistroGastoController {
         configurarGuardarConEnter();
         configurarTabla();
         cargarUltimosGastos();
-        cargarUltimosGastos();
+        //cargarUltimosGastos();
         configurarValidacionCedula();
         configurarCampoCedula();
         configurarFormatoMoneda(); // ✅ NUEVO

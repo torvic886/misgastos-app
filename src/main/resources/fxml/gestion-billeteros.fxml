@@ -9,117 +9,148 @@
             fx:controller="com.misgastos.controller.GestionBilleterosController"
             styleClass="content">
 
-    <!-- TOP: Título y botones de acción -->
+    <!-- TOP: Título y botones de acción - MÁS COMPACTO -->
     <top>
         <HBox spacing="15" alignment="CENTER_LEFT" styleClass="header-box">
             <padding>
-                <Insets top="15" right="15" bottom="15" left="15"/>
+                <Insets top="10" right="15" bottom="10" left="15"/>
             </padding>
-            <Label text="💼 Gestión de Billeteros" styleClass="page-title"/>
+            <Label text="💼 Gestión de Billeteros" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1f2937;"/>
             <Region HBox.hgrow="ALWAYS"/>
             <Button fx:id="btnNuevo" text="+ Nuevo" styleClass="primary-button" 
-                    onAction="#handleNuevo"/>
+                    onAction="#handleNuevo"
+                    style="-fx-padding: 6 16; -fx-font-size: 12px;"/>
             <Button fx:id="btnRefresh" text="🔄 Actualizar" styleClass="secondary-button" 
-                    onAction="#handleRefresh"/>
+                    onAction="#handleRefresh"
+                    style="-fx-padding: 6 16; -fx-font-size: 12px;"/>
         </HBox>
     </top>
 
     <!-- CENTER: Contenido principal -->
     <center>
-        <VBox spacing="15" styleClass="main-content">
+        <VBox spacing="10" styleClass="main-content">
             <padding>
-                <Insets top="15" right="15" bottom="15" left="15"/>
+                <Insets top="10" right="15" bottom="10" left="15"/>
             </padding>
             
-            <!-- Panel de búsqueda y filtros -->
-            <HBox spacing="10" alignment="CENTER_LEFT" styleClass="search-box">
+            <!-- TARJETA 1: Panel de búsqueda y filtros - MÁS COMPACTO -->
+            <HBox spacing="10" alignment="CENTER_LEFT" styleClass="table-card">
                 <padding>
-                    <Insets top="10" right="10" bottom="10" left="10"/>
+                    <Insets top="8" right="12" bottom="8" left="12"/>
                 </padding>
-                <Label text="Buscar:"/>
+                
+                <Label text="Buscar:" style="-fx-font-size: 11px; -fx-text-fill: #475569; -fx-font-weight: 600;"/>
                 <TextField fx:id="txtBuscar" promptText="Buscar en la tabla..." 
-                          prefWidth="200" styleClass="search-field"/>
+                          prefWidth="200" prefHeight="28" styleClass="search-field"
+                          style="-fx-font-size: 11px;"/>
                 
-                <Region prefWidth="20"/>
+                <Separator orientation="VERTICAL" prefHeight="20" style="-fx-background-color: #e5e7eb;"/>
                 
-                <Label text="Desde:"/>
+                <Label text="Desde:" style="-fx-font-size: 11px; -fx-text-fill: #475569; -fx-font-weight: 600;"/>
                 <DatePicker fx:id="dpFechaDesde" promptText="Fecha inicio" 
-                           prefWidth="140"/>
+                           prefWidth="130" prefHeight="28" styleClass="date-picker"/>
                 
-                <Label text="Hasta:"/>
+                <Label text="Hasta:" style="-fx-font-size: 11px; -fx-text-fill: #475569; -fx-font-weight: 600;"/>
                 <DatePicker fx:id="dpFechaHasta" promptText="Fecha fin" 
-                           prefWidth="140"/>
+                           prefWidth="130" prefHeight="28" styleClass="date-picker"/>
                 
                 <Button text="🔍 Buscar" styleClass="search-button" 
-                       onAction="#handleBuscar"/>
+                       onAction="#handleBuscar"
+                       style="-fx-padding: 6 14; -fx-font-size: 11px;"/>
                 <Button text="✖ Limpiar" styleClass="secondary-button" 
-                       onAction="#handleLimpiarFiltros"/>
+                       onAction="#handleLimpiarFiltros"
+                       style="-fx-padding: 6 14; -fx-font-size: 11px;"/>
             </HBox>
 
-            <!-- Tabla de billeteros -->
-            <TableView fx:id="tablaBilleteros" VBox.vgrow="ALWAYS">
-                <columns>
-                    <TableColumn fx:id="colFecha" text="Fecha" prefWidth="120"/>
-                    <TableColumn fx:id="colBilletero" text="Billetero" prefWidth="150"/>
-                    <TableColumn fx:id="colPremios" text="Premios" prefWidth="150"/>
-                    <TableColumn fx:id="colDiferencia" text="Diferencia" prefWidth="150"/>
-                    <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="150"/>
-                </columns>
-                <placeholder>
-                    <Label text="No hay registros para mostrar"/>
-                </placeholder>
-            </TableView>
-
-            <!-- Panel inferior: paginación y totales -->
-            <HBox spacing="20" alignment="CENTER">
-                <padding>
-                    <Insets top="10" right="10" bottom="10" left="10"/>
-                </padding>
-                <VBox spacing="5" alignment="CENTER_LEFT">
+            <!-- TARJETA 2: Tabla de billeteros - OPTIMIZADA -->
+            <VBox styleClass="table-card" VBox.vgrow="ALWAYS" spacing="0">
+                
+                <TableView fx:id="tablaBilleteros" VBox.vgrow="ALWAYS" styleClass="table-view">
+                    <columns>
+                        <TableColumn fx:id="colFecha" text="Fecha" prefWidth="130" 
+                                    style="-fx-alignment: CENTER;"/>
+                        <TableColumn fx:id="colBilletero" text="Billetero" prefWidth="180" 
+                                    style="-fx-alignment: CENTER_RIGHT;"/>
+                        <TableColumn fx:id="colPremios" text="Premios" prefWidth="180" 
+                                    style="-fx-alignment: CENTER_RIGHT;"/>
+                        <TableColumn fx:id="colDiferencia" text="Diferencia" prefWidth="180" 
+                                    style="-fx-alignment: CENTER_RIGHT;"/>
+                        <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="120" 
+                                    style="-fx-alignment: CENTER;"/>
+                    </columns>
+                    <placeholder>
+                        <VBox alignment="CENTER" spacing="6">
+                            <Label text="📋" style="-fx-font-size: 28px;"/>
+                            <Label text="No hay registros para mostrar" 
+                                  style="-fx-text-fill: #6b7280; -fx-font-size: 12px;"/>
+                        </VBox>
+                    </placeholder>
+                </TableView>
+                
+                <!-- TARJETA 3: Panel inferior integrado - paginación y totales -->
+                <HBox spacing="15" alignment="CENTER" style="-fx-background-color: #f8fafc; -fx-padding: 8 12; -fx-border-color: #e5e7eb; -fx-border-width: 1 0 0 0;">
                     <Label fx:id="lblTotalRegistros" text="Total registros: 0" 
-                          styleClass="info-label"/>
-                </VBox>
-                
-                <Region HBox.hgrow="ALWAYS"/>
-                
-                <!-- Paginación (opcional para implementar después) -->
-                <HBox spacing="10" alignment="CENTER">
-                    <Button text="◀" styleClass="pagination-button" 
-                           fx:id="btnAnterior" disable="true"/>
-                    <Label fx:id="lblPagina" text="Página 1 de 1"/>
-                    <Button text="▶" styleClass="pagination-button" 
-                           fx:id="btnSiguiente" disable="true"/>
+                          style="-fx-font-size: 11px; -fx-text-fill: #475569; -fx-font-weight: 600;"/>
+                    
+                    <Region HBox.hgrow="ALWAYS"/>
+                    
+                    <!-- Paginación -->
+                    <HBox spacing="8" alignment="CENTER">
+                        <Button text="◀" fx:id="btnAnterior" disable="true"
+                               style="-fx-background-color: white; -fx-border-color: #cbd5e1; -fx-border-width: 1; -fx-border-radius: 4; -fx-background-radius: 4; -fx-padding: 4 10; -fx-font-size: 11px; -fx-text-fill: #475569; -fx-cursor: hand;"/>
+                        <Label fx:id="lblPagina" text="Página 1 de 1"
+                              style="-fx-font-size: 11px; -fx-text-fill: #475569; -fx-font-weight: 600;"/>
+                        <Button text="▶" fx:id="btnSiguiente" disable="true"
+                               style="-fx-background-color: white; -fx-border-color: #cbd5e1; -fx-border-width: 1; -fx-border-radius: 4; -fx-background-radius: 4; -fx-padding: 4 10; -fx-font-size: 11px; -fx-text-fill: #475569; -fx-cursor: hand;"/>
+                    </HBox>
                 </HBox>
-            </HBox>
+            </VBox>
 
-            <!-- Panel de resumen con totales -->
-            <GridPane hgap="20" vgap="10" styleClass="summary-panel">
+            <!-- TARJETA 4: Resumen general - MÁS COMPACTO -->
+            <HBox styleClass="table-card" style="-fx-background-color: linear-gradient(to right, #f8fafc, #ffffff); -fx-border-width: 2; -fx-border-color: #e5e7eb;">
                 <padding>
-                    <Insets top="15" right="15" bottom="15" left="15"/>
+                    <Insets top="12" right="15" bottom="12" left="15"/>
                 </padding>
                 
-                <Label text="📊 RESUMEN GENERAL" styleClass="summary-title" 
-                      GridPane.columnIndex="0" GridPane.rowIndex="0" 
-                      GridPane.columnSpan="3"/>
-                
-                <VBox spacing="5" GridPane.columnIndex="0" GridPane.rowIndex="1">
-                    <Label text="Total Billetero" styleClass="summary-label"/>
-                    <Label fx:id="lblTotalBilletero" text="0.00" 
-                          styleClass="summary-value"/>
+                <VBox spacing="8" HBox.hgrow="ALWAYS">
+                    <HBox alignment="CENTER_LEFT" spacing="6">
+                        <Label text="📊" style="-fx-font-size: 14px;"/>
+                        <Label text="RESUMEN GENERAL" 
+                              style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1f2937;"/>
+                    </HBox>
+                    
+                    <HBox spacing="20" alignment="CENTER_LEFT">
+                        <!-- Total Billetero -->
+                        <VBox spacing="4" alignment="CENTER_LEFT" 
+                              style="-fx-background-color: #eff6ff; -fx-background-radius: 6; -fx-padding: 8 14; -fx-border-color: #3b82f6; -fx-border-width: 0 0 0 3; -fx-border-radius: 6;">
+                            <Label text="Total Billetero" 
+                                  style="-fx-font-size: 10px; -fx-text-fill: #475569; -fx-font-weight: 600;"/>
+                            <Label fx:id="lblTotalBilletero" text="0.00" 
+                                  style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e40af;"/>
+                        </VBox>
+                        
+                        <!-- Total Premios -->
+                        <VBox spacing="4" alignment="CENTER_LEFT"
+                              style="-fx-background-color: #f5f3ff; -fx-background-radius: 6; -fx-padding: 8 14; -fx-border-color: #8b5cf6; -fx-border-width: 0 0 0 3; -fx-border-radius: 6;">
+                            <Label text="Total Premios" 
+                                  style="-fx-font-size: 10px; -fx-text-fill: #475569; -fx-font-weight: 600;"/>
+                            <Label fx:id="lblTotalPremios" text="0.00" 
+                                  style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #6d28d9;"/>
+                        </VBox>
+                        
+                        <Region HBox.hgrow="ALWAYS"/>
+                        
+                        <!-- Diferencia Neta -->
+                        <VBox spacing="4" alignment="CENTER" 
+                              style="-fx-background-color: linear-gradient(to right, #dcfce7, #bbf7d0); -fx-background-radius: 8; -fx-padding: 10 24; -fx-border-color: #10b981; -fx-border-width: 2; -fx-border-radius: 8; -fx-effect: dropshadow(gaussian, rgba(16,185,129,0.25), 8, 0, 0, 2);">
+                            <Label text="Diferencia Neta" 
+                                  style="-fx-font-size: 10px; -fx-text-fill: #065f46; -fx-font-weight: 700;"/>
+                            <Label fx:id="lblDiferenciaNeta" text="0.00" 
+                                  style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #047857;"/>
+                        </VBox>
+                    </HBox>
                 </VBox>
-                
-                <VBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                    <Label text="Total Premios" styleClass="summary-label"/>
-                    <Label fx:id="lblTotalPremios" text="0.00" 
-                          styleClass="summary-value"/>
-                </VBox>
-                
-                <VBox spacing="5" GridPane.columnIndex="2" GridPane.rowIndex="1">
-                    <Label text="Diferencia Neta" styleClass="summary-label"/>
-                    <Label fx:id="lblDiferenciaNeta" text="0.00" 
-                          styleClass="summary-value-total"/>
-                </VBox>
-            </GridPane>
+            </HBox>
 
         </VBox>
     </center>
