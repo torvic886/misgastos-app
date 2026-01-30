@@ -106,7 +106,7 @@
 		    <groupId>com.itextpdf</groupId>
 		    <artifactId>layout</artifactId>
 		    <version>7.2.5</version>
-</dependency>
+		</dependency>
 		
 		<!-- Spring Security (para BCrypt) -->
 		<dependency>
@@ -153,6 +153,7 @@
 	            <groupId>org.springframework.boot</groupId>
 	            <artifactId>spring-boot-maven-plugin</artifactId>
 	            <configuration>
+	                <mainClass>com.misgastos.MisGastosApplication</mainClass>
 	                <excludes>
 	                    <exclude>
 	                        <groupId>org.projectlombok</groupId>
@@ -160,6 +161,13 @@
 	                    </exclude>
 	                </excludes>
 	            </configuration>
+	            <executions>
+	                <execution>
+	                    <goals>
+	                        <goal>repackage</goal>
+	                    </goals>
+	                </execution>
+	            </executions>
 	        </plugin>
 	        
 	        <!-- Plugin JavaFX -->

@@ -34,7 +34,7 @@
             <Button text="Buscar" onAction="#handleBuscar" styleClass="primary-button"/>
             <Button text="🔄 Refrescar" onAction="#handleRefrescar" styleClass="secondary-button"/>
             <HBox HBox.hgrow="ALWAYS"/>
-            <Button text="🗑️ Eliminar" onAction="#handleEliminar" styleClass="danger-button"/>
+            <Button text="✖ Eliminar" onAction="#handleEliminar" styleClass="danger-button"/>
         </HBox>
         
         <!-- Tabla de gastos -->

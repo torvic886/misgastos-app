@@ -3,6 +3,8 @@ package com.misgastos.controller;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.scene.control.TextField;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -28,6 +30,9 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.control.cell.PropertyValueFactory;
 import java.text.NumberFormat;
 import java.util.Locale;
+
+import javafx.scene.control.SelectionMode;
+import javafx.collections.ObservableList;
 
 @Component
 public class RegistroGastoController {
@@ -68,6 +73,7 @@ public class RegistroGastoController {
         configurarGuardarConEnter();
         configurarTabla();
         cargarUltimosGastos();
+        configurarCopiaPegadoTabla();
         //cargarUltimosGastos();
         configurarValidacionCedula();
         configurarCampoCedula();
@@ -813,4 +819,67 @@ public class RegistroGastoController {
             this.subcategoria = s;
         }
     }
+    
+ // ✅ AGREGAR estos métodos en RegistroGastoController.java
+
+    private void configurarCopiaPegadoTabla() {
+        // Habilitar selección múltiple
+        tblUltimosGastos.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        tblUltimosGastos.getSelectionModel().setCellSelectionEnabled(true);
+        
+        tblUltimosGastos.setOnKeyPressed(event -> {
+            // Detectar Ctrl+C
+            if (event.isControlDown() && event.getCode() == KeyCode.C) {
+                copiarSeleccionAlPortapapeles();
+                event.consume();
+            }
+        });
+    }
+
+    private void copiarSeleccionAlPortapapeles() {
+        StringBuilder clipboardString = new StringBuilder();
+        
+        // Obtener todas las posiciones seleccionadas
+        ObservableList<TablePosition> posList = tblUltimosGastos.getSelectionModel().getSelectedCells();
+        
+        if (posList.isEmpty()) {
+            return;
+        }
+        
+        // Organizar por fila y columna
+        int previousRow = -1;
+        
+        for (TablePosition pos : posList) {
+            int currentRow = pos.getRow();
+            
+            // Si cambió de fila, agregar salto de línea
+            if (previousRow != -1 && previousRow != currentRow) {
+                clipboardString.append("\n");
+            }
+            
+            // Si es la misma fila pero no es la primera celda, agregar tabulador
+            if (previousRow == currentRow && clipboardString.length() > 0) {
+                clipboardString.append("\t");
+            }
+            
+            // Obtener el dato de la celda
+            Object cellData = pos.getTableColumn().getCellData(currentRow);
+            
+            if (cellData != null) {
+                clipboardString.append(cellData.toString());
+            }
+            
+            previousRow = currentRow;
+        }
+        
+        // Copiar al portapapeles
+        final ClipboardContent content = new ClipboardContent();
+        content.putString(clipboardString.toString());
+        Clipboard.getSystemClipboard().setContent(content);
+        
+        System.out.println("📋 Copiadas " + posList.size() + " celdas");
+    }
+
+    // ✅ LLAMAR este método en initialize(), agregar esta línea:
+    // configurarCopiaPegadoTabla();
 }
