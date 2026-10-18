@@ -21,6 +21,12 @@ import org.springframework.stereotype.Component;
 import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import com.misgastos.licencia.LicenciaService;
+import javafx.event.ActionEvent;
+import javafx.geometry.Insets;
+import javafx.scene.Node;
+import javafx.scene.layout.VBox;
+
 
 @Component
 public class LoginController implements Initializable {
@@ -45,6 +51,8 @@ public class LoginController implements Initializable {
     
     @Autowired
     private ApplicationContext springContext;
+ 
+    private final LicenciaService licenciaService = new LicenciaService();    
     
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -52,6 +60,9 @@ public class LoginController implements Initializable {
             configurarEventosEnter();
             configurarNavegacionTab();
             configurarVentanaLogin(); // 🔥 NUEVO: Configurar ventana de login
+            if (!verificarLicencia()) {
+                return;
+            }
             verificarSesionGuardada();
             txtUsername.requestFocus();
         });
@@ -142,6 +153,78 @@ public class LoginController implements Initializable {
     /**
      * Verifica si existe una sesión "Recordarme" válida
      */
+    
+    /**
+     * Revisa la licencia antes de permitir el acceso.
+     * Devuelve false si no hay licencia ni prueba vigente (la app se cierra).
+     */
+    private boolean verificarLicencia() {
+        LicenciaService.Resultado r = licenciaService.evaluar();
+
+        if (r.estado() == LicenciaService.Estado.LICENCIADA) {
+            return true;
+        }
+        if (r.estado() == LicenciaService.Estado.PRUEBA) {
+            if (r.diasRestantes() <= 15) {
+                mostrarAlerta("Periodo de prueba",
+                    "Te quedan " + r.diasRestantes() + " día(s) de prueba.",
+                    Alert.AlertType.INFORMATION);
+            }
+            return true;
+        }
+        return mostrarActivacion(r.motivo());
+    }
+
+    private boolean mostrarActivacion(String motivo) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Activación requerida");
+        dialog.setHeaderText(motivo + ".\nPara continuar, ingresa tu clave de activación.");
+
+        if (txtUsername.getScene() != null && txtUsername.getScene().getWindow() != null) {
+            dialog.initOwner(txtUsername.getScene().getWindow());
+        }
+
+        TextField txtCodigo = new TextField(licenciaService.codigoEquipo());
+        txtCodigo.setEditable(false);
+
+        TextArea txtClave = new TextArea();
+        txtClave.setPromptText("Pega aquí la clave de activación");
+        txtClave.setWrapText(true);
+        txtClave.setPrefRowCount(4);
+
+        Label lblError = new Label();
+        lblError.setStyle("-fx-text-fill: #c0392b;");
+
+        VBox box = new VBox(10,
+            new Label("Código de tu equipo (envíalo para recibir la clave):"),
+            txtCodigo,
+            new Label("Clave de activación:"),
+            txtClave,
+            lblError);
+        box.setPadding(new Insets(20));
+        box.setPrefWidth(460);
+
+        ButtonType btnActivar = new ButtonType("Activar", ButtonBar.ButtonData.OK_DONE);
+        ButtonType btnSalir = new ButtonType("Salir", ButtonBar.ButtonData.CANCEL_CLOSE);
+        dialog.getDialogPane().getButtonTypes().addAll(btnActivar, btnSalir);
+        dialog.getDialogPane().setContent(box);
+
+        Node okBtn = dialog.getDialogPane().lookupButton(btnActivar);
+        okBtn.addEventFilter(ActionEvent.ACTION, ev -> {
+            if (!licenciaService.activar(txtClave.getText())) {
+                ev.consume(); // no cierra el diálogo
+                lblError.setText("Clave inválida, vencida o de otro equipo.");
+            }
+        });
+
+        Optional<ButtonType> res = dialog.showAndWait();
+        if (res.isPresent() && res.get() == btnActivar) {
+            return true;
+        }
+        Platform.exit();
+        return false;
+    }    
+    
     private void verificarSesionGuardada() {
         Optional<Long> usuarioIdOpt = sesionService.validarSesionLocal();
         

@@ -53,6 +53,8 @@ public class RegistroGastoController {
     @FXML private TableColumn<Gasto, BigDecimal> colTotal;
     @FXML private Label lblCedula;
     @FXML private TextField txtCedula;
+    @FXML private TableColumn<Gasto, String> colHora;
+    @FXML private Label lblTotalGastos;
     
     @Autowired private CategoriaService categoriaService;
     @Autowired private GastoService gastoService;
@@ -428,6 +430,11 @@ public class RegistroGastoController {
         tblUltimosGastos.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         
         colFecha.setCellValueFactory(data -> new SimpleObjectProperty<>(data.getValue().getFecha()));
+        colHora.setCellValueFactory(data -> {
+            Object h = data.getValue().getHora();
+            String texto = h == null ? "" : String.valueOf(h);
+            return new SimpleStringProperty(texto.length() > 8 ? texto.substring(0, 8) : texto);
+        });
         colCategoria.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getCategoria().getNombre()));
         colProducto.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getProducto()));
         colCantidad.setCellValueFactory(new PropertyValueFactory<>("cantidad"));
@@ -458,7 +465,7 @@ public class RegistroGastoController {
         System.out.println("👤 Usuario ID: " + usuarioId);
         
         try {
-            List<Gasto> gastos = gastoService.obtenerUltimosGastos(usuarioId, 10);
+            List<Gasto> gastos = gastoService.obtenerUltimosGastos(usuarioId, 100000);
             
             System.out.println("📊 Total de gastos obtenidos: " + gastos.size());
             System.out.println("───────────────────────────────────────");
@@ -489,6 +496,7 @@ public class RegistroGastoController {
             System.out.println("🔄 Actualizando tabla en UI...");
             
             tblUltimosGastos.setItems(FXCollections.observableArrayList(gastos));
+            actualizarTotal();
             
             System.out.println("✅ Tabla actualizada correctamente");
             System.out.println("   Items en tabla: " + tblUltimosGastos.getItems().size());
@@ -834,6 +842,15 @@ public class RegistroGastoController {
                 event.consume();
             }
         });
+    }
+    
+    private void actualizarTotal() {
+        BigDecimal suma = tblUltimosGastos.getItems().stream()
+            .map(Gasto::getValorTotal)
+            .filter(java.util.Objects::nonNull)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        lblTotalGastos.setText(
+            NumberFormat.getCurrencyInstance(new Locale("es", "CO")).format(suma));
     }
 
     private void copiarSeleccionAlPortapapeles() {

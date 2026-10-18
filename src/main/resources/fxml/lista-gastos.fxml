@@ -14,11 +14,11 @@
     <padding>
         <Insets top="30" right="30" bottom="30" left="30"/>
     </padding>
-    
+
     <children>
         <Label text="📋 Historial de Gastos" styleClass="content-title"/>
         <Label text="Visualiza y gestiona todos tus gastos registrados" styleClass="content-subtitle"/>
-        
+
         <!-- Filtros de fecha para exportación -->
         <HBox spacing="15" alignment="CENTER_LEFT">
             <Label text="Fecha Inicio:"/>
@@ -27,7 +27,7 @@
             <DatePicker fx:id="dpFechaFin" promptText="Hasta..."/>
             <Button text="📊 Exportar Excel" onAction="#handleExportarExcel" styleClass="primary-button"/>
         </HBox>
-        
+
         <!-- Barra de búsqueda y acciones -->
         <HBox spacing="15" alignment="CENTER_LEFT">
             <TextField fx:id="txtBuscar" promptText="🔍 Buscar por producto o categoría..." prefWidth="300" onAction="#handleBuscar"/>
@@ -36,12 +36,13 @@
             <HBox HBox.hgrow="ALWAYS"/>
             <Button text="✖ Eliminar" onAction="#handleEliminar" styleClass="danger-button"/>
         </HBox>
-        
+
         <!-- Tabla de gastos -->
         <TableView fx:id="tableGastos" VBox.vgrow="ALWAYS">
             <columns>
                 <TableColumn fx:id="colId" text="ID" prefWidth="50"/>
                 <TableColumn fx:id="colFecha" text="Fecha" prefWidth="100"/>
+                <TableColumn fx:id="colHora" text="Hora" prefWidth="80"/>
                 <TableColumn fx:id="colCategoria" text="Categoría" prefWidth="120"/>
                 <TableColumn fx:id="colProducto" text="Producto" prefWidth="200"/>
                 <TableColumn fx:id="colCantidad" text="Cantidad" prefWidth="80"/>
@@ -49,5 +50,10 @@
                 <TableColumn fx:id="colValorTotal" text="Total" prefWidth="100"/>
             </columns>
         </TableView>
+
+        <!-- Total de los gastos que se muestran en la tabla -->
+        <HBox alignment="CENTER_RIGHT">
+            <Label fx:id="lblTotalGastos" text="TOTAL: $0" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+        </HBox>
     </children>
 </VBox>

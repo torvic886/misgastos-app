@@ -169,4 +169,8 @@ public class UsuarioService {
             .map(u -> Rol.ADMINISTRADOR.name().equals(u.getRol()))
             .orElse(false);
     }
+    
+    public boolean existenUsuarios() {
+        return usuarioRepository.count() > 0;
+    }
 }

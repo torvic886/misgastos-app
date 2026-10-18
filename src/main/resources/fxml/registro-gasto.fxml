@@ -86,6 +86,7 @@
         <TableView fx:id="tblUltimosGastos" VBox.vgrow="ALWAYS" style="-fx-fixed-cell-size: 34px;">
             <columns>
                 <TableColumn fx:id="colFecha" text="Fecha" prefWidth="95" minWidth="85"/>
+                <TableColumn fx:id="colHora" text="Hora" prefWidth="75" minWidth="65"/>             
                 <TableColumn fx:id="colCategoria" text="Categoría" prefWidth="120" minWidth="100"/>
                 <TableColumn fx:id="colProducto" text="Producto" prefWidth="140" minWidth="120"/>
                 <TableColumn fx:id="colCantidad" text="Cant" prefWidth="55" minWidth="45"/>
@@ -93,6 +94,11 @@
                 <TableColumn fx:id="colTotal" text="Total" prefWidth="105" minWidth="95"/>
             </columns>
         </TableView>
+
+		<HBox alignment="CENTER_RIGHT" spacing="10" style="-fx-padding: 8 4 0 4;">
+		    <Label text="TOTAL:" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+		    <Label fx:id="lblTotalGastos" text="COP 0.00" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #16a34a;"/>
+		</HBox>
 
     </VBox>
 
