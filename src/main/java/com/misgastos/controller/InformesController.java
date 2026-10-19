@@ -15,6 +15,8 @@ import java.io.File;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.text.NumberFormat;
+import java.util.Locale;
 
 @Component
 public class InformesController {
@@ -210,7 +212,9 @@ public class InformesController {
             BigDecimal total = gastos.stream()
                 .map(Gasto::getValorTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-            lblMontoTotal.setText("$" + String.format("%,.2f", total));
+            NumberFormat formatoCOP = NumberFormat.getCurrencyInstance(new Locale("es", "CO"));
+            formatoCOP.setMaximumFractionDigits(0);
+            lblMontoTotal.setText(formatoCOP.format(total));
             
             long categorias = gastos.stream()
                 .map(g -> g.getCategoria().getId())
@@ -343,7 +347,7 @@ public class InformesController {
                           "El informe aparecerá aquí antes de exportarlo a PDF o Excel.");
         
         lblTotalGastos.setText("0");
-        lblMontoTotal.setText("0.00");
+        lblMontoTotal.setText("$ 0");
         lblCategorias.setText("0");
         
         cmbTipoInforme.getSelectionModel().selectFirst();

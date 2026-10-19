@@ -335,17 +335,18 @@ public class InformeService {
 
         sb.append("📋 HISTORIAL DE COMPRAS (Últimas 10)\n");
         sb.append("─".repeat(80)).append("\n");
-        sb.append(String.format("%-12s %10s %15s %15s %20s\n", 
-            "FECHA", "CANTIDAD", "PRECIO UNIT.", "TOTAL", "NOTAS"));
+        sb.append(String.format("%-12s %-8s %8s %14s %14s %16s\n", 
+            "FECHA", "HORA", "CANT.", "PRECIO UNIT.", "TOTAL", "NOTAS"));
         sb.append("─".repeat(80)).append("\n");
 
         gastos.stream().limit(10).forEach(g -> {
-            sb.append(String.format("%-12s %10d %15s %15s %20s\n",
+            sb.append(String.format("%-12s %-8s %8d %14s %14s %16s\n",
                 formatearFecha(g.getFecha()),
+                formatearHora(g),
                 g.getCantidad(),
                 formatearMoneda(g.getValorUnitario()),
                 formatearMoneda(g.getValorTotal()),
-                truncar((g.getNotas() != null && !g.getNotas().isEmpty()) ? g.getNotas() : "-", 20)
+                truncar((g.getNotas() != null && !g.getNotas().isEmpty()) ? g.getNotas() : "-", 16)
             ));
         });
 
@@ -1254,12 +1255,12 @@ public class InformeService {
             .setMarginBottom(12);
         document.add(seccionHistorial);
 
-        float[] historialWidths = {90f, 70f, 110f, 110f, 150f};
+        float[] historialWidths = {80f, 60f, 60f, 100f, 100f, 130f};
         com.itextpdf.layout.element.Table tableHistorial = new com.itextpdf.layout.element.Table(historialWidths);
         tableHistorial.setWidth(com.itextpdf.layout.properties.UnitValue.createPercentValue(100));
 
         // Headers mejorados
-        String[] headers = {"FECHA", "CANT.", "PRECIO UNIT.", "TOTAL", "NOTAS"};
+        String[] headers = {"FECHA", "HORA", "CANT.", "PRECIO UNIT.", "TOTAL", "NOTAS"};
         for (String header : headers) {
             com.itextpdf.layout.element.Cell cell = new com.itextpdf.layout.element.Cell();
             cell.add(new Paragraph(header).setBold().setFontSize(9).setFontColor(com.itextpdf.kernel.colors.ColorConstants.WHITE));
@@ -1277,6 +1278,7 @@ public class InformeService {
             DeviceRgb colorFondo = (i % 2 == 0) ? new DeviceRgb(255, 255, 255) : grisClaro;
             
             agregarCeldaDato(tableHistorial, formatearFecha(gasto.getFecha()), colorFondo, grisBorde, com.itextpdf.layout.properties.TextAlignment.CENTER);
+            agregarCeldaDato(tableHistorial, formatearHora(gasto), colorFondo, grisBorde, com.itextpdf.layout.properties.TextAlignment.CENTER);
             agregarCeldaDato(tableHistorial, String.valueOf(gasto.getCantidad()), colorFondo, grisBorde, com.itextpdf.layout.properties.TextAlignment.CENTER);
             agregarCeldaDato(tableHistorial, formatearMoneda(gasto.getValorUnitario()), colorFondo, grisBorde, com.itextpdf.layout.properties.TextAlignment.RIGHT);
             agregarCeldaDato(tableHistorial, formatearMoneda(gasto.getValorTotal()), colorFondo, grisBorde, com.itextpdf.layout.properties.TextAlignment.RIGHT);
@@ -2295,7 +2297,7 @@ public class InformeService {
         titleCell.setCellStyle(titleStyle);
 
         Row headerRow = sheet.createRow(2);
-        String[] columnas = {"Fecha", "Subcategoría", "Producto", "Cantidad", "Valor Unit.", "Total", "Notas"};
+        String[] columnas = {"Fecha", "Hora", "Subcategoría", "Producto", "Cantidad", "Valor Unit.", "Total", "Notas"};
         
         for (int i = 0; i < columnas.length; i++) {
             org.apache.poi.ss.usermodel.Cell cell = headerRow.createCell(i);
@@ -2313,29 +2315,30 @@ public class InformeService {
             dateCell.setCellValue(formatearFecha(gasto.getFecha()));
             dateCell.setCellStyle(dateStyle);
             
-            row.createCell(1).setCellValue(gasto.getSubcategoria().getNombre());
-            row.createCell(2).setCellValue(gasto.getProducto());
-            row.createCell(3).setCellValue(gasto.getCantidad());
+            row.createCell(1).setCellValue(formatearHora(gasto));
+            row.createCell(2).setCellValue(gasto.getSubcategoria().getNombre());
+            row.createCell(3).setCellValue(gasto.getProducto());
+            row.createCell(4).setCellValue(gasto.getCantidad());
             
-            org.apache.poi.ss.usermodel.Cell valorUnitCell = row.createCell(4);
+            org.apache.poi.ss.usermodel.Cell valorUnitCell = row.createCell(5);
             valorUnitCell.setCellValue(gasto.getValorUnitario().doubleValue());
             valorUnitCell.setCellStyle(moneyStyle);
             
-            org.apache.poi.ss.usermodel.Cell totalCell = row.createCell(5);
+            org.apache.poi.ss.usermodel.Cell totalCell = row.createCell(6);
             totalCell.setCellValue(gasto.getValorTotal().doubleValue());
             totalCell.setCellStyle(moneyStyle);
             
-            row.createCell(6).setCellValue(gasto.getNotas() != null ? gasto.getNotas() : "");
+            row.createCell(7).setCellValue(gasto.getNotas() != null ? gasto.getNotas() : "");
             
             totalGastado = totalGastado.add(gasto.getValorTotal());
         }
 
         Row totalRow = sheet.createRow(rowNum + 1);
-        org.apache.poi.ss.usermodel.Cell totalLabelCell = totalRow.createCell(4);
+        org.apache.poi.ss.usermodel.Cell totalLabelCell = totalRow.createCell(5);
         totalLabelCell.setCellValue("TOTAL:");
         totalLabelCell.setCellStyle(headerStyle);
         
-        org.apache.poi.ss.usermodel.Cell totalValueCell = totalRow.createCell(5);
+        org.apache.poi.ss.usermodel.Cell totalValueCell = totalRow.createCell(6);
         totalValueCell.setCellValue(totalGastado.doubleValue());
         totalValueCell.setCellStyle(crearEstiloTotal(workbook));
 
@@ -2370,7 +2373,7 @@ public class InformeService {
         titleCell.setCellStyle(titleStyle);
 
         Row headerRow = sheet.createRow(2);
-        String[] columnas = {"Fecha", "Cantidad", "Precio Unitario", "Total", "Notas"};
+        String[] columnas = {"Fecha", "Hora", "Cantidad", "Precio Unitario", "Total", "Notas"};
         
         for (int i = 0; i < columnas.length; i++) {
             org.apache.poi.ss.usermodel.Cell cell = headerRow.createCell(i);
@@ -2389,17 +2392,18 @@ public class InformeService {
             dateCell.setCellValue(formatearFecha(gasto.getFecha()));
             dateCell.setCellStyle(dateStyle);
             
-            row.createCell(1).setCellValue(gasto.getCantidad());
+            row.createCell(1).setCellValue(formatearHora(gasto));
+            row.createCell(2).setCellValue(gasto.getCantidad());
             
-            org.apache.poi.ss.usermodel.Cell precioCell = row.createCell(2);
+            org.apache.poi.ss.usermodel.Cell precioCell = row.createCell(3);
             precioCell.setCellValue(gasto.getValorUnitario().doubleValue());
             precioCell.setCellStyle(moneyStyle);
             
-            org.apache.poi.ss.usermodel.Cell totalCell = row.createCell(3);
+            org.apache.poi.ss.usermodel.Cell totalCell = row.createCell(4);
             totalCell.setCellValue(gasto.getValorTotal().doubleValue());
             totalCell.setCellStyle(moneyStyle);
             
-            row.createCell(4).setCellValue(gasto.getNotas() != null ? gasto.getNotas() : "");
+            row.createCell(5).setCellValue(gasto.getNotas() != null ? gasto.getNotas() : "");
             
             totalGastado = totalGastado.add(gasto.getValorTotal());
             cantidadTotal += gasto.getCantidad();
@@ -2407,9 +2411,9 @@ public class InformeService {
 
         Row totalRow = sheet.createRow(rowNum + 1);
         totalRow.createCell(0).setCellValue("TOTALES:");
-        totalRow.createCell(1).setCellValue(cantidadTotal);
+        totalRow.createCell(2).setCellValue(cantidadTotal);
         
-        org.apache.poi.ss.usermodel.Cell totalValueCell = totalRow.createCell(3);
+        org.apache.poi.ss.usermodel.Cell totalValueCell = totalRow.createCell(4);
         totalValueCell.setCellValue(totalGastado.doubleValue());
         totalValueCell.setCellStyle(crearEstiloTotal(workbook));
 
@@ -2522,6 +2526,15 @@ public class InformeService {
     private String formatearFecha(LocalDate fecha) {
         return fecha.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
     }
+    
+    private String formatearHora(Gasto gasto) {
+        Object hora = gasto.getHora();
+        if (hora == null) return "-";
+        if (hora instanceof java.time.LocalTime) {
+            return ((java.time.LocalTime) hora).format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"));
+        }
+        return hora.toString();
+    }   
 
     private String truncar(String texto, int max) {
         if (texto == null) return "";

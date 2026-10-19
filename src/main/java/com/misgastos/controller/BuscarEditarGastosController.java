@@ -24,11 +24,12 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Component
 public class BuscarEditarGastosController {
-    
+
     @FXML private DatePicker dpFechaInicio;
     @FXML private DatePicker dpFechaFin;
     @FXML private TextField txtBuscarProducto;
@@ -46,22 +47,23 @@ public class BuscarEditarGastosController {
     @FXML private TableColumn<Gasto, BigDecimal> colTotal;
     @FXML private TableColumn<Gasto, Void> colAcciones;
     @FXML private Label lblResultados;
-    
+    @FXML private Label lblTotalGastos;
+
     @Autowired private GastoService gastoService;
     @Autowired private CategoriaService categoriaService;
-    
+
     private Long usuarioId = 1L;
     private List<Gasto> gastosActuales;
-    
+
     // Formato para peso colombiano sin decimales
     private static final NumberFormat formatoCOP;
-    
+
     static {
         formatoCOP = NumberFormat.getCurrencyInstance(new Locale("es", "CO"));
         formatoCOP.setMaximumFractionDigits(0);
         formatoCOP.setMinimumFractionDigits(0);
     }
-    
+
     @FXML
     public void initialize() {
         configurarTabla();
@@ -69,19 +71,35 @@ public class BuscarEditarGastosController {
         habilitarCopiaDeCeldas();
         cargarGastosRecientes();
     }
-    
+
     private void configurarFechas() {
         dpFechaFin.setValue(LocalDate.now());
         dpFechaInicio.setValue(LocalDate.now().minusMonths(1));
     }
-    
+
+    /**
+     * Muestra en la tabla la lista indicada y actualiza el TOTAL de lo que se ve.
+     */
+    private void mostrarGastos(List<Gasto> gastos) {
+        tableGastos.setItems(FXCollections.observableArrayList(gastos));
+        actualizarTotal(gastos);
+    }
+
+    private void actualizarTotal(List<Gasto> gastos) {
+        BigDecimal total = gastos.stream()
+            .map(Gasto::getValorTotal)
+            .filter(Objects::nonNull)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        lblTotalGastos.setText("TOTAL: " + formatoCOP.format(total));
+    }
+
     private void habilitarCopiaDeCeldas() {
         tableGastos.setOnKeyPressed(event -> {
             if (event.isControlDown() && event.getCode() == javafx.scene.input.KeyCode.C) {
                 copiarCeldaSeleccionada();
             }
         });
-        
+
         // Permitir doble clic para copiar
         tableGastos.setOnMouseClicked(event -> {
             if (event.getClickCount() == 2) {
@@ -89,38 +107,38 @@ public class BuscarEditarGastosController {
             }
         });
     }
-    
+
     private void copiarCeldaSeleccionada() {
         TablePosition<Gasto, ?> pos = tableGastos.getFocusModel().getFocusedCell();
         if (pos != null) {
             Object cell = pos.getTableColumn().getCellData(pos.getRow());
             if (cell != null) {
                 String texto = cell.toString();
-                
+
                 // Si es un BigDecimal, aplicar formato
                 if (cell instanceof BigDecimal) {
                     texto = formatoCOP.format((BigDecimal) cell);
                 }
-                
+
                 javafx.scene.input.Clipboard clipboard = javafx.scene.input.Clipboard.getSystemClipboard();
                 javafx.scene.input.ClipboardContent content = new javafx.scene.input.ClipboardContent();
                 content.putString(texto);
                 clipboard.setContent(content);
-                
+
                 // Feedback visual
                 System.out.println("✓ Copiado: " + texto);
             }
         }
     }
-    
+
     private void configurarTabla() {
         // Habilitar selección por celda en lugar de por fila
         tableGastos.getSelectionModel().setCellSelectionEnabled(true);
         tableGastos.setEditable(false);
-        
+
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colFecha.setCellValueFactory(new PropertyValueFactory<>("fecha"));
-        
+
         colHora.setCellValueFactory(new PropertyValueFactory<>("hora"));
         colHora.setCellFactory(column -> new TableCell<Gasto, LocalTime>() {
             @Override
@@ -133,22 +151,22 @@ public class BuscarEditarGastosController {
                 }
             }
         });
-        
-        colCategoria.setCellValueFactory(cellData -> 
+
+        colCategoria.setCellValueFactory(cellData ->
             new javafx.beans.property.SimpleStringProperty(
                 cellData.getValue().getCategoria().getNombre()
             )
         );
-        
-        colSubcategoria.setCellValueFactory(cellData -> 
+
+        colSubcategoria.setCellValueFactory(cellData ->
             new javafx.beans.property.SimpleStringProperty(
                 cellData.getValue().getSubcategoria().getNombre()
             )
         );
-        
+
         colProducto.setCellValueFactory(new PropertyValueFactory<>("producto"));
         colCantidad.setCellValueFactory(new PropertyValueFactory<>("cantidad"));
-        
+
         // FORMATO PESO COLOMBIANO PARA VALOR UNITARIO
         colValorUnitario.setCellValueFactory(new PropertyValueFactory<>("valorUnitario"));
         colValorUnitario.setCellFactory(column -> new TableCell<Gasto, BigDecimal>() {
@@ -162,7 +180,7 @@ public class BuscarEditarGastosController {
                 }
             }
         });
-        
+
         // FORMATO PESO COLOMBIANO PARA TOTAL
         colTotal.setCellValueFactory(new PropertyValueFactory<>("valorTotal"));
         colTotal.setCellFactory(column -> new TableCell<Gasto, BigDecimal>() {
@@ -176,34 +194,34 @@ public class BuscarEditarGastosController {
                 }
             }
         });
-        
+
         agregarColumnaAcciones();
     }
-    
+
     private void agregarColumnaAcciones() {
         colAcciones.setCellFactory(param -> new TableCell<>() {
             private final Button btnEditar = new Button("✏ Editar");
             private final Button btnEliminar = new Button("🗑");
             private final HBox contenedor = new HBox(5, btnEditar, btnEliminar);
-            
+
             {
                 btnEditar.getStyleClass().add("secondary-button");
                 btnEditar.setStyle("-fx-font-size: 11px; -fx-padding: 5 10;");
-                
+
                 btnEliminar.getStyleClass().add("danger-button");
                 btnEliminar.setStyle("-fx-font-size: 11px; -fx-padding: 5 10; -fx-background-color: #ef4444; -fx-text-fill: white;");
-                
+
                 btnEditar.setOnAction(event -> {
                     Gasto gasto = getTableView().getItems().get(getIndex());
                     abrirDialogoEditar(gasto);
                 });
-                
+
                 btnEliminar.setOnAction(event -> {
                     Gasto gasto = getTableView().getItems().get(getIndex());
                     confirmarEliminar(gasto);
                 });
             }
-            
+
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
@@ -211,66 +229,66 @@ public class BuscarEditarGastosController {
             }
         });
     }
-    
+
     @FXML
     public void handleBuscar() {
         LocalDate inicio = dpFechaInicio.getValue();
         LocalDate fin = dpFechaFin.getValue();
-        
+
         if (inicio == null || fin == null) {
             mostrarAlerta("Validación", "Seleccione ambas fechas", Alert.AlertType.WARNING);
             return;
         }
-        
+
         if (inicio.isAfter(fin)) {
             mostrarAlerta("Validación", "La fecha de inicio no puede ser posterior a la fecha fin", Alert.AlertType.WARNING);
             return;
         }
-        
+
         gastosActuales = gastoService.buscarPorUsuarioYPeriodo(usuarioId, inicio, fin);
-        tableGastos.setItems(FXCollections.observableArrayList(gastosActuales));
-        
+        mostrarGastos(gastosActuales);
+
         lblResultados.setText(gastosActuales.size() + " gasto(s) encontrado(s)");
         txtBuscarProducto.clear();
     }
-    
+
     @FXML
     public void handleBuscarProducto() {
         String textoBusqueda = txtBuscarProducto.getText();
-        
+
         if (textoBusqueda == null || textoBusqueda.trim().isEmpty()) {
             mostrarAlerta("Validación", "Ingrese un texto para buscar", Alert.AlertType.WARNING);
             return;
         }
-        
+
         LocalDate inicio = dpFechaInicio.getValue();
         LocalDate fin = dpFechaFin.getValue();
-        
+
         if (inicio == null || fin == null) {
             mostrarAlerta("Validación", "Seleccione ambas fechas", Alert.AlertType.WARNING);
             return;
         }
-        
+
         if (inicio.isAfter(fin)) {
             mostrarAlerta("Validación", "La fecha de inicio no puede ser posterior a la fecha fin", Alert.AlertType.WARNING);
             return;
         }
-        
+
         List<Gasto> todosLosGastos = gastoService.buscarPorUsuarioYPeriodo(usuarioId, inicio, fin);
         gastosActuales = todosLosGastos.stream()
             .filter(gasto -> gasto.getProducto().toLowerCase().contains(textoBusqueda.toLowerCase()))
             .collect(Collectors.toList());
-        
-        tableGastos.setItems(FXCollections.observableArrayList(gastosActuales));
+
+        mostrarGastos(gastosActuales);
         lblResultados.setText(gastosActuales.size() + " gasto(s) encontrado(s) con '" + textoBusqueda + "'");
     }
-    
+
     @FXML
     public void handleLimpiarBusqueda() {
         txtBuscarProducto.clear();
         handleBuscar();
     }
-    
+
     @FXML
     public void handleLimpiar() {
         dpFechaInicio.setValue(LocalDate.now().minusMonths(1));
@@ -278,51 +296,51 @@ public class BuscarEditarGastosController {
         txtBuscarProducto.clear();
         cargarGastosRecientes();
     }
-    
+
     private void cargarGastosRecientes() {
         LocalDate inicio = LocalDate.now().minusMonths(1);
         LocalDate fin = LocalDate.now();
         gastosActuales = gastoService.buscarPorUsuarioYPeriodo(usuarioId, inicio, fin);
-        tableGastos.setItems(FXCollections.observableArrayList(gastosActuales));
+        mostrarGastos(gastosActuales);
         lblResultados.setText(gastosActuales.size() + " gasto(s) en el último mes");
     }
-    
+
     private void abrirDialogoEditar(Gasto gasto) {
         Dialog<Gasto> dialog = new Dialog<>();
         dialog.setTitle("✏️ Editar Gasto");
         dialog.setHeaderText("Editar gasto #" + gasto.getId());
-        
+
         ButtonType btnGuardar = new ButtonType("💾 Guardar", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(btnGuardar, ButtonType.CANCEL);
-        
+
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(10);
         grid.setPadding(new Insets(20));
-        
+
         DatePicker dpFecha = new DatePicker(gasto.getFecha());
         TextField txtHora = new TextField(gasto.getHora().format(DateTimeFormatter.ofPattern("HH:mm")));
-        
+
         ComboBox<Categoria> cmbCategoria = new ComboBox<>();
         cmbCategoria.getItems().setAll(categoriaService.listarCategorias());
         cmbCategoria.setValue(gasto.getCategoria());
-        
+
         ComboBox<Subcategoria> cmbSubcategoria = new ComboBox<>();
         cmbSubcategoria.getItems().setAll(
             categoriaService.listarSubcategoriasPorCategoria(gasto.getCategoria().getId())
         );
         cmbSubcategoria.setValue(gasto.getSubcategoria());
-        
+
         TextField txtProducto = new TextField(gasto.getProducto());
         TextField txtCantidad = new TextField(String.valueOf(gasto.getCantidad()));
         TextField txtValorUnitario = new TextField(gasto.getValorUnitario().toString());
         TextField txtValorTotal = new TextField(formatoCOP.format(gasto.getValorTotal()));
         txtValorTotal.setEditable(false);
         txtValorTotal.setStyle("-fx-background-color: #f3f4f6;");
-        
+
         TextArea txtNotas = new TextArea(gasto.getNotas());
         txtNotas.setPrefRowCount(3);
-        
+
         cmbCategoria.setOnAction(e -> {
             Categoria selected = cmbCategoria.getValue();
             if (selected != null) {
@@ -331,7 +349,7 @@ public class BuscarEditarGastosController {
                 );
             }
         });
-        
+
         Runnable calcularTotal = () -> {
             try {
                 int cantidad = Integer.parseInt(txtCantidad.getText());
@@ -342,45 +360,45 @@ public class BuscarEditarGastosController {
                 txtValorTotal.setText(formatoCOP.format(0));
             }
         };
-        
+
         txtCantidad.textProperty().addListener((obs, old, newVal) -> calcularTotal.run());
         txtValorUnitario.textProperty().addListener((obs, old, newVal) -> calcularTotal.run());
-        
+
         int row = 0;
         grid.add(new Label("Fecha:"), 0, row);
         grid.add(dpFecha, 1, row++);
-        
+
         grid.add(new Label("Hora (HH:mm):"), 0, row);
         grid.add(txtHora, 1, row++);
-        
+
         grid.add(new Label("Categoría:"), 0, row);
         grid.add(cmbCategoria, 1, row++);
-        
+
         grid.add(new Label("Subcategoría:"), 0, row);
         grid.add(cmbSubcategoria, 1, row++);
-        
+
         grid.add(new Label("Producto:"), 0, row);
         grid.add(txtProducto, 1, row++);
-        
+
         grid.add(new Label("Cantidad:"), 0, row);
         grid.add(txtCantidad, 1, row++);
-        
+
         grid.add(new Label("Valor Unitario:"), 0, row);
         grid.add(txtValorUnitario, 1, row++);
-        
+
         grid.add(new Label("Valor Total:"), 0, row);
         grid.add(txtValorTotal, 1, row++);
-        
+
         grid.add(new Label("Notas:"), 0, row);
         grid.add(txtNotas, 1, row++);
-        
+
         dialog.getDialogPane().setContent(grid);
-        
+
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == btnGuardar) {
                 try {
                     LocalTime hora = LocalTime.parse(txtHora.getText(), DateTimeFormatter.ofPattern("HH:mm"));
-                    
+
                     gastoService.actualizarGasto(
                         gasto.getId(),
                         cmbCategoria.getValue().getId(),
@@ -392,7 +410,7 @@ public class BuscarEditarGastosController {
                         dpFecha.getValue(),
                         hora
                     );
-                    
+
                     return gasto;
                 } catch (Exception e) {
                     mostrarAlerta("Error", "Error al guardar: " + e.getMessage(), Alert.AlertType.ERROR);
@@ -401,13 +419,13 @@ public class BuscarEditarGastosController {
             }
             return null;
         });
-        
+
         dialog.showAndWait().ifPresent(gastoActualizado -> {
             mostrarAlerta("Éxito", "Gasto actualizado correctamente", Alert.AlertType.INFORMATION);
             handleBuscar();
         });
     }
-    
+
     private void confirmarEliminar(Gasto gasto) {
         Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
         confirmacion.setTitle("Confirmar eliminación");
@@ -417,7 +435,7 @@ public class BuscarEditarGastosController {
             "Valor: " + formatoCOP.format(gasto.getValorTotal()) + "\n" +
             "Fecha: " + gasto.getFecha()
         );
-        
+
         confirmacion.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
                 gastoService.eliminarGasto(gasto.getId());
@@ -426,7 +444,7 @@ public class BuscarEditarGastosController {
             }
         });
     }
-    
+
     private void mostrarAlerta(String titulo, String mensaje, Alert.AlertType tipo) {
         Alert alert = new Alert(tipo);
         alert.setTitle(titulo);

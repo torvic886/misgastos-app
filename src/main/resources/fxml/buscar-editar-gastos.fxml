@@ -8,85 +8,85 @@
 <VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.misgastos.controller.BuscarEditarGastosController"
       spacing="12" style="-fx-background-color: #f7fafc;">
-    
+
     <padding>
         <Insets top="15" right="15" bottom="15" left="15"/>
     </padding>
-    
+
     <!-- TÍTULO -->
     <HBox alignment="CENTER_LEFT" spacing="8">
         <Label text="🔍 Buscar y Editar Gastos" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
     </HBox>
-    
+
     <!-- PANEL DE BÚSQUEDA -->
     <VBox spacing="10" style="-fx-background-color: white; -fx-background-radius: 10; -fx-padding: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);">
-        
+
         <Label text="📅 Filtrar por Fecha" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
-        
+
         <HBox spacing="12" alignment="CENTER_LEFT">
             <VBox spacing="3">
                 <Label text="Fecha Inicio:" style="-fx-font-size: 11px; -fx-text-fill: #6b7280;"/>
                 <DatePicker fx:id="dpFechaInicio" prefWidth="140" promptText="Desde"/>
             </VBox>
-            
+
             <VBox spacing="3">
                 <Label text="Fecha Fin:" style="-fx-font-size: 11px; -fx-text-fill: #6b7280;"/>
                 <DatePicker fx:id="dpFechaFin" prefWidth="140" promptText="Hasta"/>
             </VBox>
-            
+
             <VBox spacing="3">
                 <Label text=" " style="-fx-font-size: 11px;"/>
                 <HBox spacing="8">
-                    <Button fx:id="btnBuscar" text="🔍 Buscar" onAction="#handleBuscar" 
+                    <Button fx:id="btnBuscar" text="🔍 Buscar" onAction="#handleBuscar"
                             styleClass="primary-button"
                             style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-padding: 6 16; -fx-font-size: 12px; -fx-cursor: hand;"/>
-                    
+
                     <Button fx:id="btnLimpiar" text="🔄 Limpiar" onAction="#handleLimpiar"
                             styleClass="secondary-button"
                             style="-fx-background-color: #e5e7eb; -fx-text-fill: #374151; -fx-padding: 6 16; -fx-font-size: 12px; -fx-cursor: hand;"/>
                 </HBox>
             </VBox>
         </HBox>
-        
+
         <Separator style="-fx-padding: 3 0;"/>
-        
+
         <!-- BÚSQUEDA POR TEXTO -->
         <Label text="🔎 Buscar Producto Específico" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
-        
+
         <HBox spacing="8" alignment="CENTER_LEFT">
             <VBox spacing="3" HBox.hgrow="ALWAYS">
                 <Label text="Nombre del Producto:" style="-fx-font-size: 11px; -fx-text-fill: #6b7280;"/>
-                <TextField fx:id="txtBuscarProducto" promptText="Escribe para buscar..." 
+                <TextField fx:id="txtBuscarProducto" promptText="Escribe para buscar..."
                           prefWidth="280"
                           onAction="#handleBuscarProducto"
                           style="-fx-padding: 6; -fx-font-size: 12px;"/>
             </VBox>
-            
+
             <VBox spacing="3">
                 <Label text=" " style="-fx-font-size: 11px;"/>
                 <HBox spacing="8">
                     <Button text="🔍 Buscar Producto" onAction="#handleBuscarProducto"
                             styleClass="primary-button"
                             style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-padding: 6 16; -fx-font-size: 12px; -fx-cursor: hand;"/>
-                    
+
                     <Button text="✖ Limpiar Búsqueda" onAction="#handleLimpiarBusqueda"
                             styleClass="secondary-button"
                             style="-fx-background-color: #f59e0b; -fx-text-fill: white; -fx-padding: 6 16; -fx-font-size: 12px; -fx-cursor: hand;"/>
                 </HBox>
             </VBox>
         </HBox>
-        
-        <Label fx:id="lblResultados" text="0 gasto(s) encontrado(s)" 
+
+        <Label fx:id="lblResultados" text="0 gasto(s) encontrado(s)"
                style="-fx-font-size: 11px; -fx-text-fill: #6b7280; -fx-font-style: italic;"/>
     </VBox>
-    
+
     <!-- TABLA DE RESULTADOS -->
-    <VBox VBox.vgrow="ALWAYS" spacing="8" 
+    <VBox VBox.vgrow="ALWAYS" spacing="8"
           style="-fx-background-color: white; -fx-background-radius: 10; -fx-padding: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);">
-        
+
         <Label text="📋 Resultados de Búsqueda" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
-        
-        <TableView fx:id="tableGastos" VBox.vgrow="ALWAYS" 
+
+        <TableView fx:id="tableGastos" VBox.vgrow="ALWAYS"
                    prefHeight="500"
                    style="-fx-background-color: white;">
             <columns>
@@ -101,7 +101,7 @@
                 <TableColumn fx:id="colTotal" text="Total" prefWidth="100" style="-fx-alignment: CENTER_RIGHT;"/>
                 <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="150" style="-fx-alignment: CENTER;"/>
             </columns>
-            
+
             <placeholder>
                 <VBox alignment="CENTER" spacing="10" style="-fx-padding: 40;">
                     <Label text="🔭" style="-fx-font-size: 48px;"/>
@@ -110,6 +110,11 @@
                 </VBox>
             </placeholder>
         </TableView>
+
+        <!-- TOTAL de los gastos que se muestran en la tabla -->
+        <HBox alignment="CENTER_RIGHT">
+            <Label fx:id="lblTotalGastos" text="TOTAL: $0" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+        </HBox>
     </VBox>
-    
+
 </VBox>

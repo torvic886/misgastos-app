@@ -179,10 +179,10 @@ public class DashboardController {
     private void cargarVistaConSubMenu() {
         try {
             VBox container = new VBox(10);
-            container.setStyle("-fx-padding: 20; -fx-background-color: #f7fafc;");
+            container.setStyle("-fx-padding: 8; -fx-background-color: #f7fafc;");
             
             HBox submenu = new HBox(15);
-            submenu.setStyle("-fx-padding: 10;");
+            submenu.setStyle("-fx-padding: 0 0 4 0;");
             
             Button btnListar = new Button("📋 Ver Historial");
             btnListar.getStyleClass().add("secondary-button");
@@ -205,6 +205,7 @@ public class DashboardController {
             loader.setControllerFactory(springContext::getBean);
             Parent vista = loader.load();
             
+            VBox.setVgrow(vista, javafx.scene.layout.Priority.ALWAYS);
             container.getChildren().add(vista);
             mainBorderPane.setCenter(container);
             

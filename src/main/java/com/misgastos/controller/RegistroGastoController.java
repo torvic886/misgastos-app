@@ -34,6 +34,20 @@ import java.util.Locale;
 import javafx.scene.control.SelectionMode;
 import javafx.collections.ObservableList;
 
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.geometry.Side;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.TreeSet;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 @Component
 public class RegistroGastoController {
     
@@ -68,12 +82,21 @@ public class RegistroGastoController {
     private boolean ignorarCambioTexto = false;
     private Set<String> productosYaUsados = new HashSet<>();
     
+    private final ObservableList<Gasto> gastosMaestro = FXCollections.observableArrayList();
+    private FilteredList<Gasto> gastosFiltrados;
+    private final Map<TableColumn<Gasto, ?>, Function<Gasto, String>> extractores = new LinkedHashMap<>();
+    private final Map<TableColumn<Gasto, ?>, Set<String>> seleccionados = new HashMap<>();
+    private final Map<TableColumn<Gasto, ?>, Button> botonesFiltro = new HashMap<>();
+    private final NumberFormat fmtMoneda = NumberFormat.getCurrencyInstance(new Locale("es", "CO"));
+    
+    
     @FXML
     public void initialize() {
         configurarCalculoAutomatico();
         configurarProductoAutocomplete();
         configurarGuardarConEnter();
         configurarTabla();
+        configurarFiltros();
         cargarUltimosGastos();
         configurarCopiaPegadoTabla();
         //cargarUltimosGastos();
@@ -427,7 +450,7 @@ public class RegistroGastoController {
     private void configurarTabla() {
         NumberFormat formatoPeso = NumberFormat.getCurrencyInstance(new Locale("es", "CO"));
         
-        tblUltimosGastos.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tblUltimosGastos.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
         
         colFecha.setCellValueFactory(data -> new SimpleObjectProperty<>(data.getValue().getFecha()));
         colHora.setCellValueFactory(data -> {
@@ -495,7 +518,10 @@ public class RegistroGastoController {
             System.out.println("───────────────────────────────────────");
             System.out.println("🔄 Actualizando tabla en UI...");
             
-            tblUltimosGastos.setItems(FXCollections.observableArrayList(gastos));
+            seleccionados.clear();
+            gastosMaestro.setAll(gastos);
+            aplicarFiltros();
+
             actualizarTotal();
             
             System.out.println("✅ Tabla actualizada correctamente");
@@ -852,6 +878,126 @@ public class RegistroGastoController {
         lblTotalGastos.setText(
             NumberFormat.getCurrencyInstance(new Locale("es", "CO")).format(suma));
     }
+    
+    private void configurarFiltros() {
+        gastosFiltrados = new FilteredList<>(gastosMaestro, g -> true);
+        SortedList<Gasto> ordenados = new SortedList<>(gastosFiltrados);
+        ordenados.comparatorProperty().bind(tblUltimosGastos.comparatorProperty());
+        tblUltimosGastos.setItems(ordenados);
+
+        agregarFiltro(colFecha, "Fecha", g -> String.valueOf(g.getFecha()));
+        agregarFiltro(colHora, "Hora", g -> {
+            Object h = g.getHora();
+            String t = h == null ? "" : String.valueOf(h);
+            return t.length() > 5 ? t.substring(0, 5) : t;
+        });
+        agregarFiltro(colCategoria, "Categoría", g -> g.getCategoria().getNombre());
+        agregarFiltro(colProducto, "Producto", g -> g.getProducto());
+        agregarFiltro(colCantidad, "Cant", g -> String.valueOf(g.getCantidad()));
+        agregarFiltro(colValorUnitario, "V. Unit",
+            g -> g.getValorUnitario() == null ? "" : fmtMoneda.format(g.getValorUnitario()));
+        agregarFiltro(colTotal, "Total",
+            g -> g.getValorTotal() == null ? "" : fmtMoneda.format(g.getValorTotal()));
+    }
+
+    private void agregarFiltro(TableColumn<Gasto, ?> col, String titulo, Function<Gasto, String> extractor) {
+        Label lbl = new Label(titulo);
+        lbl.setStyle("-fx-font-weight: bold;");
+        Button btn = new Button("▼");
+        btn.setFocusTraversable(false);
+        btn.setStyle(ESTILO_FILTRO_NORMAL);
+        btn.setOnAction(e -> mostrarMenuFiltro(col, btn));
+
+        HBox caja = new HBox(4, lbl, btn);
+        caja.setAlignment(Pos.CENTER);
+        col.setText("");
+        col.setGraphic(caja);
+
+        extractores.put(col, extractor);
+        botonesFiltro.put(col, btn);
+    }
+
+    private static final String ESTILO_FILTRO_NORMAL =
+        "-fx-padding: 0 4 0 4; -fx-font-size: 10px; -fx-background-color: transparent; -fx-text-fill: #64748b; -fx-cursor: hand;";
+    private static final String ESTILO_FILTRO_ACTIVO =
+        "-fx-padding: 0 4 0 4; -fx-font-size: 10px; -fx-background-color: #dbeafe; -fx-text-fill: #2563eb; -fx-font-weight: bold; -fx-cursor: hand;";
+
+    private void mostrarMenuFiltro(TableColumn<Gasto, ?> col, Button anchor) {
+        Function<Gasto, String> ext = extractores.get(col);
+        TreeSet<String> valores = gastosMaestro.stream()
+            .map(g -> { String v = ext.apply(g); return v == null ? "" : v; })
+            .collect(Collectors.toCollection(TreeSet::new));
+        Set<String> actuales = seleccionados.containsKey(col)
+            ? new HashSet<>(seleccionados.get(col)) : new HashSet<>(valores);
+
+        TextField buscar = new TextField();
+        buscar.setPromptText("Buscar...");
+        CheckBox chkTodo = new CheckBox("(Seleccionar todo)");
+        chkTodo.setSelected(actuales.containsAll(valores));
+        VBox lista = new VBox(4);
+        lista.setPadding(new Insets(4));
+        ScrollPane sp = new ScrollPane(lista);
+        sp.setFitToWidth(true);
+        sp.setPrefHeight(200);
+        sp.setPrefWidth(230);
+        Button ok = new Button("Aceptar");
+        Button limpiar = new Button("Limpiar filtro");
+        HBox botones = new HBox(8, ok, limpiar);
+        VBox contenido = new VBox(8, buscar, chkTodo, sp, botones);
+        contenido.setPadding(new Insets(8));
+
+        ContextMenu menu = new ContextMenu();
+        CustomMenuItem item = new CustomMenuItem(contenido, false);
+        menu.getItems().add(item);
+
+        Runnable[] refrescar = new Runnable[1];
+        refrescar[0] = () -> {
+            String q = buscar.getText() == null ? "" : buscar.getText().trim().toLowerCase();
+            lista.getChildren().clear();
+            for (String v : valores) {
+                String etiqueta = v.isEmpty() ? "(vacío)" : v;
+                if (!q.isEmpty() && !etiqueta.toLowerCase().contains(q)) continue;
+                CheckBox cb = new CheckBox(etiqueta);
+                cb.setSelected(actuales.contains(v));
+                cb.selectedProperty().addListener((o, a, sel) -> {
+                    if (sel) actuales.add(v); else actuales.remove(v);
+                });
+                lista.getChildren().add(cb);
+            }
+        };
+        buscar.textProperty().addListener((o, a, b) -> refrescar[0].run());
+        chkTodo.setOnAction(e -> {
+            for (Node n : lista.getChildren()) ((CheckBox) n).setSelected(chkTodo.isSelected());
+        });
+        ok.setOnAction(e -> {
+            if (actuales.containsAll(valores)) seleccionados.remove(col);
+            else seleccionados.put(col, new HashSet<>(actuales));
+            menu.hide();
+            aplicarFiltros();
+        });
+        limpiar.setOnAction(e -> {
+            seleccionados.remove(col);
+            menu.hide();
+            aplicarFiltros();
+        });
+
+        refrescar[0].run();
+        menu.show(anchor, Side.BOTTOM, 0, 0);
+    }
+
+    private void aplicarFiltros() {
+        if (gastosFiltrados == null) return;
+        gastosFiltrados.setPredicate(g -> {
+            for (Map.Entry<TableColumn<Gasto, ?>, Set<String>> f : seleccionados.entrySet()) {
+                String v = extractores.get(f.getKey()).apply(g);
+                if (!f.getValue().contains(v == null ? "" : v)) return false;
+            }
+            return true;
+        });
+        botonesFiltro.forEach((c, b) ->
+            b.setStyle(seleccionados.containsKey(c) ? ESTILO_FILTRO_ACTIVO : ESTILO_FILTRO_NORMAL));
+        actualizarTotal();
+    }    
 
     private void copiarSeleccionAlPortapapeles() {
         StringBuilder clipboardString = new StringBuilder();
