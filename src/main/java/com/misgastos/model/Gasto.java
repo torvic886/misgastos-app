@@ -50,6 +50,9 @@ public class Gasto {
     
     @Column(length = 20)
     private String cedula;
+    
+    @Column(length = 100)
+    private String nombrePersona;
 
     // Tus getters y setters existentes...
     public Long getId() { return id; }
@@ -76,4 +79,6 @@ public class Gasto {
     public void setNotas(String notas) { this.notas = notas; }
     public String getCedula() { return cedula; }
     public void setCedula(String cedula) { this.cedula = cedula; }
+    public String getNombrePersona() { return nombrePersona; }
+    public void setNombrePersona(String nombrePersona) { this.nombrePersona = nombrePersona; }
 }

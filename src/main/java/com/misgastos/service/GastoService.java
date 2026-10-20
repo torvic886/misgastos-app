@@ -39,7 +39,7 @@ public class GastoService {
     
     public Gasto registrarGasto(Long usuarioId, Long categoriaId, Long subcategoriaId,
             String producto, Integer cantidad, BigDecimal valorUnitario,
-            String notas, String cedula) {
+            String notas, String cedula, String nombrePersona) {
         
         Usuario usuario = usuarioRepository.findById(usuarioId)
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -62,6 +62,7 @@ public class GastoService {
         gasto.setValorTotal(valorUnitario.multiply(BigDecimal.valueOf(cantidad)));
         gasto.setNotas(notas);
         gasto.setCedula(cedula);
+        gasto.setNombrePersona(nombrePersona);
         
         return gastoRepository.save(gasto);
     }
@@ -130,11 +131,19 @@ public class GastoService {
         return gastoRepository.findUltimosPorUsuario(usuarioId, limite);
     }
     
+    public List<Gasto> obtenerUltimosGastosGeneral(int limite) {
+        return gastoRepository.findUltimos(limite);
+    }
+    
     public boolean existeProducto(String producto) {
         if (producto == null) return false;
         String p = producto.trim();
         if (p.isEmpty()) return false;
         return gastoRepository.existeProducto(p);
+    }
+    
+    public List<Gasto> buscarTodosPorPeriodo(LocalDate inicio, LocalDate fin) {
+        return gastoRepository.findByFechaBetweenOrderByFechaDescHoraDesc(inicio, fin);
     }
 
     // ============================================================================
@@ -178,5 +187,18 @@ public class GastoService {
     		public Optional<Gasto> buscarPorId(Long id) {
     		    return gastoRepository.findById(id);
     		} 
+    	
+    		public Gasto registrarGasto(Long usuarioId, Long categoriaId, Long subcategoriaId,
+    		        String producto, Integer cantidad, BigDecimal valorUnitario,
+    		        String notas, String cedula) {
+    		    return registrarGasto(usuarioId, categoriaId, subcategoriaId, producto,
+    		        cantidad, valorUnitario, notas, cedula, null);
+    		}
+
+    		public Optional<String> buscarNombrePorCedula(String cedula) {
+    		    if (cedula == null || cedula.isBlank()) return Optional.empty();
+    		    return gastoRepository.ultimoNombrePorCedula(cedula.trim());
+    		}		
+    		
 
 }

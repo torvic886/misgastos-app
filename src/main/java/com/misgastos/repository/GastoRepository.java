@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -21,6 +22,8 @@ public interface GastoRepository extends JpaRepository<Gasto, Long> {
     List<Gasto> findByFechaBetween(LocalDate inicio, LocalDate fin);
     
     List<Gasto> findByCategoriaId(Long categoriaId);
+    
+    List<Gasto> findByFechaBetweenOrderByFechaDescHoraDesc(LocalDate inicio, LocalDate fin);
     
     @Query("SELECT SUM(g.valorTotal) FROM Gasto g WHERE g.fecha BETWEEN :inicio AND :fin")
     BigDecimal sumarGastosPorPeriodo(LocalDate inicio, LocalDate fin);
@@ -43,6 +46,13 @@ public interface GastoRepository extends JpaRepository<Gasto, Long> {
 
     default List<Gasto> findUltimosPorUsuario(Long usuarioId, int limite) {
         return findUltimosPorUsuario(usuarioId, PageRequest.of(0, limite));
+    }
+    
+    @Query("SELECT g FROM Gasto g ORDER BY g.fecha DESC, g.hora DESC")
+    List<Gasto> findUltimos(Pageable pageable);
+
+    default List<Gasto> findUltimos(int limite) {
+        return findUltimos(PageRequest.of(0, limite));
     }
     
     @Query("""
@@ -95,5 +105,16 @@ public interface GastoRepository extends JpaRepository<Gasto, Long> {
  // ✅ SUMA POR FECHA EXACTA Y CATEGORÍA (CORREGIDO PARA SQLITE)
     @Query(value = "SELECT COALESCE(SUM(valor_total), 0) FROM gastos WHERE fecha = :fecha AND categoria_id = :categoriaId", nativeQuery = true)
     BigDecimal sumByFechaAndCategoriaId(@Param("fecha") String fecha, @Param("categoriaId") Long categoriaId);
+
+    @Query("""
+    	    SELECT g.nombrePersona FROM Gasto g
+    	    WHERE g.cedula = :cedula AND g.nombrePersona IS NOT NULL AND g.nombrePersona <> ''
+    	    ORDER BY g.fecha DESC, g.hora DESC
+    	""")
+    	List<String> nombresPorCedula(@Param("cedula") String cedula, Pageable pageable);
+
+    	default Optional<String> ultimoNombrePorCedula(String cedula) {
+    	    return nombresPorCedula(cedula, PageRequest.of(0, 1)).stream().findFirst();
+    	}
 
 }

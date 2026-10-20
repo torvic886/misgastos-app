@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import com.misgastos.util.FiltroExcel;
+import javafx.beans.property.SimpleStringProperty;
 
 @Component
 public class BuscarEditarGastosController {
@@ -48,6 +50,10 @@ public class BuscarEditarGastosController {
     @FXML private TableColumn<Gasto, Void> colAcciones;
     @FXML private Label lblResultados;
     @FXML private Label lblTotalGastos;
+    @FXML private TableColumn<Gasto, String> colUsuario;
+    @FXML private TableColumn<Gasto, String> colCedula;
+    @FXML private TableColumn<Gasto, String> colNombre;
+    private FiltroExcel<Gasto> filtro;
 
     @Autowired private GastoService gastoService;
     @Autowired private CategoriaService categoriaService;
@@ -81,8 +87,7 @@ public class BuscarEditarGastosController {
      * Muestra en la tabla la lista indicada y actualiza el TOTAL de lo que se ve.
      */
     private void mostrarGastos(List<Gasto> gastos) {
-        tableGastos.setItems(FXCollections.observableArrayList(gastos));
-        actualizarTotal(gastos);
+    	filtro.setDatos(gastos);
     }
 
     private void actualizarTotal(List<Gasto> gastos) {
@@ -196,6 +201,35 @@ public class BuscarEditarGastosController {
         });
 
         agregarColumnaAcciones();
+        
+        colUsuario.setCellValueFactory(c -> new SimpleStringProperty(
+        	    c.getValue().getUsuario() == null ? "" : c.getValue().getUsuario().getUsername()));
+
+        colCedula.setCellValueFactory(c -> new SimpleStringProperty(
+        	    c.getValue().getCedula() == null ? "" : c.getValue().getCedula()));
+        colNombre.setCellValueFactory(c -> new SimpleStringProperty(
+        	    c.getValue().getNombrePersona() == null ? "" : c.getValue().getNombrePersona()));
+        
+        	filtro = new FiltroExcel<>(tableGastos, this::actualizarTotal);
+        	filtro.agregar(colId, "ID", g -> String.valueOf(g.getId()));
+        	filtro.agregar(colFecha, "Fecha", g -> String.valueOf(g.getFecha()));
+        	filtro.agregar(colHora, "Hora", g -> {
+        	    String h = g.getHora() == null ? "" : g.getHora().toString();
+        	    return h.length() > 5 ? h.substring(0, 5) : h;
+        	});
+        	filtro.agregar(colUsuario, "Registrado por",
+        	    g -> g.getUsuario() == null ? "" : g.getUsuario().getUsername());
+        	filtro.agregar(colCategoria, "Categoría", g -> g.getCategoria().getNombre());
+        	filtro.agregar(colSubcategoria, "Subcategoría", g -> g.getSubcategoria().getNombre());
+        	filtro.agregar(colProducto, "Producto", Gasto::getProducto);
+        	filtro.agregar(colCedula, "Cédula", g -> g.getCedula() == null ? "" : g.getCedula());
+        	filtro.agregar(colNombre, "Nombre", g -> g.getNombrePersona() == null ? "" : g.getNombrePersona());
+        	filtro.agregar(colCantidad, "Cant.", g -> String.valueOf(g.getCantidad()));
+        	filtro.agregar(colValorUnitario, "Valor Unit.",
+        	    g -> g.getValorUnitario() == null ? "" : formatoCOP.format(g.getValorUnitario()));
+        	filtro.agregar(colTotal, "Total",
+        	    g -> g.getValorTotal() == null ? "" : formatoCOP.format(g.getValorTotal()));
+        
     }
 
     private void agregarColumnaAcciones() {
@@ -245,7 +279,7 @@ public class BuscarEditarGastosController {
             return;
         }
 
-        gastosActuales = gastoService.buscarPorUsuarioYPeriodo(usuarioId, inicio, fin);
+        gastosActuales = gastoService.buscarTodosPorPeriodo(inicio, fin);
         mostrarGastos(gastosActuales);
 
         lblResultados.setText(gastosActuales.size() + " gasto(s) encontrado(s)");
@@ -274,7 +308,7 @@ public class BuscarEditarGastosController {
             return;
         }
 
-        List<Gasto> todosLosGastos = gastoService.buscarPorUsuarioYPeriodo(usuarioId, inicio, fin);
+        List<Gasto> todosLosGastos = gastoService.buscarTodosPorPeriodo(inicio, fin);
         gastosActuales = todosLosGastos.stream()
             .filter(gasto -> gasto.getProducto().toLowerCase().contains(textoBusqueda.toLowerCase()))
             .collect(Collectors.toList());
@@ -300,7 +334,7 @@ public class BuscarEditarGastosController {
     private void cargarGastosRecientes() {
         LocalDate inicio = LocalDate.now().minusMonths(1);
         LocalDate fin = LocalDate.now();
-        gastosActuales = gastoService.buscarPorUsuarioYPeriodo(usuarioId, inicio, fin);
+        gastosActuales = gastoService.buscarTodosPorPeriodo(inicio, fin);
         mostrarGastos(gastosActuales);
         lblResultados.setText(gastosActuales.size() + " gasto(s) en el último mes");
     }

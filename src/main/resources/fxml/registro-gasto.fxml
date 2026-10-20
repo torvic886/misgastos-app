@@ -47,21 +47,27 @@
                        GridPane.rowIndex="3" GridPane.columnIndex="1"
                        visible="false" managed="false"/>
 
-            <Label text="Cantidad:" GridPane.rowIndex="4" style="-fx-font-size: 12px;"/>
-            <TextField fx:id="txtCantidad" text="1" GridPane.rowIndex="4" GridPane.columnIndex="1" styleClass="search-field"/>
+            <Label fx:id="lblNombre" text="Nombre:" GridPane.rowIndex="4"
+                   visible="false" managed="false" style="-fx-font-size: 12px;"/>
+            <TextField fx:id="txtNombre" promptText="Nombre de la persona"
+                       GridPane.rowIndex="4" GridPane.columnIndex="1"
+                       visible="false" managed="false"/>
 
-            <Label text="Valor Unit.:" GridPane.rowIndex="5" style="-fx-font-size: 12px;"/>
+            <Label text="Cantidad:" GridPane.rowIndex="5" style="-fx-font-size: 12px;"/>
+            <TextField fx:id="txtCantidad" text="1" GridPane.rowIndex="5" GridPane.columnIndex="1" styleClass="search-field"/>
+
+            <Label text="Valor Unit.:" GridPane.rowIndex="6" style="-fx-font-size: 12px;"/>
             <TextField fx:id="txtValorUnitario" promptText="0.00"
-                       GridPane.rowIndex="5" GridPane.columnIndex="1" styleClass="search-field"/>
+                       GridPane.rowIndex="6" GridPane.columnIndex="1" styleClass="search-field"/>
 
-            <Label text="Total:" GridPane.rowIndex="6" style="-fx-font-size: 12px;"/>
+            <Label text="Total:" GridPane.rowIndex="7" style="-fx-font-size: 12px;"/>
             <TextField fx:id="txtValorTotal" editable="false"
-                       GridPane.rowIndex="6" GridPane.columnIndex="1" styleClass="search-field"
+                       GridPane.rowIndex="7" GridPane.columnIndex="1" styleClass="search-field"
                        style="-fx-background-color: #f1f5f9; -fx-font-weight: bold; -fx-text-fill: #6f6dd9;"/>
 
-            <Label text="Notas:" GridPane.rowIndex="7" style="-fx-font-size: 12px;"/>
+            <Label text="Notas:" GridPane.rowIndex="8" style="-fx-font-size: 12px;"/>
             <TextArea fx:id="txtNotas" prefRowCount="3"
-                      GridPane.rowIndex="7" GridPane.columnIndex="1"
+                      GridPane.rowIndex="8" GridPane.columnIndex="1"
                       style="-fx-pref-height: 70px; -fx-max-height: 70px;"/>
         </GridPane>
 
@@ -87,8 +93,11 @@
             <columns>
                 <TableColumn fx:id="colFecha" text="Fecha" prefWidth="115" minWidth="105"/>
                 <TableColumn fx:id="colHora" text="Hora" prefWidth="85" minWidth="80"/>
+                <TableColumn fx:id="colUsuario" text="Registrado por" prefWidth="140" minWidth="130"/>
                 <TableColumn fx:id="colCategoria" text="Categoría" prefWidth="135" minWidth="125"/>
                 <TableColumn fx:id="colProducto" text="Producto" prefWidth="150" minWidth="135"/>
+                <TableColumn fx:id="colCedula" text="Cédula" prefWidth="120" minWidth="110"/>
+                <TableColumn fx:id="colNombre" text="Nombre" prefWidth="160" minWidth="140"/>
                 <TableColumn fx:id="colCantidad" text="Cant" prefWidth="80" minWidth="75"/>
                 <TableColumn fx:id="colValorUnitario" text="V. Unit" prefWidth="125" minWidth="115"/>
                 <TableColumn fx:id="colTotal" text="Total" prefWidth="125" minWidth="115"/>

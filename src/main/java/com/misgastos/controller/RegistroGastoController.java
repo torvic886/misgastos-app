@@ -47,6 +47,7 @@ import java.util.Map;
 import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import com.misgastos.service.UsuarioService;
 
 @Component
 public class RegistroGastoController {
@@ -67,8 +68,15 @@ public class RegistroGastoController {
     @FXML private TableColumn<Gasto, BigDecimal> colTotal;
     @FXML private Label lblCedula;
     @FXML private TextField txtCedula;
+    @FXML private Label lblNombre;
+    @FXML private TextField txtNombre;
     @FXML private TableColumn<Gasto, String> colHora;
     @FXML private Label lblTotalGastos;
+    @Autowired private UsuarioService usuarioService;
+    @FXML private TableColumn<Gasto, String> colUsuario;
+    @FXML private TableColumn<Gasto, String> colCedula;
+    @FXML private TableColumn<Gasto, String> colNombre;
+    
     
     @Autowired private CategoriaService categoriaService;
     @Autowired private GastoService gastoService;
@@ -259,6 +267,13 @@ public class RegistroGastoController {
     private void configurarGuardarConEnter() {
         txtCedula.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.ENTER) {
+            	(txtNombre.isEditable() ? txtNombre : txtCantidad).requestFocus();
+                event.consume();
+            }
+        });
+        
+        txtNombre.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER) {
                 txtCantidad.requestFocus();
                 event.consume();
             }
@@ -364,8 +379,20 @@ public class RegistroGastoController {
             }
             
             String cedula = null;
-            if (txtCedula.isVisible() && txtCedula.getText() != null && !txtCedula.getText().trim().isEmpty()) {
-                cedula = txtCedula.getText().trim();
+            String nombrePersona = null;
+            if (txtCedula.isVisible()) {
+                cedula = txtCedula.getText() == null ? "" : txtCedula.getText().trim();
+                nombrePersona = txtNombre.getText() == null ? "" : txtNombre.getText().trim();
+                if (cedula.isEmpty()) {
+                    mostrarAlerta("Validación", "Ingrese la cédula de la persona", Alert.AlertType.WARNING);
+                    txtCedula.requestFocus();
+                    return;
+                }
+                if (nombrePersona.isEmpty()) {
+                    mostrarAlerta("Validación", "Ingrese el nombre de la persona", Alert.AlertType.WARNING);
+                    txtNombre.requestFocus();
+                    return;
+                }
                 System.out.println("📋 Cédula ingresada: " + cedula);
             }
             
@@ -380,7 +407,8 @@ public class RegistroGastoController {
                 Integer.parseInt(txtCantidad.getText().trim()),
                 new BigDecimal(valorUnitarioLimpio), // ✅ Usar valor limpio
                 txtNotas.getText(),
-                cedula
+                cedula,
+                nombrePersona
             );
             
             System.out.println("✅ Gasto guardado exitosamente");
@@ -423,6 +451,8 @@ public class RegistroGastoController {
         txtValorTotal.setText("$ 0");
         txtNotas.clear();
         txtCedula.clear();
+        txtNombre.clear();
+        txtNombre.setEditable(true);
         
         Platform.runLater(() -> cmbProducto.requestFocus());
         
@@ -458,6 +488,12 @@ public class RegistroGastoController {
             String texto = h == null ? "" : String.valueOf(h);
             return new SimpleStringProperty(texto.length() > 8 ? texto.substring(0, 8) : texto);
         });
+        colUsuario.setCellValueFactory(data -> new SimpleStringProperty(
+        	    data.getValue().getUsuario() == null ? "" : data.getValue().getUsuario().getUsername()));
+        colCedula.setCellValueFactory(d -> new SimpleStringProperty(
+        	    d.getValue().getCedula() == null ? "" : d.getValue().getCedula()));
+        	colNombre.setCellValueFactory(d -> new SimpleStringProperty(
+        	    d.getValue().getNombrePersona() == null ? "" : d.getValue().getNombrePersona()));
         colCategoria.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getCategoria().getNombre()));
         colProducto.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getProducto()));
         colCantidad.setCellValueFactory(new PropertyValueFactory<>("cantidad"));
@@ -488,7 +524,7 @@ public class RegistroGastoController {
         System.out.println("👤 Usuario ID: " + usuarioId);
         
         try {
-            List<Gasto> gastos = gastoService.obtenerUltimosGastos(usuarioId, 100000);
+        	List<Gasto> gastos = gastoService.obtenerUltimosGastosGeneral(100000);
             
             System.out.println("📊 Total de gastos obtenidos: " + gastos.size());
             System.out.println("───────────────────────────────────────");
@@ -727,6 +763,27 @@ public class RegistroGastoController {
                 txtCedula.setText(oldVal);
             }
         });
+        txtCedula.textProperty().addListener((obs, oldVal, newVal) -> autocompletarNombre(newVal));
+    }
+    
+    public void setUsuarioActual(String username) {
+        usuarioService.buscarPorUsername(username).ifPresent(u -> this.usuarioId = u.getId());
+        cargarUltimosGastos();
+    }
+    
+    private void autocompletarNombre(String cedula) {
+        if (cedula != null && !cedula.trim().isEmpty()) {
+            java.util.Optional<String> nombre = gastoService.buscarNombrePorCedula(cedula.trim());
+            if (nombre.isPresent()) {
+                txtNombre.setText(nombre.get());
+                txtNombre.setEditable(false);
+                return;
+            }
+        }
+        if (!txtNombre.isEditable()) {
+            txtNombre.clear();
+        }
+        txtNombre.setEditable(true);
     }
     
     // ✅ NUEVO: Configurar formato de moneda en tiempo real
@@ -836,9 +893,15 @@ public class RegistroGastoController {
         lblCedula.setManaged(mostrar);
         txtCedula.setVisible(mostrar);
         txtCedula.setManaged(mostrar);
+        lblNombre.setVisible(mostrar);
+        lblNombre.setManaged(mostrar);
+        txtNombre.setVisible(mostrar);
+        txtNombre.setManaged(mostrar);
         
         if (!mostrar) {
             txtCedula.clear();
+            txtNombre.clear();
+            txtNombre.setEditable(true);
         }
         
         System.out.println("🔍 Campo cedula: " + (mostrar ? "VISIBLE" : "OCULTO"));
@@ -891,8 +954,12 @@ public class RegistroGastoController {
             String t = h == null ? "" : String.valueOf(h);
             return t.length() > 5 ? t.substring(0, 5) : t;
         });
+        agregarFiltro(colUsuario, "Registrado por",
+        	    g -> g.getUsuario() == null ? "" : g.getUsuario().getUsername());
         agregarFiltro(colCategoria, "Categoría", g -> g.getCategoria().getNombre());
         agregarFiltro(colProducto, "Producto", g -> g.getProducto());
+        agregarFiltro(colCedula, "Cédula", g -> g.getCedula() == null ? "" : g.getCedula());
+        agregarFiltro(colNombre, "Nombre", g -> g.getNombrePersona() == null ? "" : g.getNombrePersona());
         agregarFiltro(colCantidad, "Cant", g -> String.valueOf(g.getCantidad()));
         agregarFiltro(colValorUnitario, "V. Unit",
             g -> g.getValorUnitario() == null ? "" : fmtMoneda.format(g.getValorUnitario()));

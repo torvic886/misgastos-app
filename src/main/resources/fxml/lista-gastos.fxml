@@ -30,7 +30,7 @@
 
         <!-- Barra de búsqueda y acciones -->
         <HBox spacing="15" alignment="CENTER_LEFT">
-            <TextField fx:id="txtBuscar" promptText="🔍 Buscar por producto o categoría..." prefWidth="300" onAction="#handleBuscar"/>
+            <TextField fx:id="txtBuscar" promptText="🔍 Producto, categoría, cédula o nombre..." prefWidth="380" onAction="#handleBuscar"/>
             <Button text="Buscar" onAction="#handleBuscar" styleClass="primary-button"/>
             <Button text="🔄 Refrescar" onAction="#handleRefrescar" styleClass="secondary-button"/>
             <HBox HBox.hgrow="ALWAYS"/>
@@ -40,14 +40,17 @@
         <!-- Tabla de gastos -->
         <TableView fx:id="tableGastos" VBox.vgrow="ALWAYS">
             <columns>
-                <TableColumn fx:id="colId" text="ID" prefWidth="50"/>
-                <TableColumn fx:id="colFecha" text="Fecha" prefWidth="100"/>
-                <TableColumn fx:id="colHora" text="Hora" prefWidth="80"/>
-                <TableColumn fx:id="colCategoria" text="Categoría" prefWidth="120"/>
-                <TableColumn fx:id="colProducto" text="Producto" prefWidth="200"/>
-                <TableColumn fx:id="colCantidad" text="Cantidad" prefWidth="80"/>
-                <TableColumn fx:id="colValorUnitario" text="Valor Unit." prefWidth="100"/>
-                <TableColumn fx:id="colValorTotal" text="Total" prefWidth="100"/>
+                <TableColumn fx:id="colId" text="ID" prefWidth="65"/>
+				<TableColumn fx:id="colFecha" text="Fecha" prefWidth="115"/>
+				<TableColumn fx:id="colHora" text="Hora" prefWidth="90"/>
+				<TableColumn fx:id="colUsuario" text="Registrado por" prefWidth="140"/>
+				<TableColumn fx:id="colCategoria" text="Categoría" prefWidth="135"/>
+				<TableColumn fx:id="colProducto" text="Producto" prefWidth="200"/>
+				<TableColumn fx:id="colCedula" text="Cédula" prefWidth="120"/>
+				<TableColumn fx:id="colNombre" text="Nombre" prefWidth="160"/>
+				<TableColumn fx:id="colCantidad" text="Cantidad" prefWidth="105"/>
+				<TableColumn fx:id="colValorUnitario" text="Valor Unit." prefWidth="120"/>
+				<TableColumn fx:id="colValorTotal" text="Total" prefWidth="110"/>
             </columns>
         </TableView>
 

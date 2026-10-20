@@ -205,6 +205,8 @@ public class DashboardController {
             loader.setControllerFactory(springContext::getBean);
             Parent vista = loader.load();
             
+            RegistroGastoController registroCtrl = loader.getController();
+            registroCtrl.setUsuarioActual(username);
             VBox.setVgrow(vista, javafx.scene.layout.Priority.ALWAYS);
             container.getChildren().add(vista);
             mainBorderPane.setCenter(container);

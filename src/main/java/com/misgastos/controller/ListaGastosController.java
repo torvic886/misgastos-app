@@ -31,6 +31,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import com.misgastos.util.FiltroExcel;
 
 @Component
 public class ListaGastosController {
@@ -62,6 +63,9 @@ public class ListaGastosController {
     @FXML
     private TableColumn<Gasto, BigDecimal> colValorTotal;
 
+    @FXML private TableColumn<Gasto, String> colCedula;
+    @FXML private TableColumn<Gasto, String> colNombre;
+    
     @FXML
     private TextField txtBuscar;
 
@@ -73,6 +77,9 @@ public class ListaGastosController {
 
     @FXML
     private Label lblTotalGastos;
+    
+    @FXML private TableColumn<Gasto, String> colUsuario;
+    private FiltroExcel<Gasto> filtro;
 
     @Autowired
     private GastoService gastoService;
@@ -149,13 +156,40 @@ public class ListaGastosController {
                 }
             }
         });
+        
+        colUsuario.setCellValueFactory(c -> new SimpleStringProperty(
+        	    c.getValue().getUsuario() == null ? "" : c.getValue().getUsuario().getUsername()));
+
+        	filtro = new FiltroExcel<>(tableGastos, this::actualizarTotal);
+        	filtro.agregar(colId, "ID", g -> String.valueOf(g.getId()));
+        	filtro.agregar(colFecha, "Fecha", g -> String.valueOf(g.getFecha()));
+        	filtro.agregar(colHora, "Hora", g -> {
+        	    String h = horaTexto(g);
+        	    return h.length() > 5 ? h.substring(0, 5) : h;
+        	});
+        	filtro.agregar(colUsuario, "Registrado por",
+        	    g -> g.getUsuario() == null ? "" : g.getUsuario().getUsername());
+        	filtro.agregar(colCategoria, "Categoría", g -> g.getCategoria().getNombre());
+        	filtro.agregar(colProducto, "Producto", Gasto::getProducto);
+        	filtro.agregar(colCedula, "Cédula", g -> g.getCedula() == null ? "" : g.getCedula());
+        	filtro.agregar(colNombre, "Nombre", g -> g.getNombrePersona() == null ? "" : g.getNombrePersona());
+        	filtro.agregar(colCantidad, "Cantidad", g -> String.valueOf(g.getCantidad()));
+        	filtro.agregar(colValorUnitario, "Valor Unit.",
+        	    g -> g.getValorUnitario() == null ? "" : "$" + formatoPesos.format(g.getValorUnitario()));
+        	filtro.agregar(colValorTotal, "Total",
+        	    g -> g.getValorTotal() == null ? "" : "$" + formatoPesos.format(g.getValorTotal()));
+        
+        	colCedula.setCellValueFactory(c -> new SimpleStringProperty(
+        		    c.getValue().getCedula() == null ? "" : c.getValue().getCedula()));
+        		colNombre.setCellValueFactory(c -> new SimpleStringProperty(
+        		    c.getValue().getNombrePersona() == null ? "" : c.getValue().getNombrePersona()));
+    
     }
 
     private void cargarGastos() {
         List<Gasto> gastos = gastoService.listarTodos();
         listaGastos = FXCollections.observableArrayList(gastos);
-        tableGastos.setItems(listaGastos);
-        actualizarTotal(gastos);
+        filtro.setDatos(gastos);
 
         System.out.println("✅ Cargados " + gastos.size() + " gastos");
     }
@@ -180,12 +214,10 @@ public class ListaGastosController {
         }
 
         List<Gasto> gastosFiltrados = listaGastos.stream()
-            .filter(g -> g.getProducto().toLowerCase().contains(busqueda) ||
-                        g.getCategoria().getNombre().toLowerCase().contains(busqueda))
+        		.filter(g -> coincideBusqueda(g, busqueda))
             .toList();
 
-        tableGastos.setItems(FXCollections.observableArrayList(gastosFiltrados));
-        actualizarTotal(gastosFiltrados);
+        filtro.setDatos(gastosFiltrados);
     }
 
     @FXML
@@ -313,11 +345,11 @@ public class ListaGastosController {
             titleCell.setCellStyle(titleStyle);
 
             // Fusionar celdas del título (8 columnas)
-            sheet.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(0, 0, 0, 7));
+            sheet.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(0, 0, 0, 9));
 
             // Crear encabezados (fila 1, justo debajo del título)
             Row headerRow = sheet.createRow(1);
-            String[] columnas = {"ID", "Fecha", "Hora", "Categoría", "Producto", "Cantidad", "Valor Unitario", "Valor Total"};
+            String[] columnas = {"ID", "Fecha", "Hora", "Categoría", "Producto", "Cédula", "Nombre", "Cantidad", "Valor Unitario", "Valor Total"};
 
             for (int i = 0; i < columnas.length; i++) {
                 org.apache.poi.ss.usermodel.Cell cell = headerRow.createCell(i);
@@ -342,13 +374,15 @@ public class ListaGastosController {
 
                 row.createCell(3).setCellValue(gasto.getCategoria().getNombre());
                 row.createCell(4).setCellValue(gasto.getProducto());
-                row.createCell(5).setCellValue(gasto.getCantidad());
+                row.createCell(5).setCellValue(gasto.getCedula() == null ? "" : gasto.getCedula());
+                row.createCell(6).setCellValue(gasto.getNombrePersona() == null ? "" : gasto.getNombrePersona());
+                row.createCell(7).setCellValue(gasto.getCantidad());
 
-                org.apache.poi.ss.usermodel.Cell valorUnitCell = row.createCell(6);
+                org.apache.poi.ss.usermodel.Cell valorUnitCell = row.createCell(8);
                 valorUnitCell.setCellValue(gasto.getValorUnitario().doubleValue());
                 valorUnitCell.setCellStyle(numberStyle);
 
-                org.apache.poi.ss.usermodel.Cell valorTotalCell = row.createCell(7);
+                org.apache.poi.ss.usermodel.Cell valorTotalCell = row.createCell(9);
                 valorTotalCell.setCellValue(gasto.getValorTotal().doubleValue());
                 valorTotalCell.setCellStyle(numberStyle);
 
@@ -357,7 +391,7 @@ public class ListaGastosController {
 
             // Fila de total (etiqueta en la columna 6, valor en la 7)
             Row totalRow = sheet.createRow(rowNum);
-            org.apache.poi.ss.usermodel.Cell totalLabelCell = totalRow.createCell(6);
+            org.apache.poi.ss.usermodel.Cell totalLabelCell = totalRow.createCell(8);
             totalLabelCell.setCellValue("TOTAL:");
 
             Font boldFont = workbook.createFont();
@@ -367,7 +401,7 @@ public class ListaGastosController {
             boldStyle.setAlignment(HorizontalAlignment.RIGHT);
             totalLabelCell.setCellStyle(boldStyle);
 
-            org.apache.poi.ss.usermodel.Cell totalValueCell = totalRow.createCell(7);
+            org.apache.poi.ss.usermodel.Cell totalValueCell = totalRow.createCell(9);
             totalValueCell.setCellValue(totalGeneral.doubleValue());
             CellStyle totalStyle = workbook.createCellStyle();
             totalStyle.cloneStyleFrom(numberStyle);
@@ -397,4 +431,16 @@ public class ListaGastosController {
         alert.setContentText(mensaje);
         alert.showAndWait();
     }
+    
+    private boolean coincideBusqueda(Gasto g, String busqueda) {
+        return contiene(g.getProducto(), busqueda)
+            || contiene(g.getCategoria().getNombre(), busqueda)
+            || contiene(g.getCedula(), busqueda)
+            || contiene(g.getNombrePersona(), busqueda);
+    }
+
+    private boolean contiene(String texto, String busqueda) {
+        return texto != null && texto.toLowerCase().contains(busqueda);
+    }
+    
 }
