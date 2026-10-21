@@ -26,6 +26,12 @@ import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.layout.VBox;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.prefs.Preferences;
+import javafx.geometry.Bounds;
+import javafx.scene.input.MouseEvent;
+import javafx.stage.Popup;
 
 
 @Component
@@ -54,11 +60,27 @@ public class LoginController implements Initializable {
  
     private final LicenciaService licenciaService = new LicenciaService();    
     
+    private boolean dashboardAbierto = false;
+    
+    private boolean ajustandoVentana = false;
+    
+    private static final String PREF_USUARIOS = "usuarios_recientes";
+    private static final int MAX_USUARIOS = 8;
+    
+    // Lista de usuarios usados antes (se crea de nuevo cada vez que se carga el login)
+    private Popup popupUsuarios;
+    private VBox listaPopup;
+    private List<String> sugerencias = new ArrayList<>();
+    private int indiceSugerencia = 0;
+    private boolean eligiendoUsuario = false;
+    
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        Platform.runLater(() -> {
+    	dashboardAbierto = false;
+    	Platform.runLater(() -> {
             configurarEventosEnter();
             configurarNavegacionTab();
+            configurarUsuariosRecientes();
             configurarVentanaLogin(); // 🔥 NUEVO: Configurar ventana de login
             if (!verificarLicencia()) {
                 return;
@@ -76,7 +98,7 @@ public class LoginController implements Initializable {
             // Usar Platform.runLater para asegurar que el Stage esté completamente inicializado
             Platform.runLater(() -> {
                 Stage stage = obtenerStageActual();
-                if (stage != null) {
+                if (stage != null && !dashboardAbierto) {
                     // Asegurar que NO esté maximizado
                     if (stage.isMaximized()) {
                         stage.setMaximized(false);
@@ -115,11 +137,35 @@ public class LoginController implements Initializable {
      */
     private void configurarNavegacionTab() {
         txtUsername.setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.TAB) {
+            KeyCode codigo = event.getCode();
+            if (codigo == KeyCode.DOWN) {
                 event.consume();
-                txtPassword.requestFocus();
-            } else if (event.getCode() == KeyCode.ENTER) {
-                handleLogin();
+                if (sugerenciasVisibles()) {
+                    indiceSugerencia = (indiceSugerencia + 1) % sugerencias.size();
+                    resaltarSugerencia();
+                } else {
+                    mostrarSugerencias(true);
+                }
+            } else if (codigo == KeyCode.UP) {
+                event.consume();
+                if (sugerenciasVisibles()) {
+                    indiceSugerencia = (indiceSugerencia - 1 + sugerencias.size()) % sugerencias.size();
+                    resaltarSugerencia();
+                }
+            } else if (codigo == KeyCode.ESCAPE) {
+                ocultarSugerencias();
+            } else if (codigo == KeyCode.TAB || codigo == KeyCode.ENTER) {
+                event.consume();
+                if (sugerenciasVisibles()) {
+                    // Enter/Tab eligen la sugerencia resaltada y pasan a la contraseña
+                    elegirSugerencia(sugerencias.get(indiceSugerencia));
+                } else if (codigo == KeyCode.ENTER
+                        && !txtPassword.getText().isEmpty()
+                        && !txtUsername.getText().isBlank()) {
+                    handleLogin();
+                } else {
+                    txtPassword.requestFocus();
+                }
             }
         });
         
@@ -147,6 +193,166 @@ public class LoginController implements Initializable {
     private void handleKeyPressed(KeyEvent event) {
         if (event.getCode() == KeyCode.ENTER) {
             handleLogin();
+        }
+    }
+    
+    // ==================== USUARIOS RECIENTES ====================
+    
+    private List<String> leerUsuariosRecientes() {
+        String raw = Preferences.userNodeForPackage(LoginController.class).get(PREF_USUARIOS, "");
+        List<String> lista = new ArrayList<>();
+        for (String u : raw.split("\\|")) {
+            if (!u.isBlank()) {
+                lista.add(u.trim());
+            }
+        }
+        return lista;
+    }
+
+    private void guardarUsuarioReciente(String username) {
+        List<String> lista = leerUsuariosRecientes();
+        lista.removeIf(u -> u.equalsIgnoreCase(username));
+        lista.add(0, username);
+        while (lista.size() > MAX_USUARIOS) {
+            lista.remove(lista.size() - 1);
+        }
+        Preferences.userNodeForPackage(LoginController.class)
+            .put(PREF_USUARIOS, String.join("|", lista));
+    }
+
+    private void configurarUsuariosRecientes() {
+        // El campo de usuario siempre empieza en blanco.
+        // Los usuarios usados antes se ven al hacer clic en el campo.
+        txtUsername.clear();
+
+        // La lista se crea de nuevo cada vez que se carga el login,
+        // así funciona igual después de cerrar sesión.
+        if (popupUsuarios != null) {
+            popupUsuarios.hide();
+        }
+        popupUsuarios = new Popup();
+        popupUsuarios.setAutoHide(false);
+        listaPopup = new VBox(2);
+        listaPopup.setStyle(
+            "-fx-background-color: white; -fx-background-radius: 10; "
+            + "-fx-border-color: #d1d5db; -fx-border-radius: 10; -fx-padding: 6; "
+            + "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 12, 0, 0, 4);");
+        popupUsuarios.getContent().add(listaPopup);
+        sugerencias = new ArrayList<>();
+        indiceSugerencia = 0;
+
+        // Al escribir: la lista se filtra por lo que se escribe
+        txtUsername.textProperty().addListener((o, a, b) -> {
+            if (!eligiendoUsuario) {
+                mostrarSugerencias(false);
+            }
+        });
+
+        // Al hacer clic con el mouse: siempre se muestra la lista completa
+        txtUsername.setOnMouseClicked(e -> mostrarSugerencias(true));
+
+        // La lista se cierra al salir del campo de usuario
+        txtUsername.focusedProperty().addListener((o, a, enfocado) -> {
+            if (!enfocado) {
+                ocultarSugerencias();
+            }
+        });
+
+        // ... y al hacer clic en cualquier otra parte de la ventana
+        if (txtUsername.getScene() != null) {
+            txtUsername.getScene().addEventFilter(MouseEvent.MOUSE_PRESSED, e -> {
+                if (!(e.getTarget() instanceof Node) || !esDescendiente((Node) e.getTarget(), txtUsername)) {
+                    ocultarSugerencias();
+                }
+            });
+        }
+    }
+
+    private boolean esDescendiente(Node nodo, Node ancestro) {
+        for (Node n = nodo; n != null; n = n.getParent()) {
+            if (n == ancestro) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean sugerenciasVisibles() {
+        return popupUsuarios != null && popupUsuarios.isShowing() && !sugerencias.isEmpty();
+    }
+
+    /**
+     * Muestra la lista de usuarios usados antes.
+     * @param todos true = muestra todos los usuarios (clic del mouse);
+     *              false = filtra por lo que hay escrito (al escribir).
+     */
+    private void mostrarSugerencias(boolean todos) {
+        String filtro = txtUsername.getText() == null ? "" : txtUsername.getText().trim().toLowerCase();
+        sugerencias = leerUsuariosRecientes().stream()
+            .filter(u -> todos || filtro.isEmpty() || u.toLowerCase().contains(filtro))
+            .filter(u -> todos || !u.equalsIgnoreCase(filtro))
+            .toList();
+
+        if (sugerencias.isEmpty() || !txtUsername.isFocused()) {
+            ocultarSugerencias();
+            return;
+        }
+
+        indiceSugerencia = 0;
+        pintarSugerencias();
+
+        Bounds b = txtUsername.localToScreen(txtUsername.getBoundsInLocal());
+        if (b == null) {
+            return;
+        }
+        listaPopup.setPrefWidth(b.getWidth());
+        if (popupUsuarios.isShowing()) {
+            popupUsuarios.setAnchorX(b.getMinX());
+            popupUsuarios.setAnchorY(b.getMaxY() + 2);
+        } else {
+            popupUsuarios.show(txtUsername, b.getMinX(), b.getMaxY() + 2);
+        }
+    }
+
+    private void pintarSugerencias() {
+        listaPopup.getChildren().clear();
+        for (int i = 0; i < sugerencias.size(); i++) {
+            final int pos = i;
+            final String usuario = sugerencias.get(i);
+            Label lbl = new Label(usuario);
+            lbl.setMaxWidth(Double.MAX_VALUE);
+            lbl.setOnMouseEntered(e -> {
+                indiceSugerencia = pos;
+                resaltarSugerencia();
+            });
+            lbl.setOnMousePressed(e -> elegirSugerencia(usuario));
+            listaPopup.getChildren().add(lbl);
+        }
+        resaltarSugerencia();
+    }
+
+    private void resaltarSugerencia() {
+        String base = "-fx-font-size: 14px; -fx-padding: 8 12; -fx-background-radius: 6; -fx-cursor: hand;";
+        for (int i = 0; i < listaPopup.getChildren().size(); i++) {
+            Node n = listaPopup.getChildren().get(i);
+            n.setStyle(i == indiceSugerencia
+                ? base + " -fx-background-color: #e0e7ff; -fx-text-fill: #1e3a8a; -fx-font-weight: bold;"
+                : base + " -fx-background-color: transparent; -fx-text-fill: #1f2937;");
+        }
+    }
+
+    private void elegirSugerencia(String usuario) {
+        eligiendoUsuario = true;
+        ocultarSugerencias();
+        txtUsername.setText(usuario);
+        txtUsername.positionCaret(usuario.length());
+        eligiendoUsuario = false;
+        txtPassword.requestFocus();
+    }
+
+    private void ocultarSugerencias() {
+        if (popupUsuarios != null && popupUsuarios.isShowing()) {
+            popupUsuarios.hide();
         }
     }
     
@@ -254,6 +460,8 @@ public class LoginController implements Initializable {
             Usuario usuario = usuarioService.buscarPorUsername(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
             
+            guardarUsuarioReciente(usuario.getUsername());
+            
             if (checkRecordarme.isSelected()) {
                 sesionService.crearSesionRecordada(usuario.getId());
             }
@@ -270,62 +478,68 @@ public class LoginController implements Initializable {
     
     private void abrirDashboard(String username, String rol) {
         try {
+            ocultarSugerencias();
+
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/dashboard.fxml"));
             loader.setControllerFactory(springContext::getBean);
-            
+
             Parent root = loader.load();
-            
+
             DashboardController controller = loader.getController();
             controller.setUsuario(username);
             controller.setRol(rol);
-            
+
             Stage stage = obtenerStageActual();
-            
+            dashboardAbierto = true;
+
             Scene scene = new Scene(root);
             scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
-            
-            // 🔥 CONFIGURACIÓN CORRECTA PARA DASHBOARD
+
             stage.setScene(scene);
             stage.setTitle("ExpenseFlow - Dashboard");
-            
-            // Establecer tamaños mínimos para el dashboard
-            stage.setMinWidth(1200);
-            stage.setMinHeight(700);
-            
-            // 🔥 NUEVO: Listener para controlar la desmaximización
+
+            // Los mínimos nunca pueden superar el área útil de la pantalla
+            Rectangle2D pantalla = Screen.getPrimary().getVisualBounds();
+            stage.setMinWidth(Math.min(1200, pantalla.getWidth()));
+            stage.setMinHeight(Math.min(700, pantalla.getHeight()));
+
+            // Al desmaximizar, usar 85% de la pantalla
             stage.maximizedProperty().addListener((obs, wasMaximized, isNowMaximized) -> {
-                if (!isNowMaximized) {
-                    // Cuando se desmaximiza, establecer un tamaño más grande
+            	if (!isNowMaximized && !ajustandoVentana) {
                     Platform.runLater(() -> {
-                        // Obtener dimensiones de la pantalla
-                        javafx.geometry.Rectangle2D screenBounds = 
-                            javafx.stage.Screen.getPrimary().getVisualBounds();
-                        
-                        // Usar 85% del ancho y alto de la pantalla
-                        double width = screenBounds.getWidth() * 0.85;
-                        double height = screenBounds.getHeight() * 0.85;
-                        
+                        Rectangle2D bounds = Screen.getPrimary().getVisualBounds();
+                        double width = bounds.getWidth() * 0.85;
+                        double height = bounds.getHeight() * 0.85;
                         stage.setWidth(width);
                         stage.setHeight(height);
                         stage.centerOnScreen();
-                        System.out.println("✅ Ventana restaurada: " + (int)width + "x" + (int)height);
+                        System.out.println("✅ Ventana restaurada: " + (int) width + "x" + (int) height);
                     });
                 }
             });
-            
-            // Maximizar después de configurar los límites
+
             stage.setMaximized(true);
-            
+
             if (!stage.isShowing()) {
                 stage.show();
             }
-            
+
+            // Reforzar el maximizado cuando la ventana ya es visible (evita contenido recortado)
+            ajustandoVentana = true;
+            Platform.runLater(() -> {
+                stage.setMaximized(false);
+                Platform.runLater(() -> {
+                    stage.setMaximized(true);
+                    ajustandoVentana = false;
+                });
+            });
+
             System.out.println("✅ Dashboard abierto para: " + username + " | Rol: " + rol);
-            
+
         } catch (Exception e) {
             e.printStackTrace();
-            mostrarAlerta("Error Crítico", 
-                         "No se pudo abrir el dashboard. Contacte al administrador.", 
+            mostrarAlerta("Error Crítico",
+                         "No se pudo abrir el dashboard. Contacte al administrador.",
                          Alert.AlertType.ERROR);
         }
     }
@@ -366,7 +580,9 @@ public class LoginController implements Initializable {
     public void restaurarVentana() {
         Platform.runLater(() -> {
             try {
-                // Solo limpiar campos, el tamaño ya fue ajustado por DashboardController
+                // Al cerrar sesión, el usuario y la contraseña quedan en blanco.
+                // Los usuarios usados antes se ven al hacer clic en el campo de usuario.
+                ocultarSugerencias();
                 txtUsername.clear();
                 txtPassword.clear();
                 checkRecordarme.setSelected(false);

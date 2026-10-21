@@ -36,6 +36,7 @@ jpackage ^
  --java-options "-Dfile.encoding=UTF-8" ^
  --win-menu ^
  --win-shortcut ^
+ --icon %PROYECTO%\app-icon.ico ^
  --win-dir-chooser ^
  --win-per-user-install ^
  --win-upgrade-uuid 3f2b8c1e-7a4d-4e9b-9c55-1d2a6b7e8f90

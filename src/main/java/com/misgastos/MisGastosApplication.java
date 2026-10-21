@@ -1,9 +1,11 @@
 package com.misgastos;
 
 import com.misgastos.util.SceneManager;
+import java.io.InputStream;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.PauseTransition;
+import javafx.animation.ScaleTransition;
 import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -15,6 +17,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -31,6 +34,8 @@ import org.springframework.context.event.ContextRefreshedEvent;
 @SpringBootApplication
 public class MisGastosApplication extends Application {
 
+    private static final String RUTA_ICONO = "/images/app-icon.png";
+
     private static ConfigurableApplicationContext springContext;
 
     // ----- Ventana de carga -----
@@ -39,6 +44,7 @@ public class MisGastosApplication extends Application {
     private static Label lblPorcentaje;
     private static Label lblEstado;
     private static Timeline animacion;
+    private static ScaleTransition latido;
     private static double progreso = 0;
     private static volatile double meta = 0.15;
     private static volatile String mensaje = "Iniciando...";
@@ -60,6 +66,22 @@ public class MisGastosApplication extends Application {
         }
     }
 
+    // ==================== ICONO ====================
+
+    /** Carga el icono de la billetera. Devuelve null si no se encuentra, para no romper el arranque. */
+    private static Image cargarIcono() {
+        try (InputStream in = MisGastosApplication.class.getResourceAsStream(RUTA_ICONO)) {
+            if (in == null) {
+                System.err.println("No se encontró el icono: " + RUTA_ICONO);
+                return null;
+            }
+            return new Image(in, 256, 256, true, true);
+        } catch (Exception e) {
+            System.err.println("No se pudo cargar el icono: " + e.getMessage());
+            return null;
+        }
+    }
+
     // ==================== VENTANA DE CARGA ====================
 
     /** Cada etapa real del arranque sube el techo de la barra. */
@@ -78,6 +100,8 @@ public class MisGastosApplication extends Application {
 
     private void mostrarSplash() {
         Platform.runLater(() -> {
+            Image icono = cargarIcono();
+
             Label titulo = new Label("ExpenseFlow");
             titulo.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: white;");
 
@@ -90,13 +114,36 @@ public class MisGastosApplication extends Application {
             lblPorcentaje = new Label("0 %");
             lblPorcentaje.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #93c5fd;");
 
-            VBox caja = new VBox(12, titulo, lblEstado, barra, lblPorcentaje);
+            VBox caja = new VBox(12);
             caja.setAlignment(Pos.CENTER);
             caja.setPadding(new Insets(30));
             caja.setStyle("-fx-background-color: #1a2236; -fx-border-color: #3b82f6; -fx-border-width: 2;");
 
+            // Billetera con efecto de latido
+            if (icono != null) {
+                ImageView logo = new ImageView(icono);
+                logo.setFitWidth(80);
+                logo.setPreserveRatio(true);
+                logo.setSmooth(true);
+
+                latido = new ScaleTransition(Duration.millis(700), logo);
+                latido.setFromX(1.0);
+                latido.setFromY(1.0);
+                latido.setToX(1.12);
+                latido.setToY(1.12);
+                latido.setAutoReverse(true);
+                latido.setCycleCount(Animation.INDEFINITE);
+                latido.play();
+
+                caja.getChildren().add(logo);
+            }
+            caja.getChildren().addAll(titulo, lblEstado, barra, lblPorcentaje);
+
             splash = new Stage(StageStyle.UNDECORATED);
-            splash.setScene(new Scene(caja, 380, 230));
+            if (icono != null) {
+                splash.getIcons().add(icono);
+            }
+            splash.setScene(new Scene(caja, 380, 290));
             splash.setAlwaysOnTop(true);
             splash.centerOnScreen();
             splash.show();
@@ -120,6 +167,9 @@ public class MisGastosApplication extends Application {
             }
             if (animacion != null) {
                 animacion.stop();
+            }
+            if (latido != null) {
+                latido.stop();
             }
             barra.setProgress(1.0);
             lblPorcentaje.setText("100 %");
@@ -145,30 +195,10 @@ public class MisGastosApplication extends Application {
 
     private void iniciar(Stage stage) throws Exception {
 
-        // 🎨 CONFIGURAR ICONO DE LA APLICACIÓN (ALTA CALIDAD)
-        try {
-            stage.getIcons().addAll(
-                new Image(getClass().getResourceAsStream("/images/icon-16.png"), 16, 16, true, true),
-                new Image(getClass().getResourceAsStream("/images/icon-32.png"), 32, 32, true, true),
-                new Image(getClass().getResourceAsStream("/images/icon-48.png"), 48, 48, true, true),
-                new Image(getClass().getResourceAsStream("/images/icon-64.png"), 64, 64, true, true),
-                new Image(getClass().getResourceAsStream("/images/icon-128.png"), 128, 128, true, true),
-                new Image(getClass().getResourceAsStream("/images/icon-256.png"), 256, 256, true, true)
-            );
-
-            System.out.println("✅ Iconos cargados correctamente");
-        } catch (Exception e) {
-            System.err.println("⚠️ No se pudo cargar el icono: " + e.getMessage());
-            // Intentar cargar un icono único de alta resolución como fallback
-            try {
-                Image fallbackIcon = new Image(
-                    getClass().getResourceAsStream("/images/app-icon.png"),
-                    256, 256, true, true
-                );
-                stage.getIcons().add(fallbackIcon);
-            } catch (Exception ex) {
-                System.err.println("⚠️ No se pudo cargar icono de respaldo");
-            }
+        // Icono de la aplicación (ventana y barra de tareas)
+        Image icono = cargarIcono();
+        if (icono != null) {
+            stage.getIcons().add(icono);
         }
 
         FXMLLoader loader = new FXMLLoader(
