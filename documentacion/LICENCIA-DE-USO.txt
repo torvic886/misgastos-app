@@ -1,0 +1,93 @@
+LICENCIA DE USO POR SUSCRIPCIÓN MENSUAL — MISGASTOS
+
+Versión: 1.0  
+Fecha de emisión: 2026-10-24
+
+**1. TITULAR DEL SOFTWARE**
+
+Titular: TorvicSoft  
+Correo de contacto: vagutierrezv@uqvirtual.edu.co
+
+**2. MODALIDAD DEL SERVICIO**
+
+MisGastos se ofrece mediante una suscripción mensual que autoriza al cliente a utilizar el software mientras su suscripción se encuentre vigente y se cumplan las condiciones acordadas.
+
+El pago de la suscripción no constituye la compra definitiva del programa ni transfiere al cliente los derechos de propiedad intelectual sobre el software.
+
+**3. ALCANCE DE LA AUTORIZACIÓN**
+
+El cliente podrá utilizar MisGastos para la gestión y el control de gastos personales, de acuerdo con las condiciones contratadas.
+
+La suscripción autoriza el uso en el siguiente número de equipos: [NÚMERO DE EQUIPOS AUTORIZADOS].
+
+La instalación o utilización en equipos adicionales requerirá la autorización correspondiente.
+
+**4. PRECIO Y FORMA DE PAGO**
+
+Precio mensual: $200.000.
+
+Fecha de pago: Final de mes.
+
+Medio de pago: Efectivo.
+
+La suscripción se renovará mensualmente conforme a las condiciones acordadas, salvo cancelación o terminación de acuerdo con dichas condiciones.
+
+Cualquier modificación del precio deberá comunicarse al cliente con la anticipación y en la forma que correspondan conforme al acuerdo y a la legislación aplicable.
+
+**5. VENCIMIENTO Y FALTA DE PAGO**
+
+Si el cliente no realiza el pago en la fecha acordada, el titular podrá enviar un aviso de pago pendiente y, cuando esté previsto en las condiciones contratadas y permitido por la legislación aplicable, suspender temporalmente el acceso al software.
+
+La suspensión del acceso no deberá provocar por sí misma la eliminación automática de la base de datos ni de los registros del cliente.
+
+Las condiciones para restablecer el acceso se informarán al cliente.
+
+**6. CANCELACIÓN DE LA SUSCRIPCIÓN**
+
+El cliente podrá cancelar la suscripción conforme al procedimiento y los plazos informados al contratar el servicio.
+
+Al finalizar la suscripción, terminará la autorización de uso, según las condiciones acordadas. El cliente deberá recibir información clara sobre las opciones disponibles para recuperar o exportar sus datos, los plazos de conservación y las condiciones de eliminación que resulten aplicables.
+
+La cancelación no transfiere al cliente la propiedad intelectual del software.
+
+**7. PROPIEDAD INTELECTUAL Y RESTRICCIONES**
+
+Los derechos de propiedad intelectual que correspondan al titular permanecen en su poder.
+
+Sin autorización del titular, y dentro de los límites permitidos por la legislación vigente, el cliente no podrá:
+
+- Revender, redistribuir o sublicenciar el software.
+- Autorizar su uso a terceros fuera de las condiciones contratadas.
+- Instalarlo en equipos adicionales no autorizados.
+- Presentar el software como una creación propia.
+
+**8. DATOS DEL CLIENTE**
+
+Los datos financieros y personales registrados por el cliente en MisGastos no se convierten en propiedad del titular del software por el hecho de utilizar la aplicación.
+
+El titular y el cliente deberán cumplir las obligaciones que les correspondan respecto del tratamiento y la protección de los datos personales.
+
+La conservación, las copias de seguridad, la exportación y la eliminación de los datos deberán gestionarse conforme a las condiciones informadas y a la legislación aplicable.
+
+**9. SOPORTE Y ACTUALIZACIONES**
+
+La suscripción incluye el siguiente soporte: [DESCRIBIR EL SOPORTE INCLUIDO].
+
+Las actualizaciones y funcionalidades incluidas serán: [DESCRIBIR LAS CONDICIONES].
+
+Los servicios adicionales, si existen, podrán estar sujetos a condiciones y precios separados previamente informados.
+
+**10. ACEPTACIÓN ELECTRÓNICA**
+
+Antes de utilizar el programa, el cliente tendrá la oportunidad de consultar estas condiciones y aceptar o rechazar la licencia.
+
+Cuando el programa registre la aceptación electrónica, podrá guardar la versión de la licencia aceptada, la fecha y hora de aceptación y los datos técnicos estrictamente necesarios para dejar constancia del evento.
+
+El registro deberá protegerse razonablemente contra modificaciones no autorizadas. La aceptación electrónica no acredita por sí sola la identidad del usuario ni sustituye automáticamente un contrato firmado.
+
+**11. LEGISLACIÓN APLICABLE**
+
+Estas condiciones deberán interpretarse conforme a la legislación aplicable y al acuerdo de suscripción celebrado entre las partes.
+
+Titular: TorvicSoft  
+Correo electrónico: vagutierrezv@uqvirtual.edu.co

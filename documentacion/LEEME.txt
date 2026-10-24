@@ -1,0 +1,24 @@
+AVISO DE DERECHOS DE AUTOR Y CONDICIONES DE USO
+
+Software: MisGastos  
+Titular de los derechos: TorvicSoft  
+Copyright © 2026. Todos los derechos reservados.
+
+MisGastos es una aplicación de escritorio destinada a la gestión y el control de gastos personales.
+
+El software se ofrece mediante una modalidad de suscripción mensual. El pago de la suscripción concede al cliente un derecho de uso limitado, sujeto a las condiciones contratadas, y no implica la venta del programa ni la transferencia de sus derechos de propiedad intelectual.
+
+La utilización del software requiere la aceptación de las condiciones de la licencia y el cumplimiento de las obligaciones de pago acordadas.
+
+La suscripción podrá estar limitada al equipo o a los equipos autorizados para cada cliente. Las condiciones de renovación, suspensión y cancelación se detallarán en la licencia o acuerdo correspondiente.
+
+La cancelación o suspensión del servicio no autoriza la eliminación automática de los datos personales o financieros del cliente. La conservación, exportación y eliminación de estos datos se gestionarán conforme a las condiciones informadas y a la legislación aplicable.
+
+Para consultas, pagos y soporte:
+
+Titular: TorvicSoft  
+Correo electrónico: vagutierrezv@uqvirtual.edu.co
+
+La licencia completa se encuentra en el archivo LICENCIA-DE-USO.txt.
+
+Este aviso es informativo y no sustituye el acuerdo de suscripción aplicable.
