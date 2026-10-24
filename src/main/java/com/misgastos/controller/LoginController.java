@@ -3,6 +3,7 @@ package com.misgastos.controller;
 import com.misgastos.model.Usuario;
 import com.misgastos.service.SesionRecordadaService;
 import com.misgastos.service.UsuarioService;
+import com.misgastos.service.SesionActual;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -34,6 +35,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.stage.Popup;
 
 
+
 @Component
 public class LoginController implements Initializable {
     
@@ -51,6 +53,9 @@ public class LoginController implements Initializable {
     
     @Autowired
     private UsuarioService usuarioService;
+    
+    @Autowired 
+    private SesionActual sesionActual;
     
     @Autowired
     private SesionRecordadaService sesionService;
@@ -477,7 +482,9 @@ public class LoginController implements Initializable {
     }
     
     private void abrirDashboard(String username, String rol) {
-        try {
+    	usuarioService.buscarPorUsername(username)
+        .ifPresent(u -> sesionActual.iniciar(u.getId(), u.getUsername()));
+    	try {
             ocultarSugerencias();
 
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/dashboard.fxml"));

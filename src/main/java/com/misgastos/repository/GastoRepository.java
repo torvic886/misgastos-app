@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Collection;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -127,5 +128,15 @@ public interface GastoRepository extends JpaRepository<Gasto, Long> {
 	@Modifying(clearAutomatically = true, flushAutomatically = true)
 	@Query(value = "DELETE FROM gastos WHERE fecha_eliminacion IS NOT NULL", nativeQuery = true)
 	int vaciarPapelera();
+	
+    // Productos de gastos activos (sin los de la papelera)
+    @Query("SELECT DISTINCT g.producto FROM Gasto g WHERE g.producto IS NOT NULL")
+    List<String> productosActivos();
+
+    // Todas las escrituras guardadas (incluye papelera), de la más usada a la menos usada
+    @Query(value = "SELECT producto FROM gastos WHERE producto IS NOT NULL GROUP BY producto ORDER BY COUNT(*) DESC, producto", nativeQuery = true)
+    List<String> productosPorFrecuencia();
+
+    List<Gasto> findByProductoInOrderByFechaDescHoraDesc(Collection<String> productos);
 
 }

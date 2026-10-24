@@ -84,6 +84,13 @@
 				styleClass="menu-button" onAction="#handleRespaldo"
 				maxWidth="Infinity" />
 
+			<Button fx:id="btnRegistroCambios"
+				text="📜 Registro de cambios" styleClass="menu-button"
+				onAction="#handleRegistroCambios" maxWidth="Infinity" />
+
+			<Button fx:id="btnPresupuestos" text="💰 Presupuestos"
+				styleClass="menu-button" onAction="#handlePresupuestos"
+				maxWidth="Infinity" />
 
 		</VBox>
 	</left>

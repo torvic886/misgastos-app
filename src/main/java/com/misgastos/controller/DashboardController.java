@@ -49,7 +49,8 @@ public class DashboardController {
     @FXML private Button btnReportesBilleteros;
     @FXML private Button btnConsultas;
     @FXML private Button btnRespaldo;
-    
+    @FXML private Button btnRegistroCambios;
+    @FXML private Button btnPresupuestos;
     
     @Autowired
     private ApplicationContext springContext;
@@ -226,7 +227,9 @@ public class DashboardController {
                     return btn.getText().contains("Informes") ||
                             btn.getText().contains("Usuarios") ||
                             btn.getText().contains("Consultas") ||
-                            btn.getText().contains("Respaldo");
+                            btn.getText().contains("Respaldo") ||
+                            btn.getText().contains("Registro de cambios") ||
+                            btn.getText().contains("Presupuestos");
                 }
                 return false;
             });
@@ -324,6 +327,26 @@ public class DashboardController {
         }
         establecerBotonActivo(btnRespaldo);
         cargarVista("/fxml/respaldo.fxml");
+    }
+    
+    @FXML
+    public void handleRegistroCambios() {
+        if (esUsuarioNormal()) {
+            mostrarAlerta("Acceso Denegado", "No tiene permisos para acceder a esta sección");
+            return;
+        }
+        establecerBotonActivo(btnRegistroCambios);
+        cargarVista("/fxml/registro-cambios.fxml");
+    }
+    
+    @FXML
+    public void handlePresupuestos() {
+        if (esUsuarioNormal()) {
+            mostrarAlerta("Acceso Denegado", "No tiene permisos para acceder a esta sección");
+            return;
+        }
+        establecerBotonActivo(btnPresupuestos);
+        cargarVista("/fxml/presupuestos.fxml");
     }
     
     @FXML

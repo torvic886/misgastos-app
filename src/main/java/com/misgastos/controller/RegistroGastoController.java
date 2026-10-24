@@ -48,6 +48,7 @@ import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import com.misgastos.service.UsuarioService;
+import com.misgastos.service.PresupuestoService;
 
 @Component
 public class RegistroGastoController {
@@ -80,6 +81,7 @@ public class RegistroGastoController {
     
     @Autowired private CategoriaService categoriaService;
     @Autowired private GastoService gastoService;
+    @Autowired private PresupuestoService presupuestoService;
     
     private Long usuarioId = 1L;
     
@@ -88,6 +90,7 @@ public class RegistroGastoController {
     private String ultimoProductoAutocompletado = null;
     private boolean formateandoMoneda = false;
     private boolean ignorarCambioTexto = false;
+    private boolean actualizandoLista = false;
     private Set<String> productosYaUsados = new HashSet<>();
     
     private final ObservableList<Gasto> gastosMaestro = FXCollections.observableArrayList();
@@ -146,14 +149,13 @@ public class RegistroGastoController {
     private void configurarProductoAutocomplete() {
         cmbProducto.setEditable(true);
         TextField editor = cmbProducto.getEditor();
-        
-        // ✅ EventFilter para capturar Enter ANTES que el ComboBox lo procese
+
+        // EventFilter para capturar Enter ANTES que el ComboBox lo procese
         cmbProducto.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, event -> {
             if (event.getCode() == KeyCode.ENTER) {
                 String textoActual = editor.getText();
-                // Si hay texto, avanzar al siguiente campo
                 if (textoActual != null && !textoActual.trim().isEmpty()) {
-                    event.consume(); // Consumir el evento para que no lo procese el ComboBox
+                    event.consume();
                     Platform.runLater(() -> {
                         if (txtCedula.isVisible()) {
                             txtCedula.requestFocus();
@@ -164,30 +166,27 @@ public class RegistroGastoController {
                 }
             }
         });
-        
+
         editor.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.DOWN) {
                 cmbProducto.show();
             }
         });
-        
-        // ✅ Este listener se dispara cuando el usuario ESCRIBE
+
+        // Se dispara cuando el usuario ESCRIBE
         editor.textProperty().addListener((obs, oldText, newText) -> {
-            // ✅ Ignorar cambios programáticos
             if (ignorarCambioTexto) {
                 return;
             }
-            
+
             System.out.println("🔍 textProperty cambió: '" + oldText + "' -> '" + newText + "'");
-            
-            // ✅ Si el texto cambió y es diferente al último autocompletado, resetear
+
             if (newText == null || !newText.equals(ultimoProductoAutocompletado)) {
                 productoNuevoYaConfigurado = false;
                 System.out.println("   🔄 Flag reseteado (producto diferente)");
             }
-            
+
             if (newText == null || newText.isBlank()) {
-                // ✅ Cerrar dropdown, limpiar selección Y LUEGO limpiar items
                 Platform.runLater(() -> {
                     cmbProducto.hide();
                     cmbProducto.getSelectionModel().clearSelection();
@@ -195,24 +194,43 @@ public class RegistroGastoController {
                 });
                 return;
             }
-            
+
             List<String> productos = gastoService.buscarProductos(newText);
             if (productos.isEmpty()) {
-                // ✅ NO limpiar el ComboBox aquí, solo cerrar el dropdown
                 cmbProducto.hide();
                 return;
             }
-            
-            cmbProducto.getItems().setAll(productos);
-            cmbProducto.show();
+
+            // Al cambiar la lista, el ComboBox puede reescribir el editor con el valor viejo.
+            // Se descarta la selección anterior y se restaura lo que el usuario tiene escrito.
+            String textoEscrito = newText;
+            int posicionCursor = editor.getCaretPosition();
+
+            ignorarCambioTexto = true;
+            actualizandoLista = true;
+            try {
+                cmbProducto.getSelectionModel().clearSelection();
+                cmbProducto.getItems().setAll(productos);
+                if (!textoEscrito.equals(editor.getText())) {
+                    editor.setText(textoEscrito);
+                    editor.positionCaret(Math.min(posicionCursor, textoEscrito.length()));
+                }
+                cmbProducto.show();
+            } finally {
+                ignorarCambioTexto = false;
+                actualizandoLista = false;
+            }
         });
-        
-        // ✅ Este listener se dispara cuando se SELECCIONA del dropdown
+
+        // Se dispara cuando se SELECCIONA del dropdown
         cmbProducto.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (actualizandoLista || ignorarCambioTexto) {
+                return;
+            }
+           
             if (newVal != null && !newVal.isBlank()) {
                 System.out.println("✅ Producto seleccionado del autocomplete: '" + newVal + "'");
-                
-                // ✅ SIEMPRE autocompletar, NUNCA saltar automáticamente
+
                 autocompletarDatosPorProducto(newVal);
                 productosYaUsados.add(newVal.trim());
                 ultimoProductoAutocompletado = newVal;
@@ -294,6 +312,7 @@ public class RegistroGastoController {
         });
     }
     
+
     @FXML
     public void handleGuardar() {
         System.out.println("🟢 handleGuardar() ejecutado");
@@ -399,7 +418,8 @@ public class RegistroGastoController {
             // ✅ Limpiar formato de moneda antes de guardar
             String valorUnitarioLimpio = txtValorUnitario.getText().replaceAll("[^0-9]", "");
             
-            gastoService.registrarGasto(
+            // CAMBIO 1: se guarda el resultado en la variable "guardado"
+            Gasto guardado = gastoService.registrarGasto(
                 usuarioId,
                 cmbCategoria.getValue().getId(),
                 cmbSubcategoria.getValue().getId(),
@@ -413,7 +433,19 @@ public class RegistroGastoController {
             
             System.out.println("✅ Gasto guardado exitosamente");
             
-            mostrarAlerta("Éxito", "Gasto registrado correctamente", Alert.AlertType.INFORMATION);
+            // CAMBIO 2: calcula el aviso de presupuesto y lo muestra junto al mensaje de éxito
+            String aviso = null;
+            try {
+                aviso = presupuestoService.avisoTrasGasto(guardado);
+            } catch (Exception ex) {
+                System.err.println("No se pudo calcular el aviso de presupuesto: " + ex.getMessage());
+            }
+            if (aviso == null) {
+                mostrarAlerta("Éxito", "Gasto registrado correctamente", Alert.AlertType.INFORMATION);
+            } else {
+                mostrarAlerta("Presupuesto", "Gasto registrado correctamente.\n\n" + aviso, Alert.AlertType.WARNING);
+            }
+            
             cargarUltimosGastos();
             limpiarFormulario();
             

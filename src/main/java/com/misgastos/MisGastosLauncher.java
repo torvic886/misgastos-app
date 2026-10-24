@@ -56,6 +56,10 @@ public class MisGastosLauncher {
             // cambio de estructura). Si falla, solo se avisa: nunca impide abrir el programa.
             respaldarBaseDeDatos(carpeta, db);
             aplicarImportacionPendiente(carpeta, db);
+            
+            respaldarBaseDeDatos(carpeta, db);
+            aplicarImportacionPendiente(carpeta, db);
+            MigracionesBase.aplicar(db);   // <-- NUEVA
 
             String dbPath = db.toString().replace('\\', '/');
             System.setProperty("spring.datasource.url", "jdbc:sqlite:" + dbPath);

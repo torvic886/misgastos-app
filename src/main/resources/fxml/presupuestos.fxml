@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.misgastos.controller.PresupuestosController"
+      spacing="16" styleClass="content">
+    <padding>
+        <Insets top="20" right="24" bottom="20" left="24"/>
+    </padding>
+
+    <VBox spacing="2">
+        <Label text="💰 Presupuestos"
+               style="-fx-font-weight: bold; -fx-font-size: 18px; -fx-text-fill: #1e293b;"/>
+        <Label text="Fija un tope mensual por categoría. El programa avisa al llegar al 80 % y al pasarse."
+               wrapText="true"
+               style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+    </VBox>
+
+    <VBox spacing="10" styleClass="form-card">
+        <Label fx:id="lblMes" style="-fx-font-size: 12px; -fx-text-fill: #475569;"/>
+        <HBox spacing="10">
+            <Button text="Fijar tope" onAction="#handleFijarTope" styleClass="primary-button"/>
+            <Button text="Quitar tope" onAction="#handleQuitarTope" styleClass="secondary-button"/>
+        </HBox>
+        <Label text="Selecciona una categoría de la tabla y pulsa el botón."
+               style="-fx-font-size: 11px; -fx-text-fill: #94a3b8;"/>
+    </VBox>
+
+    <TableView fx:id="tablaPresupuestos" VBox.vgrow="ALWAYS">
+        <columnResizePolicy>
+            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+        </columnResizePolicy>
+        <placeholder>
+            <Label text="No hay categorías todavía"/>
+        </placeholder>
+        <columns>
+            <TableColumn fx:id="colCategoria" text="Categoría" prefWidth="220"/>
+            <TableColumn fx:id="colTope" text="Tope mensual" prefWidth="150"/>
+            <TableColumn fx:id="colGastado" text="Gastado este mes" prefWidth="150"/>
+            <TableColumn fx:id="colPorcentaje" text="Uso" prefWidth="80"/>
+        </columns>
+    </TableView>
+</VBox>
