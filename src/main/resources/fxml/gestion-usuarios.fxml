@@ -65,6 +65,16 @@
                           style="-fx-background-color: white; -fx-border-color: #cbd5e1; -fx-border-width: 1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 5;"/>
             </VBox>
 
+            <!-- Avatar -->
+            <VBox spacing="5">
+                <Label text="Avatar:"
+                       style="-fx-font-size: 11px; -fx-font-weight: 600; -fx-text-fill: #334155;"/>
+                <ComboBox fx:id="cmbAvatar"
+                          maxWidth="Infinity"
+                          promptText="Seleccione avatar"
+                          style="-fx-background-color: white; -fx-border-color: #cbd5e1; -fx-border-width: 1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 5;"/>
+            </VBox>
+
             <!-- Usuario Activo -->
             <HBox spacing="8" alignment="CENTER_LEFT" 
                   style="-fx-background-color: #f8fafc; -fx-padding: 8 10; -fx-background-radius: 6; -fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 6;">

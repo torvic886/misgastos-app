@@ -1,299 +1,183 @@
 package com.misgastos.service;
 
-import java.io.FileOutputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
 
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.DataFormat;
-import org.apache.poi.ss.usermodel.FillPatternType;
-import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
-import org.apache.poi.ss.usermodel.IndexedColors;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.itextpdf.kernel.colors.ColorConstants;
-import com.itextpdf.kernel.colors.DeviceRgb;
-import com.itextpdf.kernel.pdf.PdfDocument;
-import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.layout.element.Paragraph;
-import com.itextpdf.layout.properties.TextAlignment;
-import com.itextpdf.layout.properties.UnitValue;
-import com.misgastos.model.Gasto;
-import com.itextpdf.kernel.colors.Color;
-import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.properties.TextAlignment;
+import com.misgastos.model.Gasto;
+import com.misgastos.service.diseno.Diseno;
+import com.misgastos.service.diseno.ExcelEstilo;
+import com.misgastos.service.diseno.ExcelEstilo.Rol;
+import com.misgastos.service.diseno.HojaExcel;
+import com.misgastos.service.diseno.PdfEstilo;
+import com.misgastos.service.diseno.PdfEstilo.Fila;
 
-
-
+/**
+ * Exportación de listados de gastos a Excel y PDF con el diseño común de la aplicación.
+ * Incluye quién registró el gasto y, para los bonos, la cédula y el nombre de la persona.
+ */
 @Service
 public class ReporteService {
-    
+
+    private static final DateTimeFormatter HORA_MIN = DateTimeFormatter.ofPattern("HH:mm");
+
     @Autowired
     private GastoService gastoService;
-    
-    // ==================== MÉTODOS EXCEL ====================
-    
-    public void exportarGastosExcel(String rutaArchivo) throws Exception {
-        List<Gasto> gastos = gastoService.listarTodos();
-        generarExcel(gastos, rutaArchivo, "Todos los Gastos");
-    }
-    
-    public void exportarGastosPorPeriodoExcel(LocalDate inicio, LocalDate fin, String rutaArchivo) throws Exception {
-        List<Gasto> gastos = gastoService.listarPorPeriodo(inicio, fin);
-        String titulo = "Gastos del " + inicio + " al " + fin;
-        generarExcel(gastos, rutaArchivo, titulo);
-    }
-    
-    private void generarExcel(List<Gasto> gastos, String rutaArchivo, String titulo) throws Exception {
-        Workbook workbook = new XSSFWorkbook();
-        Sheet sheet = workbook.createSheet("Gastos");
-        
-        // Estilos
-        CellStyle headerStyle = crearEstiloHeader(workbook);
-        CellStyle moneyStyle = crearEstiloMoneda(workbook);
-        CellStyle dateStyle = crearEstiloFecha(workbook);
-        CellStyle totalStyle = crearEstiloTotal(workbook);
-        
-        // Título
-        Row titleRow = sheet.createRow(0);
-        org.apache.poi.ss.usermodel.Cell titleCell = titleRow.createCell(0);
-        titleCell.setCellValue(titulo);
-        CellStyle titleStyle = workbook.createCellStyle();
-        Font titleFont = workbook.createFont();
-        titleFont.setBold(true);
-        titleFont.setFontHeightInPoints((short) 16);
-        titleStyle.setFont(titleFont);
-        titleCell.setCellStyle(titleStyle);
-        
-        // Encabezados
-        Row headerRow = sheet.createRow(2);
-        String[] columnas = {"ID", "Fecha", "Hora", "Categoría", "Subcategoría", "Producto", "Cantidad", "Valor Unit.", "Total", "Notas"};
-        
-        for (int i = 0; i < columnas.length; i++) {
-            org.apache.poi.ss.usermodel.Cell cell = headerRow.createCell(i);
-            cell.setCellValue(columnas[i]);
-            cell.setCellStyle(headerStyle);
-        }
-        
-        // Datos
-        int rowNum = 3;
-        BigDecimal totalGeneral = BigDecimal.ZERO;
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
-        
-        for (Gasto gasto : gastos) {
-            Row row = sheet.createRow(rowNum++);
-            
-            row.createCell(0).setCellValue(gasto.getId());
-            
-            org.apache.poi.ss.usermodel.Cell dateCell = row.createCell(1);
-            dateCell.setCellValue(gasto.getFecha().format(dateFormatter));
-            dateCell.setCellStyle(dateStyle);
-            
-            row.createCell(2).setCellValue(gasto.getHora().format(timeFormatter));
-            row.createCell(3).setCellValue(gasto.getCategoria().getNombre());
-            row.createCell(4).setCellValue(gasto.getSubcategoria().getNombre());
-            row.createCell(5).setCellValue(gasto.getProducto());
-            row.createCell(6).setCellValue(gasto.getCantidad());
-            
-            org.apache.poi.ss.usermodel.Cell valorUnitCell = row.createCell(7);
-            valorUnitCell.setCellValue(gasto.getValorUnitario().doubleValue());
-            valorUnitCell.setCellStyle(moneyStyle);
-            
-            org.apache.poi.ss.usermodel.Cell totalCell = row.createCell(8);
-            totalCell.setCellValue(gasto.getValorTotal().doubleValue());
-            totalCell.setCellStyle(moneyStyle);
-            
-            row.createCell(9).setCellValue(gasto.getNotas() != null ? gasto.getNotas() : "");
-            
-            totalGeneral = totalGeneral.add(gasto.getValorTotal());
-        }
-        
-        // Fila de total
-        Row totalRow = sheet.createRow(rowNum + 1);
-        org.apache.poi.ss.usermodel.Cell totalLabelCell = totalRow.createCell(7);
-        totalLabelCell.setCellValue("TOTAL:");
-        totalLabelCell.setCellStyle(totalStyle);
-        
-        org.apache.poi.ss.usermodel.Cell totalValueCell = totalRow.createCell(8);
-        totalValueCell.setCellValue(totalGeneral.doubleValue());
-        totalValueCell.setCellStyle(totalStyle);
-        
-        // Ajustar ancho de columnas
-        for (int i = 0; i < columnas.length; i++) {
-            sheet.autoSizeColumn(i);
-        }
-        
-        // Filtros automáticos
-        sheet.setAutoFilter(new org.apache.poi.ss.util.CellRangeAddress(2, rowNum - 1, 0, columnas.length - 1));
-        
-        // Guardar archivo
-        try (FileOutputStream fileOut = new FileOutputStream(rutaArchivo)) {
-            workbook.write(fileOut);
-        }
-        
-        workbook.close();
-    }
-    
-    // ==================== MÉTODOS PDF ====================
-    
-    public void exportarGastosPDF(String rutaArchivo) throws Exception {
-        List<Gasto> gastos = gastoService.listarTodos();
-        generarPDF(gastos, rutaArchivo, "Reporte de Todos los Gastos");
-    }
-    
-    public void exportarGastosPorPeriodoPDF(LocalDate inicio, LocalDate fin, String rutaArchivo) throws Exception {
-        List<Gasto> gastos = gastoService.listarPorPeriodo(inicio, fin);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        String titulo = String.format("Reporte de Gastos\n%s - %s", 
-            inicio.format(formatter), 
-            fin.format(formatter));
-        generarPDF(gastos, rutaArchivo, titulo);
-    }
-    
-    private void generarPDF(List<Gasto> gastos, String rutaArchivo, String titulo) throws Exception {
-        PdfWriter writer = new PdfWriter(rutaArchivo);
-        PdfDocument pdf = new PdfDocument(writer);
-        com.itextpdf.layout.Document document = new com.itextpdf.layout.Document(pdf);
-        
-        // Colores personalizados
-        DeviceRgb azulOscuro = new DeviceRgb(30, 58, 138);
-        DeviceRgb grisClaro = new DeviceRgb(243, 244, 246);
-        
-        // Título
-        Paragraph tituloParrafo = new Paragraph(titulo)
-            .setFontSize(18)
-            .setBold()
-            .setTextAlignment(TextAlignment.CENTER)
-            .setMarginBottom(10);
-        document.add(tituloParrafo);
-        
-        // Fecha de generación
-        Paragraph fechaGen = new Paragraph("Generado: " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
-            .setFontSize(10)
-            .setTextAlignment(TextAlignment.CENTER)
-            .setMarginBottom(20);
-        document.add(fechaGen);
-        
-        // Tabla con 8 columnas
-        float[] columnWidths = {50f, 70f, 50f, 90f, 90f, 120f, 60f, 80f};
-        com.itextpdf.layout.element.Table table = new com.itextpdf.layout.element.Table(UnitValue.createPointArray(columnWidths));
-        table.setWidth(UnitValue.createPercentValue(100));
-        
-        // Encabezados
-        String[] headers = {"ID", "Fecha", "Hora", "Categoría", "Subcategoría", "Producto", "Cantidad", "Total"};
-        for (String header : headers) {
-            com.itextpdf.layout.element.Cell cell = new com.itextpdf.layout.element.Cell()
-                .add(new Paragraph(header).setBold().setFontSize(10))
-                .setBackgroundColor(azulOscuro)
-                .setFontColor(ColorConstants.WHITE)
-                .setTextAlignment(TextAlignment.CENTER)
-                .setPadding(8);
-            table.addHeaderCell(cell);
-        }
-        
-        // Datos
-        BigDecimal totalGeneral = BigDecimal.ZERO;
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
-        boolean alternar = false;
-        
-        
-        for (Gasto gasto : gastos) {
-        	Color bgColor = alternar ? grisClaro : ColorConstants.WHITE;
-            
-            agregarCeldaPDF(table, String.valueOf(gasto.getId()), bgColor, TextAlignment.CENTER);
-            agregarCeldaPDF(table, gasto.getFecha().format(dateFormatter), bgColor, TextAlignment.CENTER);
-            agregarCeldaPDF(table, gasto.getHora().format(timeFormatter), bgColor, TextAlignment.CENTER);
-            agregarCeldaPDF(table, gasto.getCategoria().getNombre(), bgColor, TextAlignment.LEFT);
-            agregarCeldaPDF(table, gasto.getSubcategoria().getNombre(), bgColor, TextAlignment.LEFT);
-            agregarCeldaPDF(table, gasto.getProducto(), bgColor, TextAlignment.LEFT);
-            agregarCeldaPDF(table, String.valueOf(gasto.getCantidad()), bgColor, TextAlignment.CENTER);
-            agregarCeldaPDF(table, String.format("$%,.2f", gasto.getValorTotal()), bgColor, TextAlignment.RIGHT);
-            
-            totalGeneral = totalGeneral.add(gasto.getValorTotal());
-            alternar = !alternar;
-        }
-        
-        document.add(table);
-        
-        // Total general
-        Paragraph totalParrafo = new Paragraph(String.format("TOTAL GENERAL: $%,.2f", totalGeneral))
-            .setFontSize(14)
-            .setBold()
-            .setTextAlignment(TextAlignment.RIGHT)
-            .setMarginTop(15)
-            .setBackgroundColor(new DeviceRgb(254, 252, 232))
-            .setPadding(10);
-        document.add(totalParrafo);
-        
-        // Resumen
-        Paragraph resumen = new Paragraph(String.format("Total de registros: %d", gastos.size()))
-            .setFontSize(10)
-            .setTextAlignment(TextAlignment.CENTER)
-            .setMarginTop(20);
-        document.add(resumen);
-        
-        document.close();
-    }
-    
-    private void agregarCeldaPDF(
-            Table table,
-            String texto,
-            Color backgroundColor,
-            TextAlignment alineacion
-    ) {
-        Cell cell = new Cell()
-                .add(new Paragraph(texto).setFontSize(9))
-                .setBackgroundColor(backgroundColor)
-                .setTextAlignment(alineacion)
-                .setPadding(6);
 
-        table.addCell(cell);
+    // ==================== EXCEL ====================
+
+    public void exportarGastosExcel(String rutaArchivo) throws Exception {
+        generarExcel(gastoService.listarTodos(), rutaArchivo, "Todos los gastos", null);
     }
-    
-    // ==================== ESTILOS EXCEL ====================
-    
-    private CellStyle crearEstiloHeader(Workbook workbook) {
-        CellStyle style = workbook.createCellStyle();
-        Font font = workbook.createFont();
-        font.setBold(true);
-        font.setColor(IndexedColors.WHITE.getIndex());
-        style.setFont(font);
-        style.setFillForegroundColor(IndexedColors.DARK_BLUE.getIndex());
-        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        style.setAlignment(HorizontalAlignment.CENTER);
-        return style;
+
+    public void exportarGastosPorPeriodoExcel(LocalDate inicio, LocalDate fin, String rutaArchivo) throws Exception {
+        generarExcel(gastoService.listarPorPeriodo(inicio, fin), rutaArchivo,
+            "Gastos por período", Diseno.fecha(inicio) + " al " + Diseno.fecha(fin));
     }
-    
-    private CellStyle crearEstiloMoneda(Workbook workbook) {
-        CellStyle style = workbook.createCellStyle();
-        DataFormat format = workbook.createDataFormat();
-        style.setDataFormat(format.getFormat("$#,##0.00"));
-        return style;
+
+    private void generarExcel(List<Gasto> datos, String rutaArchivo, String titulo, String periodo) throws Exception {
+        List<Gasto> gastos = ordenar(datos);
+
+        ExcelEstilo estilos = new ExcelEstilo();
+        HojaExcel hoja = new HojaExcel(estilos, "Gastos", 13, true);
+
+        hoja.titulo(titulo, subtitulo(periodo, gastos.size()));
+
+        HorizontalAlignment c = HorizontalAlignment.CENTER;
+        HorizontalAlignment l = HorizontalAlignment.LEFT;
+        HorizontalAlignment r = HorizontalAlignment.RIGHT;
+        hoja.encabezado(
+            new String[] {"ID", "Fecha", "Hora", "Registrado por", "Categoría", "Subcategoría", "Producto",
+                "Cédula", "Nombre", "Cantidad", "Valor unit.", "Total", "Notas"},
+            new HorizontalAlignment[] {c, c, c, l, l, l, l, l, l, r, r, r, l});
+
+        int primera = hoja.siguienteFila();
+        for (Gasto g : gastos) {
+            hoja.fila(Rol.DATO)
+                .id(g.getId())
+                .fecha(g.getFecha())
+                .hora(g.getHora())
+                .texto(usuarioDe(g))
+                .texto(g.getCategoria().getNombre())
+                .texto(g.getSubcategoria().getNombre())
+                .texto(g.getProducto())
+                .texto(g.getCedula())
+                .texto(g.getNombrePersona())
+                .entero(g.getCantidad())
+                .moneda(g.getValorUnitario())
+                .moneda(g.getValorTotal())
+                .texto(g.getNotas());
+        }
+        int ultima = hoja.siguienteFila() - 1;
+
+        // El total usa SUBTOTAL: al filtrar en Excel, suma solo las filas visibles
+        HojaExcel.FilaExcel total = hoja.fila(Rol.TOTAL).texto("TOTAL");
+        for (int i = 0; i < 10; i++) {
+            total.vacio();
+        }
+        if (gastos.isEmpty()) {
+            total.moneda(BigDecimal.ZERO);
+        } else {
+            total.formulaMoneda("SUBTOTAL(109," + HojaExcel.ref(11, primera) + ":" + HojaExcel.ref(11, ultima) + ")");
+        }
+
+        hoja.terminar(true, true);
+        estilos.guardar(rutaArchivo);
     }
-    
-    private CellStyle crearEstiloFecha(Workbook workbook) {
-        CellStyle style = workbook.createCellStyle();
-        style.setAlignment(HorizontalAlignment.CENTER);
-        return style;
+
+    // ==================== PDF ====================
+
+    public void exportarGastosPDF(String rutaArchivo) throws Exception {
+        generarPDF(gastoService.listarTodos(), rutaArchivo, "Reporte de todos los gastos", null);
     }
-    
-    private CellStyle crearEstiloTotal(Workbook workbook) {
-        CellStyle style = crearEstiloMoneda(workbook);
-        Font font = workbook.createFont();
-        font.setBold(true);
-        style.setFont(font);
-        style.setFillForegroundColor(IndexedColors.LIGHT_YELLOW.getIndex());
-        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        return style;
+
+    public void exportarGastosPorPeriodoPDF(LocalDate inicio, LocalDate fin, String rutaArchivo) throws Exception {
+        generarPDF(gastoService.listarPorPeriodo(inicio, fin), rutaArchivo,
+            "Reporte de gastos", Diseno.fecha(inicio) + " al " + Diseno.fecha(fin));
+    }
+
+    private void generarPDF(List<Gasto> datos, String rutaArchivo, String titulo, String periodo) throws Exception {
+        List<Gasto> gastos = ordenar(datos);
+
+        BigDecimal totalGeneral = BigDecimal.ZERO;
+        for (Gasto g : gastos) {
+            if (g.getValorTotal() != null) {
+                totalGeneral = totalGeneral.add(g.getValorTotal());
+            }
+        }
+
+        try (PdfEstilo pdf = new PdfEstilo(rutaArchivo, "Reporte de gastos", true)) {
+            pdf.tamTabla(7.5f);
+            pdf.titulo(titulo, periodo);
+            pdf.indicadores(
+                new String[] {"Registros", Diseno.entero(gastos.size())},
+                new String[] {"Total gastado", Diseno.moneda(totalGeneral)});
+
+            TextAlignment izq = TextAlignment.LEFT;
+            TextAlignment cen = TextAlignment.CENTER;
+            TextAlignment der = TextAlignment.RIGHT;
+
+            Table tabla = pdf.tabla(8f, 6f, 10f, 12f, 12f, 17f, 9f, 13f, 5f, 9f);
+            pdf.encabezado(tabla,
+                new String[] {"Fecha", "Hora", "Registrado por", "Categoría", "Subcategoría", "Producto",
+                    "Cédula", "Nombre", "Cant.", "Total"},
+                new TextAlignment[] {cen, cen, izq, izq, izq, izq, izq, izq, cen, der});
+
+            boolean zebra = false;
+            for (Gasto g : gastos) {
+                Fila tipo = zebra ? Fila.ZEBRA : Fila.DATO;
+                tabla.addCell(pdf.celda(Diseno.fecha(g.getFecha()), cen, tipo));
+                tabla.addCell(pdf.celda(hora(g.getHora()), cen, tipo));
+                tabla.addCell(pdf.celda(usuarioDe(g), izq, tipo));
+                tabla.addCell(pdf.celda(g.getCategoria().getNombre(), izq, tipo));
+                tabla.addCell(pdf.celda(g.getSubcategoria().getNombre(), izq, tipo));
+                tabla.addCell(pdf.celda(g.getProducto(), izq, tipo));
+                tabla.addCell(pdf.celda(g.getCedula(), izq, tipo));
+                tabla.addCell(pdf.celda(g.getNombrePersona(), izq, tipo));
+                tabla.addCell(pdf.celda(String.valueOf(g.getCantidad()), cen, tipo));
+                tabla.addCell(pdf.celda(Diseno.moneda(g.getValorTotal()), der, tipo));
+                zebra = !zebra;
+            }
+
+            // Fila de total
+            tabla.addCell(pdf.celda("TOTAL", izq, Fila.TOTAL));
+            for (int i = 0; i < 8; i++) {
+                tabla.addCell(pdf.celda("", izq, Fila.TOTAL));
+            }
+            tabla.addCell(pdf.celda(Diseno.moneda(totalGeneral), der, Fila.TOTAL));
+
+            pdf.agregar(tabla);
+        }
+    }
+
+    // ==================== AUXILIARES ====================
+
+    /** Orden cronológico: fecha y hora ascendente. */
+    private List<Gasto> ordenar(List<Gasto> gastos) {
+        return gastos.stream()
+            .sorted(Comparator.comparing(Gasto::getFecha).thenComparing(Gasto::getHora))
+            .toList();
+    }
+
+    private String usuarioDe(Gasto g) {
+        return g.getUsuario() == null ? "" : g.getUsuario().getUsername();
+    }
+
+    private String hora(LocalTime hora) {
+        return hora == null ? "" : hora.format(HORA_MIN);
+    }
+
+    private String subtitulo(String periodo, int registros) {
+        String base = Diseno.entero(registros) + " registros  |  Generado el " + Diseno.fechaHoraActual();
+        return periodo == null ? base : periodo + "  |  " + base;
     }
 }

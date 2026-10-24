@@ -200,10 +200,9 @@ public class InformesController {
             // Filtrar si hay producto ingresado
             String producto = txtProducto.getText();
             if (producto != null && !producto.trim().isEmpty() && txtProducto.isVisible()) {
-                String prod = producto.toLowerCase();
-                gastos = gastos.stream()
-                    .filter(g -> g.getProducto().toLowerCase().contains(prod))
-                    .toList();
+            	gastos = gastos.stream()
+            		    .filter(g -> InformeService.mismoProducto(g.getProducto(), producto))
+            		    .toList();
             }
             
             // Actualizar labels

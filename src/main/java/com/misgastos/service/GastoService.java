@@ -20,185 +20,204 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.time.LocalDateTime;
 
 @Service
 @Transactional
 public class GastoService {
-    
-    @Autowired
-    private GastoRepository gastoRepository;
-    
-    @Autowired
-    private UsuarioRepository usuarioRepository;
-    
-    @Autowired
-    private CategoriaRepository categoriaRepository;
-    
-    @Autowired
-    private SubcategoriaRepository subcategoriaRepository;
-    
-    public Gasto registrarGasto(Long usuarioId, Long categoriaId, Long subcategoriaId,
-            String producto, Integer cantidad, BigDecimal valorUnitario,
-            String notas, String cedula, String nombrePersona) {
-        
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        
-        Categoria categoria = categoriaRepository.findById(categoriaId)
-            .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
-        
-        Subcategoria subcategoria = subcategoriaRepository.findById(subcategoriaId)
-            .orElseThrow(() -> new RuntimeException("Subcategoría no encontrada"));
-        
-        Gasto gasto = new Gasto();
-        gasto.setFecha(LocalDate.now());
-        gasto.setHora(LocalTime.now());
-        gasto.setUsuario(usuario);
-        gasto.setCategoria(categoria);
-        gasto.setSubcategoria(subcategoria);
-        gasto.setProducto(producto);
-        gasto.setCantidad(cantidad);
-        gasto.setValorUnitario(valorUnitario);
-        gasto.setValorTotal(valorUnitario.multiply(BigDecimal.valueOf(cantidad)));
-        gasto.setNotas(notas);
-        gasto.setCedula(cedula);
-        gasto.setNombrePersona(nombrePersona);
-        
-        return gastoRepository.save(gasto);
-    }
-    
-    public List<Gasto> listarTodos() {
-        return gastoRepository.findAll();
-    }
-    
-    public List<Gasto> listarPorUsuario(Long usuarioId) {
-        return gastoRepository.findByUsuarioId(usuarioId);
-    }
-    
-    public List<Gasto> listarPorPeriodo(LocalDate inicio, LocalDate fin) {
-        return gastoRepository.findByFechaBetween(inicio, fin);
-    }
-    
-    public BigDecimal calcularTotalPorPeriodo(LocalDate inicio, LocalDate fin) {
-        BigDecimal total = gastoRepository.sumarGastosPorPeriodo(inicio, fin);
-        return total != null ? total : BigDecimal.ZERO;
-    }
-    
-    public Map<String, BigDecimal> obtenerGastosPorCategoria() {
-        List<Object[]> resultados = gastoRepository.sumarPorCategoria();
-        Map<String, BigDecimal> mapa = new HashMap<>();
-        for (Object[] obj : resultados) {
-            mapa.put((String) obj[0], (BigDecimal) obj[1]);
-        }
-        return mapa;
-    }
-    
-    public List<String> buscarProductos(String texto) {
-        if (texto == null) return List.of();
-        String t = texto.trim();
-        if (t.isEmpty()) return List.of();
-        return gastoRepository.buscarProductos(t);
-    } 
-    
-    public List<Map<String, Object>> obtenerTopProductos(int limite) {
-        List<Object[]> resultados = gastoRepository.topProductos();
-        return resultados.stream()
-            .limit(limite)
-            .map(obj -> {
-                Map<String, Object> item = new HashMap<>();
-                item.put("producto", obj[0]);
-                item.put("total", obj[1]);
-                return item;
-            })
-            .collect(Collectors.toList());
-    }
-    
-    public void eliminarGasto(Long id) {
-        gastoRepository.deleteById(id);
-    }
-    
-    public Optional<Gasto> buscarUltimoGastoPorProducto(String producto) {
-        if (producto == null) return Optional.empty();
-        String p = producto.trim();
-        if (p.isEmpty()) return Optional.empty();
 
-        List<Gasto> lista = gastoRepository.ultimosGastosPorProducto(p);
-        if (lista == null || lista.isEmpty()) return Optional.empty();
-        return Optional.of(lista.get(0));
-    }
+	@Autowired
+	private GastoRepository gastoRepository;
 
-    public List<Gasto> obtenerUltimosGastos(Long usuarioId, int limite) {
-        return gastoRepository.findUltimosPorUsuario(usuarioId, limite);
-    }
-    
-    public List<Gasto> obtenerUltimosGastosGeneral(int limite) {
-        return gastoRepository.findUltimos(limite);
-    }
-    
-    public boolean existeProducto(String producto) {
-        if (producto == null) return false;
-        String p = producto.trim();
-        if (p.isEmpty()) return false;
-        return gastoRepository.existeProducto(p);
-    }
-    
-    public List<Gasto> buscarTodosPorPeriodo(LocalDate inicio, LocalDate fin) {
-        return gastoRepository.findByFechaBetweenOrderByFechaDescHoraDesc(inicio, fin);
-    }
+	@Autowired
+	private UsuarioRepository usuarioRepository;
 
-    // ============================================================================
-    		// 2️⃣ AGREGAR ESTOS MÉTODOS A GastoService.java
-    		// ============================================================================
+	@Autowired
+	private CategoriaRepository categoriaRepository;
 
-    		public List<Gasto> buscarPorFecha(LocalDate fecha) {
-    		    return gastoRepository.findByFechaExacta(fecha);
-    		}
+	@Autowired
+	private SubcategoriaRepository subcategoriaRepository;
 
-    		public List<Gasto> buscarPorUsuarioYPeriodo(Long usuarioId, LocalDate inicio, LocalDate fin) {
-    		    return gastoRepository.findByUsuarioAndFechaBetween(usuarioId, inicio, fin);
-    		}
+	public Gasto registrarGasto(Long usuarioId, Long categoriaId, Long subcategoriaId, String producto,
+			Integer cantidad, BigDecimal valorUnitario, String notas, String cedula, String nombrePersona) {
 
-    		public Gasto actualizarGasto(Long id, Long categoriaId, Long subcategoriaId,
-    		                             String producto, Integer cantidad, BigDecimal valorUnitario,
-    		                             String notas, LocalDate fecha, LocalTime hora) {
-    		    
-    		    Gasto gasto = gastoRepository.findById(id)
-    		        .orElseThrow(() -> new RuntimeException("Gasto no encontrado"));
-    		    
-    		    Categoria categoria = categoriaRepository.findById(categoriaId)
-    		        .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
-    		    
-    		    Subcategoria subcategoria = subcategoriaRepository.findById(subcategoriaId)
-    		        .orElseThrow(() -> new RuntimeException("Subcategoría no encontrada"));
-    		    
-    		    gasto.setCategoria(categoria);
-    		    gasto.setSubcategoria(subcategoria);
-    		    gasto.setProducto(producto);
-    		    gasto.setCantidad(cantidad);
-    		    gasto.setValorUnitario(valorUnitario);
-    		    gasto.setValorTotal(valorUnitario.multiply(BigDecimal.valueOf(cantidad)));
-    		    gasto.setNotas(notas);
-    		    gasto.setFecha(fecha);
-    		    gasto.setHora(hora);
-    		    
-    		    return gastoRepository.save(gasto);
-    		}
+		Usuario usuario = usuarioRepository.findById(usuarioId)
+				.orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-    		public Optional<Gasto> buscarPorId(Long id) {
-    		    return gastoRepository.findById(id);
-    		} 
-    	
-    		public Gasto registrarGasto(Long usuarioId, Long categoriaId, Long subcategoriaId,
-    		        String producto, Integer cantidad, BigDecimal valorUnitario,
-    		        String notas, String cedula) {
-    		    return registrarGasto(usuarioId, categoriaId, subcategoriaId, producto,
-    		        cantidad, valorUnitario, notas, cedula, null);
-    		}
+		Categoria categoria = categoriaRepository.findById(categoriaId)
+				.orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
 
-    		public Optional<String> buscarNombrePorCedula(String cedula) {
-    		    if (cedula == null || cedula.isBlank()) return Optional.empty();
-    		    return gastoRepository.ultimoNombrePorCedula(cedula.trim());
-    		}		
-    		
+		Subcategoria subcategoria = subcategoriaRepository.findById(subcategoriaId)
+				.orElseThrow(() -> new RuntimeException("Subcategoría no encontrada"));
+
+		Gasto gasto = new Gasto();
+		gasto.setFecha(LocalDate.now());
+		gasto.setHora(LocalTime.now());
+		gasto.setUsuario(usuario);
+		gasto.setCategoria(categoria);
+		gasto.setSubcategoria(subcategoria);
+		gasto.setProducto(producto);
+		gasto.setCantidad(cantidad);
+		gasto.setValorUnitario(valorUnitario);
+		gasto.setValorTotal(valorUnitario.multiply(BigDecimal.valueOf(cantidad)));
+		gasto.setNotas(notas);
+		gasto.setCedula(cedula);
+		gasto.setNombrePersona(nombrePersona);
+
+		return gastoRepository.save(gasto);
+	}
+
+	public List<Gasto> listarTodos() {
+		return gastoRepository.findAll();
+	}
+
+	public List<Gasto> listarPorUsuario(Long usuarioId) {
+		return gastoRepository.findByUsuarioId(usuarioId);
+	}
+
+	public List<Gasto> listarPorPeriodo(LocalDate inicio, LocalDate fin) {
+		return gastoRepository.findByFechaBetween(inicio, fin);
+	}
+
+	public BigDecimal calcularTotalPorPeriodo(LocalDate inicio, LocalDate fin) {
+		BigDecimal total = gastoRepository.sumarGastosPorPeriodo(inicio, fin);
+		return total != null ? total : BigDecimal.ZERO;
+	}
+
+	public Map<String, BigDecimal> obtenerGastosPorCategoria() {
+		List<Object[]> resultados = gastoRepository.sumarPorCategoria();
+		Map<String, BigDecimal> mapa = new HashMap<>();
+		for (Object[] obj : resultados) {
+			mapa.put((String) obj[0], (BigDecimal) obj[1]);
+		}
+		return mapa;
+	}
+
+	public List<String> buscarProductos(String texto) {
+		if (texto == null)
+			return List.of();
+		String t = texto.trim();
+		if (t.isEmpty())
+			return List.of();
+		return gastoRepository.buscarProductos(t);
+	}
+
+	public List<Map<String, Object>> obtenerTopProductos(int limite) {
+		List<Object[]> resultados = gastoRepository.topProductos();
+		return resultados.stream().limit(limite).map(obj -> {
+			Map<String, Object> item = new HashMap<>();
+			item.put("producto", obj[0]);
+			item.put("total", obj[1]);
+			return item;
+		}).collect(Collectors.toList());
+	}
+
+	public void eliminarGasto(Long id) {
+		Gasto gasto = gastoRepository.findById(id).orElseThrow(() -> new RuntimeException("Gasto no encontrado"));
+		gasto.setFechaEliminacion(LocalDateTime.now());
+		gastoRepository.save(gasto);
+	}
+
+	public Optional<Gasto> buscarUltimoGastoPorProducto(String producto) {
+		if (producto == null)
+			return Optional.empty();
+		String p = producto.trim();
+		if (p.isEmpty())
+			return Optional.empty();
+
+		List<Gasto> lista = gastoRepository.ultimosGastosPorProducto(p);
+		if (lista == null || lista.isEmpty())
+			return Optional.empty();
+		return Optional.of(lista.get(0));
+	}
+
+	public List<Gasto> obtenerUltimosGastos(Long usuarioId, int limite) {
+		return gastoRepository.findUltimosPorUsuario(usuarioId, limite);
+	}
+
+	public List<Gasto> obtenerUltimosGastosGeneral(int limite) {
+		return gastoRepository.findUltimos(limite);
+	}
+
+	public boolean existeProducto(String producto) {
+		if (producto == null)
+			return false;
+		String p = producto.trim();
+		if (p.isEmpty())
+			return false;
+		return gastoRepository.existeProducto(p);
+	}
+
+	public List<Gasto> buscarTodosPorPeriodo(LocalDate inicio, LocalDate fin) {
+		return gastoRepository.findByFechaBetweenOrderByFechaDescHoraDesc(inicio, fin);
+	}
+
+	// ============================================================================
+	// 2️⃣ AGREGAR ESTOS MÉTODOS A GastoService.java
+	// ============================================================================
+
+	public List<Gasto> buscarPorFecha(LocalDate fecha) {
+		return gastoRepository.findByFechaExacta(fecha);
+	}
+
+	public List<Gasto> buscarPorUsuarioYPeriodo(Long usuarioId, LocalDate inicio, LocalDate fin) {
+		return gastoRepository.findByUsuarioAndFechaBetween(usuarioId, inicio, fin);
+	}
+
+	public Gasto actualizarGasto(Long id, Long categoriaId, Long subcategoriaId, String producto, Integer cantidad,
+			BigDecimal valorUnitario, String notas, LocalDate fecha, LocalTime hora) {
+
+		Gasto gasto = gastoRepository.findById(id).orElseThrow(() -> new RuntimeException("Gasto no encontrado"));
+
+		Categoria categoria = categoriaRepository.findById(categoriaId)
+				.orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
+
+		Subcategoria subcategoria = subcategoriaRepository.findById(subcategoriaId)
+				.orElseThrow(() -> new RuntimeException("Subcategoría no encontrada"));
+
+		gasto.setCategoria(categoria);
+		gasto.setSubcategoria(subcategoria);
+		gasto.setProducto(producto);
+		gasto.setCantidad(cantidad);
+		gasto.setValorUnitario(valorUnitario);
+		gasto.setValorTotal(valorUnitario.multiply(BigDecimal.valueOf(cantidad)));
+		gasto.setNotas(notas);
+		gasto.setFecha(fecha);
+		gasto.setHora(hora);
+
+		return gastoRepository.save(gasto);
+	}
+
+	public Optional<Gasto> buscarPorId(Long id) {
+		return gastoRepository.findById(id);
+	}
+
+	public Gasto registrarGasto(Long usuarioId, Long categoriaId, Long subcategoriaId, String producto,
+			Integer cantidad, BigDecimal valorUnitario, String notas, String cedula) {
+		return registrarGasto(usuarioId, categoriaId, subcategoriaId, producto, cantidad, valorUnitario, notas, cedula,
+				null);
+	}
+
+	public Optional<String> buscarNombrePorCedula(String cedula) {
+		if (cedula == null || cedula.isBlank())
+			return Optional.empty();
+		return gastoRepository.ultimoNombrePorCedula(cedula.trim());
+	}
+
+	public List<Gasto> listarEliminados() {
+		return gastoRepository.findEliminados();
+	}
+
+	public void restaurarGasto(Long id) {
+		gastoRepository.restaurar(id);
+	}
+
+	public void eliminarDefinitivamente(Long id) {
+		gastoRepository.borrarDefinitivo(id);
+	}
+
+	public int vaciarPapelera() {
+		return gastoRepository.vaciarPapelera();
+	}
 
 }

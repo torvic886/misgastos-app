@@ -26,6 +26,10 @@ public class Usuario {
     @Column(nullable = false)
     private LocalDateTime fechaCreacion = LocalDateTime.now();
 
+    // Avatar opcional: "HOMBRE" o "MUJER" (null = se muestra la inicial del usuario)
+    @Column(length = 10)
+    private String avatar;
+
     // Getters y Setters
     public Long getId() {
         return id;
@@ -73,5 +77,13 @@ public class Usuario {
 
     public void setFechaCreacion(LocalDateTime fechaCreacion) {
         this.fechaCreacion = fechaCreacion;
+    }
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
     }
 }

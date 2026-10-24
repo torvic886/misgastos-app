@@ -4,6 +4,9 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.shape.Circle;
 import com.misgastos.MisGastosApplication;
 import com.misgastos.service.SesionRecordadaService;
 import com.misgastos.service.UsuarioService;
@@ -22,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
+import java.io.InputStream;
 import java.util.Optional;
 
 @Component
@@ -43,6 +47,9 @@ public class DashboardController {
     @FXML private Button btnUsuarios;
     @FXML private Button btnBilleteros;
     @FXML private Button btnReportesBilleteros;
+    @FXML private Button btnConsultas;
+    @FXML private Button btnRespaldo;
+    
     
     @Autowired
     private ApplicationContext springContext;
@@ -56,11 +63,22 @@ public class DashboardController {
     private String username;
     private String rol;
     private Button botonActivo = null;
+
+    // Tamaño (en píxeles) con el que se muestra el avatar en la barra superior
+    private static final double TAM_AVATAR = 40;
     
     @FXML
     public void initialize() {
         System.out.println("📊 Dashboard inicializado");
         cargarVista("/fxml/inicio.fxml");
+        
+     // Modo compacto (responsive): con ventana angosta se reducen menú y márgenes
+        mainBorderPane.sceneProperty().addListener((obs, antes, escena) -> {
+            if (escena != null) {
+                escena.widthProperty().addListener((o, a, ancho) -> aplicarModoCompacto(ancho.doubleValue()));
+                aplicarModoCompacto(escena.getWidth());
+            }
+        });
         
         if (btnInicio != null) {
             establecerBotonActivo(btnInicio);
@@ -110,13 +128,64 @@ public class DashboardController {
             // Opcional: Cambiar color del avatar según el rol
             if (esAdministrador()) {
                 lblAvatar.setStyle(
-                    "-fx-background-color: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);"
+                		"-fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #f59e0b 0%, #d97706 100%);"
                 );
             } else {
                 lblAvatar.setStyle(
-                    "-fx-background-color: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);"
+                    "-fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #3b82f6 0%, #2563eb 100%);"
                 );
             }
+
+            // Si el usuario tiene avatar (hombre/mujer), se muestra la imagen en lugar de la inicial
+            aplicarImagenAvatar();
+        }
+    }
+    
+    private void aplicarModoCompacto(double ancho) {
+        boolean compacto = ancho < 1100;
+        if (compacto && !mainBorderPane.getStyleClass().contains("compact")) {
+            mainBorderPane.getStyleClass().add("compact");
+        } else if (!compacto) {
+            mainBorderPane.getStyleClass().remove("compact");
+        }
+    }
+
+    private void aplicarImagenAvatar() {
+        try {
+            Optional<Usuario> usuarioOpt = usuarioService.buscarPorUsername(username);
+            if (usuarioOpt.isEmpty()) {
+                return;
+            }
+
+            String avatar = usuarioOpt.get().getAvatar();
+            String ruta = null;
+            if ("HOMBRE".equals(avatar)) {
+                ruta = "/images/avatar-hombre.png";
+            } else if ("MUJER".equals(avatar)) {
+                ruta = "/images/avatar-mujer.png";
+            }
+            if (ruta == null) {
+                return; // sin avatar: se queda la inicial de siempre
+            }
+
+            try (InputStream in = getClass().getResourceAsStream(ruta)) {
+                if (in == null) {
+                    System.err.println("No se encontró la imagen del avatar: " + ruta);
+                    return;
+                }
+                Image imagen = new Image(in, TAM_AVATAR * 2, TAM_AVATAR * 2, true, true);
+                ImageView vista = new ImageView(imagen);
+                vista.setFitWidth(TAM_AVATAR);
+                vista.setFitHeight(TAM_AVATAR);
+                vista.setPreserveRatio(true);
+                vista.setClip(new Circle(TAM_AVATAR / 2, TAM_AVATAR / 2, TAM_AVATAR / 2));
+
+                lblAvatar.setText("");
+                lblAvatar.setGraphic(vista);
+                lblAvatar.setStyle("-fx-background-color: transparent;");
+            }
+        } catch (Exception e) {
+            System.err.println("No se pudo mostrar el avatar: " + e.getMessage());
         }
     }
     
@@ -154,8 +223,10 @@ public class DashboardController {
             sidebar.getChildren().removeIf(node -> {
                 if (node instanceof Button) {
                     Button btn = (Button) node;
-                    return btn.getText().contains("Informes") || 
-                           btn.getText().contains("Usuarios");
+                    return btn.getText().contains("Informes") ||
+                            btn.getText().contains("Usuarios") ||
+                            btn.getText().contains("Consultas") ||
+                            btn.getText().contains("Respaldo");
                 }
                 return false;
             });
@@ -195,6 +266,10 @@ public class DashboardController {
                 btnBuscarEditar.getStyleClass().add("search-button");
                 btnBuscarEditar.setOnAction(e -> cargarVista("/fxml/buscar-editar-gastos.fxml"));
                 submenu.getChildren().add(btnBuscarEditar);
+                Button btnPapelera = new Button("🗑 Papelera");
+                btnPapelera.getStyleClass().add("secondary-button");
+                btnPapelera.setOnAction(e -> cargarVista("/fxml/papelera.fxml"));
+                submenu.getChildren().add(btnPapelera);
             } else {
                 System.out.println("🚫 Ocultando 'Buscar y Editar' (no es administrador)");
             }
@@ -225,6 +300,30 @@ public class DashboardController {
         System.out.println("Navegando a Informes");
         establecerBotonActivo(btnInformes);
         cargarVista("/fxml/informes.fxml");
+    }
+    
+    @FXML
+    public void handleConsultas() {
+        if (esUsuarioNormal()) {
+            mostrarAlerta("Acceso Denegado", "No tiene permisos para acceder a esta sección");
+            return;
+        }
+        establecerBotonActivo(btnConsultas);
+        cargarVista("/fxml/consulta-totales.fxml");
+    }
+    
+    @FXML
+    public void handleRespaldo() {
+        if (esUsuarioNormal()) {
+            mostrarAlerta("Acceso Denegado", "No tiene permisos para acceder a esta sección");
+            return;
+        }
+        // Pide la clave propia del respaldo (la primera vez, la crea)
+        if (!ClaveRespaldo.pedirAcceso(mainBorderPane.getScene().getWindow())) {
+            return;
+        }
+        establecerBotonActivo(btnRespaldo);
+        cargarVista("/fxml/respaldo.fxml");
     }
     
     @FXML
@@ -326,6 +425,7 @@ public class DashboardController {
             if (fxmlPath.contains("gestion-usuarios")) {
                 GestionUsuariosController controller = loader.getController();
                 controller.setUsuarioActual(username);
+                controller.setAlActualizarUsuarioActual(this::actualizarAvatar);
             }
             
             mainBorderPane.setCenter(vista);

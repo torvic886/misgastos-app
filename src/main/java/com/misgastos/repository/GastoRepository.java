@@ -13,108 +13,119 @@ import java.util.Optional;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Modifying;
 
 @Repository
 public interface GastoRepository extends JpaRepository<Gasto, Long> {
-    
-    List<Gasto> findByUsuarioId(Long usuarioId);
-    
-    List<Gasto> findByFechaBetween(LocalDate inicio, LocalDate fin);
-    
-    List<Gasto> findByCategoriaId(Long categoriaId);
-    
-    List<Gasto> findByFechaBetweenOrderByFechaDescHoraDesc(LocalDate inicio, LocalDate fin);
-    
-    @Query("SELECT SUM(g.valorTotal) FROM Gasto g WHERE g.fecha BETWEEN :inicio AND :fin")
-    BigDecimal sumarGastosPorPeriodo(LocalDate inicio, LocalDate fin);
-    
-    @Query("SELECT g.categoria.nombre, SUM(g.valorTotal) FROM Gasto g GROUP BY g.categoria.nombre")
-    List<Object[]> sumarPorCategoria();
-    
-    @Query("SELECT g.producto, SUM(g.valorTotal) FROM Gasto g GROUP BY g.producto ORDER BY SUM(g.valorTotal) DESC")
-    List<Object[]> topProductos();
-    
-    @Query("""
-        SELECT g FROM Gasto g
-        WHERE g.usuario.id = :usuarioId
-        ORDER BY g.fecha DESC, g.hora DESC
-    """)
-    List<Gasto> findUltimosPorUsuario(
-        @Param("usuarioId") Long usuarioId,
-        Pageable pageable
-    );
 
-    default List<Gasto> findUltimosPorUsuario(Long usuarioId, int limite) {
-        return findUltimosPorUsuario(usuarioId, PageRequest.of(0, limite));
-    }
-    
-    @Query("SELECT g FROM Gasto g ORDER BY g.fecha DESC, g.hora DESC")
-    List<Gasto> findUltimos(Pageable pageable);
+	List<Gasto> findByUsuarioId(Long usuarioId);
 
-    default List<Gasto> findUltimos(int limite) {
-        return findUltimos(PageRequest.of(0, limite));
-    }
-    
-    @Query("""
-        SELECT DISTINCT g.producto
-        FROM Gasto g
-        WHERE UPPER(g.producto) LIKE UPPER(CONCAT('%', :texto, '%'))
-        ORDER BY g.producto
-    """)
-    List<String> buscarProductos(@Param("texto") String texto);
-    
-    @Query("""
-        SELECT CASE WHEN COUNT(g) > 0 THEN true ELSE false END
-        FROM Gasto g
-        WHERE UPPER(TRIM(REPLACE(REPLACE(g.producto, '  ', ' '), '  ', ' '))) 
-            = UPPER(TRIM(REPLACE(REPLACE(:producto, '  ', ' '), '  ', ' ')))
-    """)
-    boolean existeProducto(@Param("producto") String producto);
+	List<Gasto> findByFechaBetween(LocalDate inicio, LocalDate fin);
 
-    @Query("""
-        SELECT g
-        FROM Gasto g
-        WHERE UPPER(TRIM(REPLACE(REPLACE(g.producto, '  ', ' '), '  ', ' '))) 
-            = UPPER(TRIM(REPLACE(REPLACE(:producto, '  ', ' '), '  ', ' ')))
-        ORDER BY g.fecha DESC, g.hora DESC
-    """)
-    List<Gasto> ultimosGastosPorProducto(@Param("producto") String producto);
+	List<Gasto> findByCategoriaId(Long categoriaId);
 
-    @Query("SELECT g FROM Gasto g WHERE g.fecha = :fecha ORDER BY g.hora DESC")
-    List<Gasto> findByFechaExacta(@Param("fecha") LocalDate fecha);
+	List<Gasto> findByFechaBetweenOrderByFechaDescHoraDesc(LocalDate inicio, LocalDate fin);
 
-    @Query("SELECT g FROM Gasto g WHERE g.usuario.id = :usuarioId AND g.fecha BETWEEN :inicio AND :fin ORDER BY g.fecha DESC, g.hora DESC")
-    List<Gasto> findByUsuarioAndFechaBetween(
-        @Param("usuarioId") Long usuarioId,
-        @Param("inicio") LocalDate inicio,
-        @Param("fin") LocalDate fin
-    );
-    
-    // ✅ SUMA TOTAL POR RANGO DE FECHAS
-    @Query("SELECT COALESCE(SUM(g.valorTotal), 0) FROM Gasto g WHERE g.fecha BETWEEN :inicio AND :fin")
-    BigDecimal sumByFechaBetween(@Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
+	@Query("SELECT SUM(g.valorTotal) FROM Gasto g WHERE g.fecha BETWEEN :inicio AND :fin")
+	BigDecimal sumarGastosPorPeriodo(LocalDate inicio, LocalDate fin);
 
- // ✅ SUMA POR RANGO DE FECHAS Y CATEGORÍA (CORREGIDO PARA SQLITE)
-    @Query(value = "SELECT COALESCE(SUM(valor_total), 0) FROM gastos WHERE fecha BETWEEN :inicio AND :fin AND categoria_id = :categoriaId", nativeQuery = true)
-    BigDecimal sumByFechaBetweenAndCategoriaId(@Param("inicio") String inicio, @Param("fin") String fin, @Param("categoriaId") Long categoriaId);
+	@Query("SELECT g.categoria.nombre, SUM(g.valorTotal) FROM Gasto g GROUP BY g.categoria.nombre")
+	List<Object[]> sumarPorCategoria();
 
-    // ✅ SUMA TOTAL POR FECHA EXACTA
-    @Query("SELECT COALESCE(SUM(g.valorTotal), 0) FROM Gasto g WHERE g.fecha = :fecha")
-    BigDecimal sumByFecha(@Param("fecha") LocalDate fecha);
+	@Query("SELECT g.producto, SUM(g.valorTotal) FROM Gasto g GROUP BY g.producto ORDER BY SUM(g.valorTotal) DESC")
+	List<Object[]> topProductos();
 
- // ✅ SUMA POR FECHA EXACTA Y CATEGORÍA (CORREGIDO PARA SQLITE)
-    @Query(value = "SELECT COALESCE(SUM(valor_total), 0) FROM gastos WHERE fecha = :fecha AND categoria_id = :categoriaId", nativeQuery = true)
-    BigDecimal sumByFechaAndCategoriaId(@Param("fecha") String fecha, @Param("categoriaId") Long categoriaId);
+	@Query("""
+			    SELECT g FROM Gasto g
+			    WHERE g.usuario.id = :usuarioId
+			    ORDER BY g.fecha DESC, g.hora DESC
+			""")
+	List<Gasto> findUltimosPorUsuario(@Param("usuarioId") Long usuarioId, Pageable pageable);
 
-    @Query("""
-    	    SELECT g.nombrePersona FROM Gasto g
-    	    WHERE g.cedula = :cedula AND g.nombrePersona IS NOT NULL AND g.nombrePersona <> ''
-    	    ORDER BY g.fecha DESC, g.hora DESC
-    	""")
-    	List<String> nombresPorCedula(@Param("cedula") String cedula, Pageable pageable);
+	default List<Gasto> findUltimosPorUsuario(Long usuarioId, int limite) {
+		return findUltimosPorUsuario(usuarioId, PageRequest.of(0, limite));
+	}
 
-    	default Optional<String> ultimoNombrePorCedula(String cedula) {
-    	    return nombresPorCedula(cedula, PageRequest.of(0, 1)).stream().findFirst();
-    	}
+	@Query("SELECT g FROM Gasto g ORDER BY g.fecha DESC, g.hora DESC")
+	List<Gasto> findUltimos(Pageable pageable);
+
+	default List<Gasto> findUltimos(int limite) {
+		return findUltimos(PageRequest.of(0, limite));
+	}
+
+	@Query("""
+			    SELECT DISTINCT g.producto
+			    FROM Gasto g
+			    WHERE UPPER(g.producto) LIKE UPPER(CONCAT('%', :texto, '%'))
+			    ORDER BY g.producto
+			""")
+	List<String> buscarProductos(@Param("texto") String texto);
+
+	@Query("""
+			    SELECT CASE WHEN COUNT(g) > 0 THEN true ELSE false END
+			    FROM Gasto g
+			    WHERE UPPER(TRIM(REPLACE(REPLACE(g.producto, '  ', ' '), '  ', ' ')))
+			        = UPPER(TRIM(REPLACE(REPLACE(:producto, '  ', ' '), '  ', ' ')))
+			""")
+	boolean existeProducto(@Param("producto") String producto);
+
+	@Query("""
+			    SELECT g
+			    FROM Gasto g
+			    WHERE UPPER(TRIM(REPLACE(REPLACE(g.producto, '  ', ' '), '  ', ' ')))
+			        = UPPER(TRIM(REPLACE(REPLACE(:producto, '  ', ' '), '  ', ' ')))
+			    ORDER BY g.fecha DESC, g.hora DESC
+			""")
+	List<Gasto> ultimosGastosPorProducto(@Param("producto") String producto);
+
+	@Query("SELECT g FROM Gasto g WHERE g.fecha = :fecha ORDER BY g.hora DESC")
+	List<Gasto> findByFechaExacta(@Param("fecha") LocalDate fecha);
+
+	@Query("SELECT g FROM Gasto g WHERE g.usuario.id = :usuarioId AND g.fecha BETWEEN :inicio AND :fin ORDER BY g.fecha DESC, g.hora DESC")
+	List<Gasto> findByUsuarioAndFechaBetween(@Param("usuarioId") Long usuarioId, @Param("inicio") LocalDate inicio,
+			@Param("fin") LocalDate fin);
+
+	// ✅ SUMA TOTAL POR RANGO DE FECHAS
+	@Query("SELECT COALESCE(SUM(g.valorTotal), 0) FROM Gasto g WHERE g.fecha BETWEEN :inicio AND :fin")
+	BigDecimal sumByFechaBetween(@Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
+
+	// ✅ SUMA POR RANGO DE FECHAS Y CATEGORÍA (CORREGIDO PARA SQLITE)
+	@Query(value = "SELECT COALESCE(SUM(valor_total), 0) FROM gastos WHERE fecha BETWEEN :inicio AND :fin AND categoria_id = :categoriaId AND fecha_eliminacion IS NULL", nativeQuery = true)
+	BigDecimal sumByFechaBetweenAndCategoriaId(@Param("inicio") String inicio, @Param("fin") String fin,
+			@Param("categoriaId") Long categoriaId);
+
+	// ✅ SUMA TOTAL POR FECHA EXACTA
+	@Query("SELECT COALESCE(SUM(g.valorTotal), 0) FROM Gasto g WHERE g.fecha = :fecha")
+	BigDecimal sumByFecha(@Param("fecha") LocalDate fecha);
+
+	// ✅ SUMA POR FECHA EXACTA Y CATEGORÍA (CORREGIDO PARA SQLITE)
+	@Query(value = "SELECT COALESCE(SUM(valor_total), 0) FROM gastos WHERE fecha = :fecha AND categoria_id = :categoriaId AND fecha_eliminacion IS NULL", nativeQuery = true)
+	BigDecimal sumByFechaAndCategoriaId(@Param("fecha") String fecha, @Param("categoriaId") Long categoriaId);
+
+	@Query("""
+			    SELECT g.nombrePersona FROM Gasto g
+			    WHERE g.cedula = :cedula AND g.nombrePersona IS NOT NULL AND g.nombrePersona <> ''
+			    ORDER BY g.fecha DESC, g.hora DESC
+			""")
+	List<String> nombresPorCedula(@Param("cedula") String cedula, Pageable pageable);
+
+	default Optional<String> ultimoNombrePorCedula(String cedula) {
+		return nombresPorCedula(cedula, PageRequest.of(0, 1)).stream().findFirst();
+	}
+
+	@Query(value = "SELECT * FROM gastos WHERE fecha_eliminacion IS NOT NULL ORDER BY fecha_eliminacion DESC", nativeQuery = true)
+	List<Gasto> findEliminados();
+
+	@Modifying(clearAutomatically = true, flushAutomatically = true)
+	@Query(value = "UPDATE gastos SET fecha_eliminacion = NULL WHERE id = :id", nativeQuery = true)
+	void restaurar(@Param("id") Long id);
+
+	@Modifying(clearAutomatically = true, flushAutomatically = true)
+	@Query(value = "DELETE FROM gastos WHERE id = :id AND fecha_eliminacion IS NOT NULL", nativeQuery = true)
+	void borrarDefinitivo(@Param("id") Long id);
+
+	@Modifying(clearAutomatically = true, flushAutomatically = true)
+	@Query(value = "DELETE FROM gastos WHERE fecha_eliminacion IS NOT NULL", nativeQuery = true)
+	int vaciarPapelera();
 
 }

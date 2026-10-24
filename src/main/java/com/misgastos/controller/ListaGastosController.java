@@ -236,7 +236,7 @@ public class ListaGastosController {
 
         if (confirmacion.showAndWait().get() == ButtonType.OK) {
             gastoService.eliminarGasto(seleccionado.getId());
-            mostrarAlerta("Éxito", "Gasto eliminado correctamente", Alert.AlertType.INFORMATION);
+            mostrarAlerta("Éxito", "Gasto enviado a la papelera", Alert.AlertType.INFORMATION);
             cargarGastos();
         }
     }

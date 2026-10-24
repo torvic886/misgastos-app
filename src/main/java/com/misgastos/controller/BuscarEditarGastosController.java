@@ -473,7 +473,7 @@ public class BuscarEditarGastosController {
         confirmacion.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
                 gastoService.eliminarGasto(gasto.getId());
-                mostrarAlerta("Éxito", "Gasto eliminado correctamente", Alert.AlertType.INFORMATION);
+                mostrarAlerta("Éxito", "Gasto enviado a la papelera", Alert.AlertType.INFORMATION);
                 handleBuscar();
             }
         });

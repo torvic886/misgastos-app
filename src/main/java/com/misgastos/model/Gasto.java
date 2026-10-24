@@ -5,8 +5,11 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import org.hibernate.annotations.SQLRestriction;
+import java.time.LocalDateTime;
 
 @Data
+@SQLRestriction("fecha_eliminacion IS NULL")
 @Entity
 @Table(name = "gastos")
 public class Gasto {
@@ -51,6 +54,9 @@ public class Gasto {
     @Column(length = 20)
     private String cedula;
     
+    @Column(name = "fecha_eliminacion")
+    private LocalDateTime fechaEliminacion;
+    
     @Column(length = 100)
     private String nombrePersona;
 
@@ -81,4 +87,6 @@ public class Gasto {
     public void setCedula(String cedula) { this.cedula = cedula; }
     public String getNombrePersona() { return nombrePersona; }
     public void setNombrePersona(String nombrePersona) { this.nombrePersona = nombrePersona; }
+    public LocalDateTime getFechaEliminacion() { return fechaEliminacion; }
+    public void setFechaEliminacion(LocalDateTime fechaEliminacion) { this.fechaEliminacion = fechaEliminacion; }
 }

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<ScrollPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.misgastos.controller.RespaldoController"
+            fitToWidth="true" hbarPolicy="NEVER"
+            style="-fx-background-color: transparent; -fx-background: transparent;">
+
+    <VBox spacing="16" styleClass="content">
+        <padding>
+            <Insets top="20" right="24" bottom="20" left="24"/>
+        </padding>
+
+        <VBox spacing="2">
+            <Label text="💾 Respaldo de datos"
+                   style="-fx-font-weight: bold; -fx-font-size: 18px; -fx-text-fill: #1e293b;"/>
+            <Label text="Todos tus datos están en un solo archivo. Aquí puedes ver dónde está, llevarte una copia o volver a una copia anterior."
+                   wrapText="true"
+                   style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+        </VBox>
+
+        <!-- Tus datos -->
+        <VBox spacing="8" styleClass="form-card">
+            <Label text="Tus datos"
+                   style="-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #1e293b;"/>
+            <Label fx:id="lblCarpeta" wrapText="true"
+                   style="-fx-font-size: 12px; -fx-text-fill: #475569;"/>
+            <Label fx:id="lblBase"
+                   style="-fx-font-size: 12px; -fx-text-fill: #475569;"/>
+            <Label fx:id="lblRespaldos" wrapText="true"
+                   style="-fx-font-size: 12px; -fx-text-fill: #475569;"/>
+            <HBox spacing="10">
+                <Button text="📂 Abrir carpeta de datos"
+                        onAction="#handleAbrirCarpetaDatos"
+                        styleClass="secondary-button"/>
+                <Button text="🗂 Abrir carpeta de respaldos"
+                        onAction="#handleAbrirCarpetaRespaldos"
+                        style="-fx-background-color: #e2e8f0; -fx-text-fill: #334155; -fx-font-weight: bold; -fx-background-radius: 6; -fx-padding: 8 16; -fx-cursor: hand;"/>
+            </HBox>
+            <Label text="Cada vez que abres el programa se guarda una copia automática (se conservan las últimas 5)."
+                   wrapText="true"
+                   style="-fx-font-size: 11px; -fx-text-fill: #94a3b8;"/>
+        </VBox>
+
+        <!-- Exportar -->
+        <VBox spacing="8" styleClass="form-card">
+            <Label text="Exportar copia"
+                   style="-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #1e293b;"/>
+            <Label text="Guarda una copia completa de tus datos donde tú quieras (memoria USB, correo, otro computador)."
+                   wrapText="true"
+                   style="-fx-font-size: 12px; -fx-text-fill: #475569;"/>
+            <HBox>
+                <Button text="⬆ Exportar copia"
+                        onAction="#handleExportar"
+                        styleClass="primary-button"/>
+            </HBox>
+        </VBox>
+
+        <!-- Importar -->
+        <VBox spacing="8" styleClass="form-card">
+            <Label text="Importar copia"
+                   style="-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #1e293b;"/>
+            <Label text="Reemplaza los datos actuales por los de una copia. Antes de aplicarla se guarda una copia de lo que tienes ahora."
+                   wrapText="true"
+                   style="-fx-font-size: 12px; -fx-text-fill: #475569;"/>
+            <HBox spacing="10">
+                <Button text="⬇ Importar copia"
+                        onAction="#handleImportar"
+                        styleClass="primary-button"/>
+                <Button fx:id="btnCancelarPendiente"
+                        text="Cancelar importación"
+                        onAction="#handleCancelarPendiente"
+                        style="-fx-background-color: #e2e8f0; -fx-text-fill: #334155; -fx-font-weight: bold; -fx-background-radius: 6; -fx-padding: 8 16; -fx-cursor: hand;"/>
+            </HBox>
+            <Label fx:id="lblPendiente" wrapText="true"
+                   text="⚠ Hay una copia lista. Cierra el programa y ábrelo de nuevo para aplicarla."
+                   style="-fx-font-size: 12px; -fx-text-fill: #b45309; -fx-background-color: #fef3c7; -fx-background-radius: 8; -fx-padding: 8 12;"/>
+        </VBox>
+
+    </VBox>
+</ScrollPane>

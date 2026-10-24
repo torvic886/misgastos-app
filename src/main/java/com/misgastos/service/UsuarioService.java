@@ -26,6 +26,11 @@ public class UsuarioService {
     
     // ==================== CREAR USUARIO ====================
     public Usuario crearUsuario(String username, String password, String rol, String usuarioCreador) {
+        return crearUsuario(username, password, rol, usuarioCreador, null);
+    }
+
+    // Misma creación, con avatar opcional ("HOMBRE" o "MUJER")
+    public Usuario crearUsuario(String username, String password, String rol, String usuarioCreador, String avatar) {
         if (usuarioRepository.existsByUsername(username)) {
             throw new RuntimeException("El usuario ya existe");
         }
@@ -36,6 +41,7 @@ public class UsuarioService {
         usuario.setRol(rol);
         usuario.setActivo(true);
         usuario.setFechaCreacion(LocalDateTime.now());
+        usuario.setAvatar(avatar);
         
         Usuario saved = usuarioRepository.save(usuario);
         
@@ -54,6 +60,11 @@ public class UsuarioService {
     
     // ==================== ACTUALIZAR USUARIO ====================
     public Usuario actualizarUsuario(Long id, String username, String rol, Boolean activo, String usuarioModificador) {
+        return actualizarUsuario(id, username, rol, activo, usuarioModificador, null);
+    }
+
+    // Misma actualización, con avatar opcional (si es null, el avatar no cambia)
+    public Usuario actualizarUsuario(Long id, String username, String rol, Boolean activo, String usuarioModificador, String avatar) {
         Usuario usuario = usuarioRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         
@@ -74,6 +85,11 @@ public class UsuarioService {
             usuario.setActivo(activo);
         }
         
+        if (avatar != null && !avatar.equals(usuario.getAvatar())) {
+            cambios += "Avatar: " + usuario.getAvatar() + " → " + avatar + "; ";
+            usuario.setAvatar(avatar);
+        }
+
         Usuario updated = usuarioRepository.save(usuario);
         
         if (!cambios.isEmpty()) {

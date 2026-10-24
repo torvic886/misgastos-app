@@ -19,6 +19,7 @@ public class GestionUsuariosController {
     @FXML private TextField txtUsername;
     @FXML private PasswordField txtPassword;
     @FXML private ComboBox<String> cmbRol;
+    @FXML private ComboBox<String> cmbAvatar;
     @FXML private CheckBox chkActivo;
     
     @FXML private TableView<Usuario> tblUsuarios;
@@ -35,10 +36,12 @@ public class GestionUsuariosController {
     
     private Usuario usuarioSeleccionado;
     private String usuarioActual;
+    private Runnable alActualizarUsuarioActual;
     
     @FXML
     public void initialize() {
         configurarComboRol();
+        configurarComboAvatar();
         configurarTabla();
         cargarUsuarios();
         configurarSeleccionTabla();
@@ -50,6 +53,11 @@ public class GestionUsuariosController {
         this.usuarioActual = username;
     }
     
+    // El dashboard registra aquí qué hacer cuando se actualiza el usuario que tiene la sesión abierta
+    public void setAlActualizarUsuarioActual(Runnable accion) {
+        this.alActualizarUsuarioActual = accion;
+    }
+    
     private void configurarComboRol() {
         cmbRol.setItems(FXCollections.observableArrayList(
             Rol.ADMINISTRADOR.name(),
@@ -57,6 +65,10 @@ public class GestionUsuariosController {
         ));
     }
     
+    private void configurarComboAvatar() {
+        cmbAvatar.setItems(FXCollections.observableArrayList("HOMBRE", "MUJER"));
+    }
+
     private void configurarTabla() {
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colUsername.setCellValueFactory(new PropertyValueFactory<>("username"));
@@ -102,6 +114,7 @@ public class GestionUsuariosController {
         txtUsername.setText(usuario.getUsername());
         txtPassword.clear();
         cmbRol.setValue(usuario.getRol());
+        cmbAvatar.setValue(usuario.getAvatar());
         chkActivo.setSelected(usuario.getActivo());
     }
     
@@ -120,7 +133,8 @@ public class GestionUsuariosController {
                 txtUsername.getText().trim(),
                 txtPassword.getText(),
                 cmbRol.getValue(),
-                usuarioActual != null ? usuarioActual : "admin"
+                usuarioActual != null ? usuarioActual : "admin",
+                cmbAvatar.getValue()
             );
             
             mostrarAlerta("Éxito", "Usuario creado correctamente", Alert.AlertType.INFORMATION);
@@ -145,13 +159,22 @@ public class GestionUsuariosController {
         }
         
         try {
+            // ¿Se está editando al usuario que tiene la sesión abierta?
+            boolean esUsuarioActual = usuarioActual != null
+                    && usuarioActual.equals(usuarioSeleccionado.getUsername());
+            
             usuarioService.actualizarUsuario(
                 usuarioSeleccionado.getId(),
                 txtUsername.getText().trim(),
                 cmbRol.getValue(),
                 chkActivo.isSelected(),
-                usuarioActual != null ? usuarioActual : "admin"
+                usuarioActual != null ? usuarioActual : "admin",
+                cmbAvatar.getValue()
             );
+            
+            if (esUsuarioActual && alActualizarUsuarioActual != null) {
+                alActualizarUsuarioActual.run();
+            }
             
             mostrarAlerta("Éxito", "Usuario actualizado correctamente", Alert.AlertType.INFORMATION);
             handleLimpiar();
@@ -223,6 +246,7 @@ public class GestionUsuariosController {
         txtUsername.clear();
         txtPassword.clear();
         cmbRol.setValue(null);
+        cmbAvatar.setValue(null);
         chkActivo.setSelected(true);
         usuarioSeleccionado = null;
         tblUsuarios.getSelectionModel().clearSelection();
