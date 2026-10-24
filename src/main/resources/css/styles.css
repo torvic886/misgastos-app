@@ -858,6 +858,99 @@
     -fx-padding: 6 10;
 }
 
+/* ===== MENÚ LATERAL (rediseño) ===== */
+.sidebar {
+    -fx-padding: 12 10 12 10;
+    -fx-pref-width: 240;
+    -fx-min-width: 240;
+    -fx-max-width: 240;
+}
+.compact .sidebar {
+    -fx-pref-width: 210;
+    -fx-min-width: 210;
+    -fx-max-width: 210;
+}
+.sidebar.collapsed,
+.compact .sidebar.collapsed {
+    -fx-pref-width: 64;
+    -fx-min-width: 64;
+    -fx-max-width: 64;
+}
+
+.sidebar-group {
+    -fx-text-fill: #94a3b8;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 14 0 4 14;
+}
+
+.sidebar .menu-button,
+.compact .sidebar .menu-button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 6;
+    -fx-background-insets: 0;
+    -fx-effect: null;
+    -fx-border-color: transparent;
+    -fx-border-width: 0 0 0 3;
+    -fx-text-fill: #cbd5e1;
+    -fx-font-size: 14px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-graphic-text-gap: 12;
+    -fx-padding: 0 12 0 12;
+    -fx-pref-height: 44;
+    -fx-min-height: 44;
+    -fx-max-height: 44;
+    -fx-translate-x: 0;
+    -fx-cursor: hand;
+}
+.sidebar.collapsed .menu-button {
+    -fx-alignment: CENTER;
+    -fx-padding: 0;
+}
+
+.sidebar .menu-icon { -fx-fill: #94a3b8; }
+
+.sidebar .menu-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.07);
+    -fx-text-fill: #ffffff;
+    -fx-translate-x: 0;
+}
+.sidebar .menu-button:hover .menu-icon { -fx-fill: #e2e8f0; }
+
+.sidebar .menu-button:focused,
+.sidebar .menu-button:pressed {
+    -fx-background-color: rgba(255, 255, 255, 0.10);
+    -fx-background-insets: 0;
+    -fx-effect: null;
+}
+
+.sidebar .menu-button.active,
+.sidebar .menu-button.active:hover,
+.sidebar .menu-button.active:focused,
+.sidebar .menu-button.active:pressed {
+    -fx-background-color: rgba(129, 140, 248, 0.20);
+    -fx-border-color: transparent transparent transparent #818cf8;
+    -fx-text-fill: #ffffff;
+    -fx-effect: null;
+}
+.sidebar .menu-button.active .menu-icon { -fx-fill: #a5b4fc; }
+
+/* ===== MENÚ LATERAL: versión más baja ===== */
+.sidebar {
+    -fx-padding: 8 10 8 10;
+}
+.sidebar-group {
+    -fx-font-size: 10px;
+    -fx-padding: 8 0 2 14;
+}
+.sidebar .menu-button,
+.compact .sidebar .menu-button {
+    -fx-pref-height: 38;
+    -fx-min-height: 38;
+    -fx-max-height: 38;
+    -fx-font-size: 13px;
+}
+
 /* ===========================
    NOTA SOBRE TRANSICIONES
    =========================== */

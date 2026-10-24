@@ -322,9 +322,14 @@ public class InformesController {
                 else if (tipoInforme.contains("Dashboard")) {
                     informeService.exportarDashboardExcel(inicio, fin, archivo.getAbsolutePath());
                 }
+                else if (tipoInforme.contains("Comparativo")) {
+                    informeService.exportarComparativoExcel(inicio, fin, archivo.getAbsolutePath());
+                }
+                else if (tipoInforme.contains("Subcategorías")) {
+                    informeService.exportarSubCategoriasExcel(inicio, fin, archivo.getAbsolutePath());
+                }
                 else {
-                    // Para otros informes, usar exportación genérica
-                    informeService.exportarInformeGeneralExcel(inicio, fin, archivo.getAbsolutePath());
+                    informeService.exportarAnualExcel(inicio.getYear(), archivo.getAbsolutePath());
                 }
 
                 mostrarAlerta("Éxito", "Informe Excel exportado correctamente a:\n" + archivo.getAbsolutePath(), Alert.AlertType.INFORMATION);

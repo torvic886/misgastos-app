@@ -39,8 +39,8 @@
                 <Label text="Hasta" style="-fx-font-size: 12px; -fx-text-fill: #475569;"/>
                 <DatePicker fx:id="dpHasta" prefWidth="150"/>
             </VBox>
-            <Button text="Buscar" onAction="#handleBuscar" styleClass="primary-button"/>
-            <Button text="Limpiar" onAction="#handleLimpiar" styleClass="secondary-button"/>
+            <Button text="🔍 Buscar" onAction="#handleBuscar" styleClass="primary-button"/>
+            <Button text="🔄 Limpiar" onAction="#handleLimpiar" styleClass="secondary-button"/>
         </HBox>
         <Label fx:id="lblResultados" wrapText="true"
                style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>

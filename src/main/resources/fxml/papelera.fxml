@@ -22,9 +22,9 @@
                style="-fx-text-fill: #64748b;"/>
 
         <HBox spacing="10" alignment="CENTER_LEFT">
-            <Button text="↩ Restaurar" styleClass="primary-button" onAction="#handleRestaurar"/>
+            <Button text="⏪ Restaurar" styleClass="primary-button" onAction="#handleRestaurar"/>
             <Button text="✖ Eliminar definitivamente" styleClass="secondary-button" onAction="#handleEliminarDefinitivo"/>
-            <Button text="🧹 Vaciar papelera" styleClass="secondary-button" onAction="#handleVaciar"/>
+            <Button text="🔄 Vaciar papelera" styleClass="secondary-button" onAction="#handleVaciar"/>
             <Region HBox.hgrow="ALWAYS"/>
             <Label fx:id="lblResumen" text="" style="-fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
         </HBox>

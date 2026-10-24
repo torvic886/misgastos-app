@@ -7,6 +7,9 @@ import javafx.scene.layout.VBox;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.shape.Circle;
+import javafx.scene.Node;
+import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.Tooltip;
 import com.misgastos.MisGastosApplication;
 import com.misgastos.service.SesionRecordadaService;
 import com.misgastos.service.UsuarioService;
@@ -51,6 +54,12 @@ public class DashboardController {
     @FXML private Button btnRespaldo;
     @FXML private Button btnRegistroCambios;
     @FXML private Button btnPresupuestos;
+    @FXML private Button btnToggleMenu;
+    @FXML private Label lblGrupoGastos;
+    @FXML private Label lblGrupoPersonas;
+    @FXML private Label lblGrupoSistema;
+    private boolean menuColapsado = false;
+    
     
     @Autowired
     private ApplicationContext springContext;
@@ -221,6 +230,7 @@ public class DashboardController {
         
         if (esUsuarioNormal()) {
             System.out.println("🚫 Ocultando opciones de administrador");
+            sidebar.getChildren().remove(lblGrupoSistema);
             sidebar.getChildren().removeIf(node -> {
                 if (node instanceof Button) {
                     Button btn = (Button) node;
@@ -234,6 +244,33 @@ public class DashboardController {
                 return false;
             });
         }
+    }
+    
+    @FXML
+    public void handleToggleMenu() {
+        menuColapsado = !menuColapsado;
+        aplicarMenuColapsado();
+    }
+
+    private void aplicarMenuColapsado() {
+        if (menuColapsado) {
+            if (!sidebar.getStyleClass().contains("collapsed")) {
+                sidebar.getStyleClass().add("collapsed");
+            }
+        } else {
+            sidebar.getStyleClass().remove("collapsed");
+        }
+
+        for (Node n : sidebar.getChildren()) {
+            if (n instanceof Button b) {
+                b.setContentDisplay(menuColapsado ? ContentDisplay.GRAPHIC_ONLY : ContentDisplay.LEFT);
+                b.setTooltip(menuColapsado ? new Tooltip(b.getText()) : null);
+            } else if (n instanceof Label l) {
+                l.setVisible(!menuColapsado);
+                l.setManaged(!menuColapsado);
+            }
+        }
+        btnToggleMenu.setTooltip(new Tooltip(menuColapsado ? "Expandir menú" : "Contraer menú"));
     }
     
     @FXML

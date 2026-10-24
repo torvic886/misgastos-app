@@ -4,111 +4,129 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 
-<HBox spacing="8" style="-fx-padding: 0;"
-      styleClass="content"
-      xmlns="http://javafx.com/javafx/17"
-      xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.misgastos.controller.RegistroGastoController">
+<HBox spacing="8" style="-fx-padding: 0;" styleClass="content"
+	xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="com.misgastos.controller.RegistroGastoController">
 
-    <padding>
-        <Insets top="0" right="0" bottom="0" left="0"/>
-    </padding>
+	<padding>
+		<Insets top="0" right="0" bottom="0" left="0" />
+	</padding>
 
-    <!-- ============================================
-         IZQUIERDA: FORMULARIO VERTICAL (ANCHO FIJO)
-         ============================================ -->
-    <VBox spacing="10" HBox.hgrow="NEVER" prefWidth="235" minWidth="235" maxWidth="235"
-          styleClass="form-card" style="-fx-padding: 12;">
+	<!-- ============================================ IZQUIERDA: FORMULARIO 
+		VERTICAL (ANCHO FIJO) ============================================ -->
+	<VBox spacing="10" HBox.hgrow="NEVER" prefWidth="235"
+		minWidth="235" maxWidth="235" styleClass="form-card"
+		style="-fx-padding: 12;">
 
-        <Label text="➕ Registrar Gasto"
-               style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+		<Label text="➕ Registrar Gasto"
+			style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
 
-        <GridPane hgap="10" vgap="9">
-            <columnConstraints>
-                <ColumnConstraints prefWidth="72" minWidth="72"/>
-                <ColumnConstraints hgrow="ALWAYS"/>
-            </columnConstraints>
+		<GridPane hgap="10" vgap="9">
+			<columnConstraints>
+				<ColumnConstraints prefWidth="72" minWidth="72" />
+				<ColumnConstraints hgrow="ALWAYS" />
+			</columnConstraints>
 
-            <Label text="Categoría:" GridPane.rowIndex="0" style="-fx-font-size: 12px;"/>
-            <ComboBox fx:id="cmbCategoria" promptText="Seleccione"
-                      GridPane.rowIndex="0" GridPane.columnIndex="1" maxWidth="Infinity"/>
+			<Label text="Categoría:" GridPane.rowIndex="0"
+				style="-fx-font-size: 12px;" />
+			<ComboBox fx:id="cmbCategoria" promptText="Seleccione"
+				GridPane.rowIndex="0" GridPane.columnIndex="1" maxWidth="Infinity" />
 
-            <Label text="Subcategoría:" GridPane.rowIndex="1" style="-fx-font-size: 12px;"/>
-            <ComboBox fx:id="cmbSubcategoria" promptText="Seleccione"
-                      GridPane.rowIndex="1" GridPane.columnIndex="1" maxWidth="Infinity"/>
+			<Label text="Subcategoría:" GridPane.rowIndex="1"
+				style="-fx-font-size: 12px;" />
+			<ComboBox fx:id="cmbSubcategoria" promptText="Seleccione"
+				GridPane.rowIndex="1" GridPane.columnIndex="1" maxWidth="Infinity" />
 
-            <Label text="Producto:" GridPane.rowIndex="2" style="-fx-font-size: 12px;"/>
-            <ComboBox fx:id="cmbProducto" editable="true" promptText="Ej: Arroz"
-                      GridPane.rowIndex="2" GridPane.columnIndex="1" maxWidth="Infinity" styleClass="combo-compact"/>
+			<Label text="Producto:" GridPane.rowIndex="2"
+				style="-fx-font-size: 12px;" />
+			<ComboBox fx:id="cmbProducto" editable="true"
+				promptText="Ej: Arroz" GridPane.rowIndex="2"
+				GridPane.columnIndex="1" maxWidth="Infinity"
+				styleClass="combo-compact" />
 
-            <Label fx:id="lblCedula" text="Cédula:" GridPane.rowIndex="3"
-                   visible="false" managed="false" style="-fx-font-size: 12px;"/>
-            <TextField fx:id="txtCedula" promptText="Solo números"
-                       GridPane.rowIndex="3" GridPane.columnIndex="1"
-                       visible="false" managed="false"/>
+			<Label fx:id="lblCedula" text="Cédula:" GridPane.rowIndex="3"
+				visible="false" managed="false" style="-fx-font-size: 12px;" />
+			<TextField fx:id="txtCedula" promptText="Solo números"
+				GridPane.rowIndex="3" GridPane.columnIndex="1" visible="false"
+				managed="false" />
 
-            <Label fx:id="lblNombre" text="Nombre:" GridPane.rowIndex="4"
-                   visible="false" managed="false" style="-fx-font-size: 12px;"/>
-            <TextField fx:id="txtNombre" promptText="Nombre de la persona"
-                       GridPane.rowIndex="4" GridPane.columnIndex="1"
-                       visible="false" managed="false"/>
+			<Label fx:id="lblNombre" text="Nombre:" GridPane.rowIndex="4"
+				visible="false" managed="false" style="-fx-font-size: 12px;" />
+			<TextField fx:id="txtNombre"
+				promptText="Nombre de la persona" GridPane.rowIndex="4"
+				GridPane.columnIndex="1" visible="false" managed="false" />
 
-            <Label text="Cantidad:" GridPane.rowIndex="5" style="-fx-font-size: 12px;"/>
-            <TextField fx:id="txtCantidad" text="1" GridPane.rowIndex="5" GridPane.columnIndex="1" styleClass="search-field"/>
+			<Label text="Cantidad:" GridPane.rowIndex="5"
+				style="-fx-font-size: 12px;" />
+			<TextField fx:id="txtCantidad" text="1"
+				GridPane.rowIndex="5" GridPane.columnIndex="1"
+				styleClass="search-field" />
 
-            <Label text="Valor Unit.:" GridPane.rowIndex="6" style="-fx-font-size: 12px;"/>
-            <TextField fx:id="txtValorUnitario" promptText="0.00"
-                       GridPane.rowIndex="6" GridPane.columnIndex="1" styleClass="search-field"/>
+			<Label text="Valor Unit.:" GridPane.rowIndex="6"
+				style="-fx-font-size: 12px;" />
+			<TextField fx:id="txtValorUnitario" promptText="0.00"
+				GridPane.rowIndex="6" GridPane.columnIndex="1"
+				styleClass="search-field" />
 
-            <Label text="Total:" GridPane.rowIndex="7" style="-fx-font-size: 12px;"/>
-            <TextField fx:id="txtValorTotal" editable="false"
-                       GridPane.rowIndex="7" GridPane.columnIndex="1" styleClass="search-field"
-                       style="-fx-background-color: #f1f5f9; -fx-font-weight: bold; -fx-text-fill: #6f6dd9;"/>
+			<Label text="Total:" GridPane.rowIndex="7"
+				style="-fx-font-size: 12px;" />
+			<TextField fx:id="txtValorTotal" editable="false"
+				GridPane.rowIndex="7" GridPane.columnIndex="1"
+				styleClass="search-field"
+				style="-fx-background-color: #f1f5f9; -fx-font-weight: bold; -fx-text-fill: #6f6dd9;" />
 
-            <Label text="Notas:" GridPane.rowIndex="8" style="-fx-font-size: 12px;"/>
-            <TextArea fx:id="txtNotas" prefRowCount="3"
-                      GridPane.rowIndex="8" GridPane.columnIndex="1"
-                      style="-fx-pref-height: 70px; -fx-max-height: 70px;"/>
-        </GridPane>
+			<Label text="Notas:" GridPane.rowIndex="8"
+				style="-fx-font-size: 12px;" />
+			<TextArea fx:id="txtNotas" prefRowCount="3"
+				GridPane.rowIndex="8" GridPane.columnIndex="1"
+				style="-fx-pref-height: 70px; -fx-max-height: 70px;" />
+		</GridPane>
 
-        <HBox spacing="8" alignment="CENTER">
-            <Button text="💾 Guardar" styleClass="primary-button" onAction="#handleGuardar"
-                    style="-fx-font-size: 13px; -fx-padding: 8 14;"/>
-            <Button text="🧹 Limpiar" styleClass="secondary-button" onAction="#handleLimpiar"
-                    style="-fx-font-size: 13px; -fx-padding: 8 14;"/>
-        </HBox>
+		<HBox spacing="8" alignment="CENTER">
+			<Button text="💾 Guardar" styleClass="primary-button"
+				onAction="#handleGuardar"
+				style="-fx-font-size: 13px; -fx-padding: 8 14;" />
+			<Button text="🔄 Limpiar" styleClass="secondary-button"
+				onAction="#handleLimpiar"
+				style="-fx-font-size: 13px; -fx-padding: 8 14;" />
+		</HBox>
 
-    </VBox>
+	</VBox>
 
-    <!-- ============================================
-         DERECHA: TABLA CON TODO EL ESPACIO RESTANTE
-         ============================================ -->
-    <VBox spacing="8" HBox.hgrow="ALWAYS" prefWidth="0" minWidth="0"
-          styleClass="table-card" style="-fx-padding: 16;">
+	<!-- ============================================ DERECHA: TABLA CON TODO 
+		EL ESPACIO RESTANTE ============================================ -->
+	<VBox spacing="8" HBox.hgrow="ALWAYS" prefWidth="0" minWidth="0"
+		styleClass="table-card" style="-fx-padding: 16;">
 
-        <Label text="📋 Últimos gastos registrados"
-               style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+		<Label text="📋 Últimos gastos registrados"
+			style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
 
-        <TableView fx:id="tblUltimosGastos" VBox.vgrow="ALWAYS" style="-fx-fixed-cell-size: 34px;">
-            <columns>
-                <TableColumn fx:id="colFecha" text="Fecha" prefWidth="115" minWidth="105"/>
-                <TableColumn fx:id="colHora" text="Hora" prefWidth="85" minWidth="80"/>
-                <TableColumn fx:id="colUsuario" text="Registrado por" prefWidth="140" minWidth="130"/>
-                <TableColumn fx:id="colCategoria" text="Categoría" prefWidth="135" minWidth="125"/>
-                <TableColumn fx:id="colProducto" text="Producto" prefWidth="150" minWidth="135"/>
-                <TableColumn fx:id="colCedula" text="Cédula" prefWidth="120" minWidth="110"/>
-                <TableColumn fx:id="colNombre" text="Nombre" prefWidth="160" minWidth="140"/>
-                <TableColumn fx:id="colCantidad" text="Cant" prefWidth="80" minWidth="75"/>
-                <TableColumn fx:id="colValorUnitario" text="V. Unit" prefWidth="125" minWidth="115"/>
-                <TableColumn fx:id="colTotal" text="Total" prefWidth="125" minWidth="115"/>
-            </columns>
-        </TableView>
 
-        <HBox alignment="CENTER_RIGHT" spacing="10" style="-fx-padding: 8 4 0 4;">
-            <Label text="TOTAL:" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-            <Label fx:id="lblTotalGastos" text="COP 0.00" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #16a34a;"/>
-        </HBox>
 
-    </VBox>
+		<TableView fx:id="tblUltimosGastos" VBox.vgrow="ALWAYS" style="-fx-fixed-cell-size: 34px;">
+		    <columns>
+		        <TableColumn fx:id="colFecha" text="Fecha" prefWidth="76" minWidth="71"/>
+		        <TableColumn fx:id="colHora" text="Hora" prefWidth="69" minWidth="64"/>
+		        <TableColumn fx:id="colUsuario" text="Registrado por" prefWidth="91" minWidth="86"/>
+		        <TableColumn fx:id="colCategoria" text="Categoría" prefWidth="135" minWidth="115"/>
+		        <TableColumn fx:id="colProducto" text="Producto" prefWidth="132" minWidth="120"/>
+		        <TableColumn fx:id="colCantidad" text="Cant" prefWidth="60" minWidth="60"/>
+		        <TableColumn fx:id="colValorUnitario" text="V. Unit" prefWidth="110" minWidth="100"/>
+		        <TableColumn fx:id="colTotal" text="Total" prefWidth="110" minWidth="100"/>
+		        <TableColumn fx:id="colBeneficiario" text="Beneficiario" prefWidth="190" minWidth="150"/>
+		    </columns>
+		</TableView>
+
+
+
+		<HBox alignment="CENTER_RIGHT" spacing="10"
+			style="-fx-padding: 8 4 0 4;">
+			<Label text="TOTAL:"
+				style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
+			<Label fx:id="lblTotalGastos" text="COP 0.00"
+				style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #16a34a;" />
+		</HBox>
+
+	</VBox>
 
 </HBox>

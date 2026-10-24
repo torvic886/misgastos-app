@@ -1833,8 +1833,400 @@ public class InformeService {
         workbook.close();
     }
 
+ // =====================================================================
+    // EXCEL: COMPARATIVO, DASHBOARD, SUBCATEGORÍAS E INFORME ANUAL
+    // Cada Excel replica su PDF: mismas secciones, columnas, orden y cifras.
+    // =====================================================================
+
+    /** Excel con un solo mensaje, para cuando no hay gastos en el período. */
+    private void guardarExcelVacio(String nombreHoja, String titulo, String periodo,
+                                   String mensaje, String rutaArchivo) throws Exception {
+        ExcelEstilo estilos = new ExcelEstilo();
+        HojaExcel vacia = new HojaExcel(estilos, nombreHoja, 3, false);
+        vacia.titulo(titulo, periodo);
+        vacia.nota(mensaje);
+        vacia.terminar(false, false);
+        estilos.guardar(rutaArchivo);
+    }
+
+    // ---------- COMPARATIVO ----------
+
+    public void exportarComparativoExcel(LocalDate inicio, LocalDate fin, String rutaArchivo) throws Exception {
+        long diasTotal = java.time.temporal.ChronoUnit.DAYS.between(inicio, fin);
+        LocalDate puntoMedio = inicio.plusDays(diasTotal / 2);
+        LocalDate inicio2 = puntoMedio.plusDays(1);
+
+        List<Gasto> gastos1 = gastoService.listarPorPeriodo(inicio, puntoMedio);
+        List<Gasto> gastos2 = gastoService.listarPorPeriodo(inicio2, fin);
+
+        Map<String, BigDecimal> monto1 = gastos1.stream()
+            .collect(Collectors.groupingBy(
+                g -> g.getCategoria().getNombre(),
+                Collectors.reducing(BigDecimal.ZERO, Gasto::getValorTotal, BigDecimal::add)));
+        Map<String, BigDecimal> monto2 = gastos2.stream()
+            .collect(Collectors.groupingBy(
+                g -> g.getCategoria().getNombre(),
+                Collectors.reducing(BigDecimal.ZERO, Gasto::getValorTotal, BigDecimal::add)));
+
+        Set<String> categoriasSet = new TreeSet<>();
+        categoriasSet.addAll(monto1.keySet());
+        categoriasSet.addAll(monto2.keySet());
+
+        // Igual que el PDF: de mayor a menor gasto combinado
+        List<String> categorias = new ArrayList<>(categoriasSet);
+        categorias.sort((a, b) -> monto1.getOrDefault(b, BigDecimal.ZERO).add(monto2.getOrDefault(b, BigDecimal.ZERO))
+            .compareTo(monto1.getOrDefault(a, BigDecimal.ZERO).add(monto2.getOrDefault(a, BigDecimal.ZERO))));
+
+        String periodo = Diseno.fecha(inicio) + " al " + Diseno.fecha(fin);
+
+        if (categorias.isEmpty()) {
+            guardarExcelVacio("Comparativo", "Comparación de períodos", periodo,
+                "No hay gastos registrados en ninguno de los dos períodos.", rutaArchivo);
+            return;
+        }
+
+        BigDecimal total1 = sumarGastos(gastos1);
+        BigDecimal total2 = sumarGastos(gastos2);
+        BigDecimal diferenciaTotal = total2.subtract(total1);
+
+        ExcelEstilo estilos = new ExcelEstilo();
+        HojaExcel hoja = new HojaExcel(estilos, "Comparativo", 5, false);
+        hoja.titulo("Comparación de períodos", periodo);
+
+        HorizontalAlignment izq = HorizontalAlignment.LEFT;
+        HorizontalAlignment der = HorizontalAlignment.RIGHT;
+        hoja.encabezado(
+            new String[] {"Categoría", "Período 1", "Período 2", "Diferencia", "Cambio"},
+            new HorizontalAlignment[] {izq, der, der, der, der});
+
+        int primera = hoja.siguienteFila();
+        for (String categoria : categorias) {
+            BigDecimal m1 = monto1.getOrDefault(categoria, BigDecimal.ZERO);
+            BigDecimal m2 = monto2.getOrDefault(categoria, BigDecimal.ZERO);
+
+            HojaExcel.FilaExcel fila = hoja.fila(ExcelEstilo.Rol.DATO);
+            fila.texto(categoria);
+            fila.moneda(m1);
+            fila.moneda(m2);
+            fila.moneda(m2.subtract(m1));
+            fila.texto(textoCambio(m1, m2));
+        }
+        int ultima = hoja.siguienteFila() - 1;
+
+        // Total con SUBTOTAL: al filtrar en Excel suma solo las filas visibles
+        HojaExcel.FilaExcel total = hoja.fila(ExcelEstilo.Rol.TOTAL);
+        total.texto("Total");
+        for (int c = 1; c <= 3; c++) {
+            total.formulaMoneda("SUBTOTAL(109," + HojaExcel.ref(c, primera) + ":" + HojaExcel.ref(c, ultima) + ")");
+        }
+        total.texto(textoCambio(total1, total2));
+
+        hoja.espacio();
+        hoja.seccion("Resumen");
+        hoja.estadistica("Período 1", Diseno.fecha(inicio) + " al " + Diseno.fecha(puntoMedio));
+        hoja.estadistica("Período 2", Diseno.fecha(inicio2) + " al " + Diseno.fecha(fin));
+        hoja.estadistica("Total período 1", Diseno.moneda(total1));
+        hoja.estadistica("Total período 2", Diseno.moneda(total2));
+        hoja.estadistica("Diferencia", Diseno.monedaConSigno(diferenciaTotal));
+        hoja.estadistica("Cambio", textoCambio(total1, total2));
+
+        hoja.terminar(true, true);
+        estilos.guardar(rutaArchivo);
+    }
+
+    // ---------- DASHBOARD EJECUTIVO ----------
+
     public void exportarDashboardExcel(LocalDate inicio, LocalDate fin, String rutaArchivo) throws Exception {
-        exportarInformeGeneralExcel(inicio, fin, rutaArchivo);
+        List<Gasto> gastos = gastoService.listarPorPeriodo(inicio, fin);
+        String periodo = Diseno.fecha(inicio) + " al " + Diseno.fecha(fin);
+
+        if (gastos.isEmpty()) {
+            guardarExcelVacio("Dashboard", "Dashboard ejecutivo", periodo,
+                "No hay gastos registrados en este período.", rutaArchivo);
+            return;
+        }
+
+        BigDecimal totalGastado = sumarGastos(gastos);
+        long dias = java.time.temporal.ChronoUnit.DAYS.between(inicio, fin) + 1;
+        BigDecimal promedioDiario = totalGastado.divide(BigDecimal.valueOf(dias), 0, RoundingMode.HALF_UP);
+        BigDecimal mayorGasto = gastos.stream()
+            .map(Gasto::getValorTotal)
+            .max(BigDecimal::compareTo)
+            .orElse(BigDecimal.ZERO);
+        BigDecimal promedioTransaccion = totalGastado.divide(BigDecimal.valueOf(gastos.size()), 0, RoundingMode.HALF_UP);
+
+        ExcelEstilo estilos = new ExcelEstilo();
+        HojaExcel hoja = new HojaExcel(estilos, "Dashboard", 4, false);
+        hoja.titulo("Dashboard ejecutivo", periodo);
+
+        hoja.estadistica("Total gastado", Diseno.moneda(totalGastado));
+        hoja.estadistica("Promedio diario", Diseno.moneda(promedioDiario));
+        hoja.estadistica("Mayor gasto individual", Diseno.moneda(mayorGasto));
+        hoja.estadistica("Transacciones", Diseno.entero(gastos.size()));
+        hoja.estadistica("Promedio por transacción", Diseno.moneda(promedioTransaccion));
+
+        HorizontalAlignment cen = HorizontalAlignment.CENTER;
+        HorizontalAlignment izq = HorizontalAlignment.LEFT;
+        HorizontalAlignment der = HorizontalAlignment.RIGHT;
+
+        // ---------- Top 3 categorías ----------
+        Map<String, BigDecimal> porCategoria = gastos.stream()
+            .collect(Collectors.groupingBy(
+                g -> g.getCategoria().getNombre(),
+                Collectors.reducing(BigDecimal.ZERO, Gasto::getValorTotal, BigDecimal::add)));
+        List<Map.Entry<String, BigDecimal>> top3 = porCategoria.entrySet().stream()
+            .sorted(Map.Entry.<String, BigDecimal>comparingByValue().reversed())
+            .limit(3)
+            .collect(Collectors.toList());
+
+        hoja.espacio();
+        hoja.seccion("Top 3 categorías");
+        hoja.encabezado(
+            new String[] {"#", "Categoría", "Monto", "% del total"},
+            new HorizontalAlignment[] {cen, izq, der, der});
+        int pos = 1;
+        for (Map.Entry<String, BigDecimal> e : top3) {
+            HojaExcel.FilaExcel fila = hoja.fila(ExcelEstilo.Rol.DATO);
+            fila.entero(pos++);
+            fila.texto(e.getKey());
+            fila.moneda(e.getValue());
+            fila.pct(pctDeTotal(e.getValue(), totalGastado) / 100.0);
+        }
+
+        // ---------- Productos más comprados ----------
+        Map<String, Long> vecesPorProducto = gastos.stream()
+            .collect(Collectors.groupingBy(Gasto::getProducto, Collectors.counting()));
+        Map<String, BigDecimal> montoPorProducto = gastos.stream()
+            .collect(Collectors.groupingBy(
+                Gasto::getProducto,
+                Collectors.reducing(BigDecimal.ZERO, Gasto::getValorTotal, BigDecimal::add)));
+        List<Map.Entry<String, Long>> topFrecuentes = vecesPorProducto.entrySet().stream()
+            .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+            .limit(5)
+            .collect(Collectors.toList());
+
+        hoja.espacio();
+        hoja.seccion("Productos más comprados");
+        hoja.encabezado(
+            new String[] {"#", "Producto", "Veces", "Monto"},
+            new HorizontalAlignment[] {cen, izq, cen, der});
+        pos = 1;
+        for (Map.Entry<String, Long> e : topFrecuentes) {
+            HojaExcel.FilaExcel fila = hoja.fila(ExcelEstilo.Rol.DATO);
+            fila.entero(pos++);
+            fila.texto(e.getKey());
+            fila.entero(e.getValue().intValue());
+            fila.moneda(montoPorProducto.get(e.getKey()));
+        }
+
+        // ---------- Gasto por usuario ----------
+        Map<String, BigDecimal> montoPorUsuario = gastos.stream()
+            .collect(Collectors.groupingBy(
+                g -> g.getUsuario() == null ? "Sin usuario" : g.getUsuario().getUsername(),
+                Collectors.reducing(BigDecimal.ZERO, Gasto::getValorTotal, BigDecimal::add)));
+        Map<String, Long> comprasPorUsuario = gastos.stream()
+            .collect(Collectors.groupingBy(
+                g -> g.getUsuario() == null ? "Sin usuario" : g.getUsuario().getUsername(),
+                Collectors.counting()));
+        List<Map.Entry<String, BigDecimal>> usuarios = montoPorUsuario.entrySet().stream()
+            .sorted(Map.Entry.<String, BigDecimal>comparingByValue().reversed())
+            .collect(Collectors.toList());
+
+        hoja.espacio();
+        hoja.seccion("Gasto por usuario");
+        hoja.encabezado(
+            new String[] {"Registrado por", "Transacciones", "Monto", "% del total"},
+            new HorizontalAlignment[] {izq, cen, der, der});
+        for (Map.Entry<String, BigDecimal> e : usuarios) {
+            HojaExcel.FilaExcel fila = hoja.fila(ExcelEstilo.Rol.DATO);
+            fila.texto(e.getKey());
+            fila.entero(comprasPorUsuario.get(e.getKey()).intValue());
+            fila.moneda(e.getValue());
+            fila.pct(pctDeTotal(e.getValue(), totalGastado) / 100.0);
+        }
+
+        hoja.terminar(false, false);
+        estilos.guardar(rutaArchivo);
+    }
+
+    // ---------- DESGLOSE POR SUBCATEGORÍAS ----------
+
+    public void exportarSubCategoriasExcel(LocalDate inicio, LocalDate fin, String rutaArchivo) throws Exception {
+        List<Gasto> gastos = gastoService.listarPorPeriodo(inicio, fin);
+        String periodo = Diseno.fecha(inicio) + " al " + Diseno.fecha(fin);
+
+        if (gastos.isEmpty()) {
+            guardarExcelVacio("Subcategorías", "Desglose por subcategorías", periodo,
+                "No hay gastos registrados en este período.", rutaArchivo);
+            return;
+        }
+
+        BigDecimal totalGeneral = sumarGastos(gastos);
+
+        Map<String, Map<String, BigDecimal>> datos = new HashMap<>();
+        for (Gasto gasto : gastos) {
+            String categoria = gasto.getCategoria().getNombre();
+            String subcategoria = gasto.getSubcategoria() != null
+                ? gasto.getSubcategoria().getNombre() : "Sin subcategoría";
+            datos.computeIfAbsent(categoria, k -> new HashMap<>())
+                .merge(subcategoria, gasto.getValorTotal(), BigDecimal::add);
+        }
+
+        // Igual que el PDF: categorías y subcategorías de mayor a menor
+        List<Map.Entry<String, Map<String, BigDecimal>>> categorias = datos.entrySet().stream()
+            .sorted((a, b) -> sumarMontos(b.getValue()).compareTo(sumarMontos(a.getValue())))
+            .collect(Collectors.toList());
+        int totalSubcategorias = datos.values().stream().mapToInt(Map::size).sum();
+
+        ExcelEstilo estilos = new ExcelEstilo();
+        HojaExcel hoja = new HojaExcel(estilos, "Subcategorías", 4, false);
+        hoja.titulo("Desglose por subcategorías", periodo);
+
+        hoja.estadistica("Total gastado", Diseno.moneda(totalGeneral));
+        hoja.estadistica("Categorías", Diseno.entero(datos.size()));
+        hoja.estadistica("Subcategorías", Diseno.entero(totalSubcategorias));
+        hoja.estadistica("Transacciones", Diseno.entero(gastos.size()));
+
+        hoja.espacio();
+        hoja.seccion("Gasto por categoría y subcategoría");
+        HorizontalAlignment izq = HorizontalAlignment.LEFT;
+        HorizontalAlignment der = HorizontalAlignment.RIGHT;
+        hoja.encabezado(
+            new String[] {"Categoría / subcategoría", "Monto", "% de la categoría", "% del total"},
+            new HorizontalAlignment[] {izq, der, der, der});
+
+        for (Map.Entry<String, Map<String, BigDecimal>> categoriaEntry : categorias) {
+            BigDecimal totalCategoria = sumarMontos(categoriaEntry.getValue());
+
+            HojaExcel.FilaExcel grupo = hoja.fila(ExcelEstilo.Rol.GRUPO);
+            grupo.texto(categoriaEntry.getKey());
+            grupo.moneda(totalCategoria);
+            grupo.vacio();
+            grupo.pct(pctDeTotal(totalCategoria, totalGeneral) / 100.0);
+
+            List<Map.Entry<String, BigDecimal>> subcategorias = categoriaEntry.getValue().entrySet().stream()
+                .sorted(Map.Entry.<String, BigDecimal>comparingByValue().reversed())
+                .collect(Collectors.toList());
+
+            for (Map.Entry<String, BigDecimal> sub : subcategorias) {
+                HojaExcel.FilaExcel fila = hoja.fila(ExcelEstilo.Rol.DATO);
+                fila.texto("    " + sub.getKey());
+                fila.moneda(sub.getValue());
+                fila.pct(pctDeTotal(sub.getValue(), totalCategoria) / 100.0);
+                fila.pct(pctDeTotal(sub.getValue(), totalGeneral) / 100.0);
+            }
+        }
+
+        HojaExcel.FilaExcel total = hoja.fila(ExcelEstilo.Rol.TOTAL);
+        total.texto("Total general");
+        total.moneda(totalGeneral);
+        total.vacio();
+        total.pct(1.0);
+
+        hoja.terminar(false, false);
+        estilos.guardar(rutaArchivo);
+    }
+
+    // ---------- INFORME ANUAL ----------
+
+    public void exportarAnualExcel(int anio, String rutaArchivo) throws Exception {
+        LocalDate inicio = LocalDate.of(anio, 1, 1);
+        LocalDate fin = LocalDate.of(anio, 12, 31);
+        List<Gasto> gastos = gastoService.listarPorPeriodo(inicio, fin);
+
+        String titulo = "Informe anual " + anio;
+        String periodo = Diseno.fecha(inicio) + " al " + Diseno.fecha(fin);
+
+        if (gastos.isEmpty()) {
+            guardarExcelVacio("Anual " + anio, titulo, periodo,
+                "No hay gastos registrados en el año " + anio + ".", rutaArchivo);
+            return;
+        }
+
+        Map<Integer, BigDecimal> gastosPorMes = new TreeMap<>();
+        for (int mes = 1; mes <= 12; mes++) {
+            gastosPorMes.put(mes, BigDecimal.ZERO);
+        }
+        for (Gasto g : gastos) {
+            gastosPorMes.merge(g.getFecha().getMonthValue(), g.getValorTotal(), BigDecimal::add);
+        }
+
+        BigDecimal totalAnual = gastosPorMes.values().stream()
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        int mesMayor = gastosPorMes.entrySet().stream()
+            .max(Map.Entry.<Integer, BigDecimal>comparingByValue()).get().getKey();
+        int mesesConGastos = (int) gastosPorMes.values().stream().filter(m -> m.signum() > 0).count();
+        BigDecimal promedioMensual = mesesConGastos > 0
+            ? totalAnual.divide(BigDecimal.valueOf(mesesConGastos), 0, RoundingMode.HALF_UP)
+            : BigDecimal.ZERO;
+
+        ExcelEstilo estilos = new ExcelEstilo();
+        HojaExcel hoja = new HojaExcel(estilos, "Anual " + anio, 4, false);
+        hoja.titulo(titulo, periodo);
+
+        hoja.estadistica("Total del año", Diseno.moneda(totalAnual));
+        hoja.estadistica("Promedio mensual", Diseno.moneda(promedioMensual));
+        hoja.estadistica("Meses con gastos", mesesConGastos + " de 12");
+        hoja.estadistica("Transacciones", Diseno.entero(gastos.size()));
+        hoja.estadistica("Mes de mayor gasto", Diseno.nombreMes(mesMayor));
+
+        HorizontalAlignment cen = HorizontalAlignment.CENTER;
+        HorizontalAlignment izq = HorizontalAlignment.LEFT;
+        HorizontalAlignment der = HorizontalAlignment.RIGHT;
+
+        // ---------- Gasto por mes ----------
+        hoja.espacio();
+        hoja.seccion("Gasto por mes");
+        hoja.encabezado(
+            new String[] {"Mes", "Gasto", "% del año"},
+            new HorizontalAlignment[] {izq, der, der});
+
+        int primera = hoja.siguienteFila();
+        for (int mes = 1; mes <= 12; mes++) {
+            BigDecimal monto = gastosPorMes.get(mes);
+            HojaExcel.FilaExcel fila = hoja.fila(ExcelEstilo.Rol.DATO);
+            fila.texto(Diseno.nombreMes(mes));
+            if (monto.signum() > 0) {
+                fila.moneda(monto);
+                fila.pct(pctDeTotal(monto, totalAnual) / 100.0);
+            } else {
+                fila.vacio();
+                fila.vacio();
+            }
+        }
+        int ultima = hoja.siguienteFila() - 1;
+
+        HojaExcel.FilaExcel total = hoja.fila(ExcelEstilo.Rol.TOTAL);
+        total.texto("Total");
+        total.formulaMoneda("SUM(" + HojaExcel.ref(1, primera) + ":" + HojaExcel.ref(1, ultima) + ")");
+        total.pct(1.0);
+
+        // ---------- Principales categorías ----------
+        Map<String, BigDecimal> porCategoria = gastos.stream()
+            .collect(Collectors.groupingBy(
+                g -> g.getCategoria().getNombre(),
+                Collectors.reducing(BigDecimal.ZERO, Gasto::getValorTotal, BigDecimal::add)));
+        List<Map.Entry<String, BigDecimal>> top = porCategoria.entrySet().stream()
+            .sorted(Map.Entry.<String, BigDecimal>comparingByValue().reversed())
+            .limit(5)
+            .collect(Collectors.toList());
+
+        hoja.espacio();
+        hoja.seccion("Principales categorías del año");
+        hoja.encabezado(
+            new String[] {"#", "Categoría", "Monto", "% del año"},
+            new HorizontalAlignment[] {cen, izq, der, der});
+        int pos = 1;
+        for (Map.Entry<String, BigDecimal> e : top) {
+            HojaExcel.FilaExcel fila = hoja.fila(ExcelEstilo.Rol.DATO);
+            fila.entero(pos++);
+            fila.texto(e.getKey());
+            fila.moneda(e.getValue());
+            fila.pct(pctDeTotal(e.getValue(), totalAnual) / 100.0);
+        }
+
+        hoja.terminar(false, false);
+        estilos.guardar(rutaArchivo);
     }
     
     /** Texto comparable: sin mayúsculas, sin tildes y con espacios simples. */

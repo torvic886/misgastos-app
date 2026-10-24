@@ -23,8 +23,8 @@
     <VBox spacing="10" styleClass="form-card">
         <Label fx:id="lblMes" style="-fx-font-size: 12px; -fx-text-fill: #475569;"/>
         <HBox spacing="10">
-            <Button text="Fijar tope" onAction="#handleFijarTope" styleClass="primary-button"/>
-            <Button text="Quitar tope" onAction="#handleQuitarTope" styleClass="secondary-button"/>
+            <Button text="📌 Fijar tope" onAction="#handleFijarTope" styleClass="primary-button"/>
+            <Button text="📍 Quitar tope" onAction="#handleQuitarTope" styleClass="secondary-button"/>
         </HBox>
         <Label text="Selecciona una categoría de la tabla y pulsa el botón."
                style="-fx-font-size: 11px; -fx-text-fill: #94a3b8;"/>

@@ -43,7 +43,7 @@
                 <TableColumn fx:id="colId" text="ID" prefWidth="65"/>
 				<TableColumn fx:id="colFecha" text="Fecha" prefWidth="115"/>
 				<TableColumn fx:id="colHora" text="Hora" prefWidth="90"/>
-				<TableColumn fx:id="colUsuario" text="Registrado por" prefWidth="140"/>
+				<TableColumn fx:id="colUsuario" text="Registrado por" prefWidth="120"/>
 				<TableColumn fx:id="colCategoria" text="Categoría" prefWidth="135"/>
 				<TableColumn fx:id="colProducto" text="Producto" prefWidth="200"/>
 				<TableColumn fx:id="colCedula" text="Cédula" prefWidth="120"/>

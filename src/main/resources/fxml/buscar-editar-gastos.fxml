@@ -93,7 +93,7 @@
                 <TableColumn fx:id="colId" text="ID" prefWidth="65" style="-fx-alignment: CENTER;"/>
 				<TableColumn fx:id="colFecha" text="Fecha" prefWidth="115" style="-fx-alignment: CENTER;"/>
 				<TableColumn fx:id="colHora" text="Hora" prefWidth="90" style="-fx-alignment: CENTER;"/>
-				<TableColumn fx:id="colUsuario" text="Registrado por" prefWidth="140"/>
+				<TableColumn fx:id="colUsuario" text="Registrado por" prefWidth="120"/>
 				<TableColumn fx:id="colCategoria" text="Categoría" prefWidth="135"/>
 				<TableColumn fx:id="colSubcategoria" text="Subcategoría" prefWidth="145"/>
 				<TableColumn fx:id="colProducto" text="Producto" prefWidth="180"/>
