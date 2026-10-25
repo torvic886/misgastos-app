@@ -1,5 +1,36 @@
 package com.misgastos.service;
 
+import java.io.FileOutputStream;
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
+import java.time.format.TextStyle;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.TreeMap;
+
+import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFColor;
+import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
@@ -9,27 +40,13 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
-import com.itextpdf.kernel.colors.ColorConstants;
-
 import com.misgastos.model.Billetero;
 import com.misgastos.repository.BilleteroRepository;
 import com.misgastos.repository.GastoRepository;
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.ss.util.CellRangeAddress;
-import org.apache.poi.xssf.usermodel.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
-import java.io.FileOutputStream;
-import java.math.BigDecimal;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.time.LocalDate;
-import java.time.YearMonth;
-import java.time.format.DateTimeFormatter;
-import java.time.format.TextStyle;
-import java.util.*;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class ReporteBilleteroService {
 
@@ -95,38 +112,38 @@ public class ReporteBilleteroService {
             LocalDate primerDia = mesActual.atDay(1);
             LocalDate ultimoDia = mesActual.atEndOfMonth();
             
-            System.out.println("\n=== DIAGNÓSTICO MES: " + mesActual + " ===");
-            System.out.println("Rango: " + primerDia + " a " + ultimoDia);
-            System.out.println("Billeteros encontrados: " + billeterosDelMes.size());
+            log.debug("Diagnóstico mes: {}", mesActual);
+            log.debug("Rango: {} a {}", primerDia, ultimoDia);
+            log.debug("Billeteros encontrados: {}", billeterosDelMes.size());
             
             // PAGOS MANUEL (categoría 14)
             BigDecimal pagosManuelBD = gastoRepository.sumByFechaBetweenAndCategoriaId(
                 primerDia.toString(), ultimoDia.toString(), 14L);
             long pagosManuelVal = obtenerValor(pagosManuelBD);
-            System.out.println("Pagos Manuel (cat 14): " + pagosManuelVal + " | BD devolvió: " + pagosManuelBD);
+            log.debug("Pagos Manuel (cat 14): {} | BD devolvió: {}", pagosManuelVal, pagosManuelBD);
             
             // INVERSIÓN (categoría 10)
             BigDecimal inversionBD = gastoRepository.sumByFechaBetweenAndCategoriaId(
                 primerDia.toString(), ultimoDia.toString(), 10L);
             long inversionVal = obtenerValor(inversionBD);
-            System.out.println("Inversión (cat 10): " + inversionVal + " | BD devolvió: " + inversionBD);
+            log.debug("Inversión (cat 10): {} | BD devolvió: {}", inversionVal, inversionBD);
             
             // GASTOS TOTALES
             BigDecimal gastosTotalesBD = gastoRepository.sumByFechaBetween(primerDia, ultimoDia);
             long gastosTotalesVal = obtenerValor(gastosTotalesBD);
-            System.out.println("Gastos Totales: " + gastosTotalesVal + " | BD devolvió: " + gastosTotalesBD);
+            log.debug("Gastos Totales: {} | BD devolvió: {}", gastosTotalesVal, gastosTotalesBD);
             
             // GASTOS LOCAL = GASTOS TOTALES - PAGOS MANUEL - INVERSIÓN
             long gastosLocal = gastosTotalesVal - pagosManuelVal - inversionVal;
-            System.out.println("Gastos Local: " + gastosLocal);
+            log.debug("Gastos Local: {}", gastosLocal);
             
             // GASTO TOTAL
             long gastoTotal = gastosLocal + pagosManuelVal + inversionVal;
-            System.out.println("Gasto Total: " + gastoTotal);
+            log.debug("Gasto Total: {}", gastoTotal);
             
             // UTILIDAD NETA = DIFERENCIA - GASTO TOTAL
             long utilidadNeta = diferencia - gastoTotal;
-            System.out.println("Utilidad Neta: " + utilidadNeta);
+            log.debug("Utilidad Neta: {}", utilidadNeta);
             
             FilaReporte fila = new FilaReporte(
                 mesActual.getMonth().getDisplayName(TextStyle.FULL, new Locale("es", "ES")).toUpperCase(),
@@ -209,6 +226,26 @@ public class ReporteBilleteroService {
         
         return filas;
     }
+    
+    // ==================== VISTA PREVIA (mismos datos que Excel y PDF) ====================
+
+    public record FilaVista(String periodo, long bill, long premios, long diferencia,
+            long gastosLocal, long pagosManuel, long inversion,
+            long gastoTotal, long utilidadNeta) {
+}
+
+public List<FilaVista> vistaPreviaMensual(LocalDate fechaInicio, LocalDate fechaFin) {
+return generarDatosReporteMensual(fechaInicio, fechaFin).stream().map(this::aVista).toList();
+}
+
+public List<FilaVista> vistaPreviaDiario(LocalDate fechaInicio, LocalDate fechaFin) {
+return generarDatosReporteDiario(fechaInicio, fechaFin).stream().map(this::aVista).toList();
+}
+
+private FilaVista aVista(FilaReporte f) {
+return new FilaVista(f.periodo, f.acumuladoBill, f.acumuladoPremios, f.diferencia,
+f.gastosLocal, f.pagosManuel, f.inversion, f.gastoTotal, f.utilidadNeta);
+}
     
     // ==================== EXPORTAR A EXCEL ====================
     

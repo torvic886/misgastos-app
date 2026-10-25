@@ -29,6 +29,14 @@ public class MisGastosLauncher {
     public static final String ARCHIVO_IMPORTACION = "importacion-pendiente.db";
 
     public static void main(String[] args) {
+        RegistroLog.iniciar();
+
+        // dev al ejecutar desde Maven/IDE; producción en el programa instalado (jpackage)
+        if (System.getProperty("spring.profiles.active") == null
+                && System.getProperty("jpackage.app-path") == null) {
+            System.setProperty("spring.profiles.active", "dev");
+        }
+
         prepararBaseDeDatos();
         Application.launch(MisGastosApplication.class, args);
     }
@@ -54,8 +62,8 @@ public class MisGastosLauncher {
 
             // Copia de seguridad ANTES de que Spring abra la base (y antes de cualquier
             // cambio de estructura). Si falla, solo se avisa: nunca impide abrir el programa.
-            respaldarBaseDeDatos(carpeta, db);
-            aplicarImportacionPendiente(carpeta, db);
+//            respaldarBaseDeDatos(carpeta, db);
+//            aplicarImportacionPendiente(carpeta, db);
             
             respaldarBaseDeDatos(carpeta, db);
             aplicarImportacionPendiente(carpeta, db);

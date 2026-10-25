@@ -31,8 +31,10 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import lombok.extern.slf4j.Slf4j;
 import com.misgastos.util.FiltroExcel;
 
+@Slf4j
 @Component
 public class ListaGastosController {
 
@@ -191,7 +193,7 @@ public class ListaGastosController {
         listaGastos = FXCollections.observableArrayList(gastos);
         filtro.setDatos(gastos);
 
-        System.out.println("✅ Cargados " + gastos.size() + " gastos");
+        log.debug("Gastos cargados: {}", gastos.size());
     }
 
     /**
@@ -276,7 +278,7 @@ public class ListaGastosController {
                 mostrarAlerta("Éxito", mensaje, Alert.AlertType.INFORMATION);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+        	log.error("No se pudo exportar la lista de gastos a Excel", e);
             mostrarAlerta("Error",
                 "No se pudo exportar el archivo:\n" + e.getMessage(),
                 Alert.AlertType.ERROR);
@@ -418,9 +420,7 @@ public class ListaGastosController {
                 workbook.write(fos);
             }
 
-            String filtroLog = (filtro != null && !filtro.isEmpty()) ? " [Filtro: \"" + filtro + "\"]" : "";
-            System.out.println("✅ Excel exportado: " + gastos.size() + " gastos - Total: $" +
-                formatoPesos.format(totalGeneral) + filtroLog);
+            log.info("Excel de gastos exportado: {} gastos", gastos.size());
         }
     }
 

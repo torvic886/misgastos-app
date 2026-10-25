@@ -8,6 +8,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import lombok.extern.slf4j.Slf4j;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
@@ -30,6 +31,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 @Component
 public class GestionBilleterosController {
 
@@ -75,7 +77,7 @@ public class GestionBilleterosController {
     
     @FXML
     public void initialize() {
-        System.out.println("💼 Inicializando Gestión de Billeteros");
+    	log.debug("Inicializando gestión de billeteros");
         configurarTabla();
         configurarBusqueda();
         cargarDatos();
@@ -183,10 +185,10 @@ public class GestionBilleterosController {
             
             lblTotalRegistros.setText("Total registros: " + listaFiltrada.size());
             
-            System.out.println("✅ Datos cargados: " + billeteros.size() + " registros");
+            log.debug("Billeteros cargados: {} registros", billeteros.size());
         } catch (Exception e) {
             mostrarError("Error al cargar datos", e.getMessage());
-            e.printStackTrace();
+            log.error("No se pudieron cargar los billeteros", e);
         }
     }
     
@@ -259,7 +261,7 @@ public class GestionBilleterosController {
             
         } catch (Exception e) {
             mostrarError("Error al buscar", e.getMessage());
-            e.printStackTrace();
+            log.error("No se pudo buscar billeteros por rango de fechas", e);
         }
     }
     
@@ -293,7 +295,7 @@ public class GestionBilleterosController {
                 mostrarInfo("Éxito", "Registro eliminado correctamente");
             } catch (Exception e) {
                 mostrarError("Error al eliminar", e.getMessage());
-                e.printStackTrace();
+                log.error("No se pudo eliminar el billetero {}", billetero.getId(), e);
             }
         }
     }
@@ -326,7 +328,7 @@ public class GestionBilleterosController {
             
         } catch (Exception e) {
             mostrarError("Error al abrir modal", e.getMessage());
-            e.printStackTrace();
+            log.error("No se pudo abrir el modal de billetero", e);
         }
     }
     
@@ -343,7 +345,7 @@ public class GestionBilleterosController {
             aplicarEstiloDiferencia(lblDiferenciaNeta, diferencia);
             
         } catch (Exception e) {
-            e.printStackTrace();
+        	log.error("No se pudo actualizar el resumen de billeteros", e);
         }
     }
     
@@ -360,7 +362,7 @@ public class GestionBilleterosController {
             aplicarEstiloDiferencia(lblDiferenciaNeta, diferencia);
             
         } catch (Exception e) {
-            e.printStackTrace();
+        	log.error("No se pudo actualizar el resumen por fechas {} a {}", inicio, fin, e);
         }
     }
     

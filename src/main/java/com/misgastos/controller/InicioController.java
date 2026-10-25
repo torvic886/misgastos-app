@@ -23,6 +23,7 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 import javafx.application.Platform;
 import javafx.scene.Node;
@@ -30,6 +31,7 @@ import javafx.scene.layout.StackPane;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 
+@Slf4j
 @Component
 public class InicioController {
 
@@ -286,7 +288,7 @@ public class InicioController {
                 flowPresupuestos.getChildren().add(mas);
             }
         } catch (Exception e) {
-            System.err.println("No se pudo cargar el presupuesto: " + e.getMessage());
+        	log.warn("No se pudo cargar el presupuesto", e);
         }
     }
 

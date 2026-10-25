@@ -6,11 +6,13 @@ import org.springframework.jdbc.datasource.init.DataSourceInitializer;
 import org.springframework.jdbc.datasource.init.DatabasePopulator;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.core.io.ClassPathResource;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+@Slf4j
 @Configuration
 public class SQLiteConfig {
     
@@ -23,7 +25,7 @@ public class SQLiteConfig {
                 try (Connection conn = dataSource.getConnection()) {
                     conn.createStatement().execute("PRAGMA foreign_keys = ON;");
                 } catch (SQLException e) {
-                    e.printStackTrace();
+                	log.error("No se pudo habilitar PRAGMA foreign_keys en SQLite", e);
                 }
             }
         };

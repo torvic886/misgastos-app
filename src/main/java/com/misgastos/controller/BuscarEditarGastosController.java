@@ -27,8 +27,10 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import com.misgastos.util.FiltroExcel;
+import lombok.extern.slf4j.Slf4j;
 import javafx.beans.property.SimpleStringProperty;
 
+@Slf4j
 @Component
 public class BuscarEditarGastosController {
 
@@ -131,7 +133,7 @@ public class BuscarEditarGastosController {
                 clipboard.setContent(content);
 
                 // Feedback visual
-                System.out.println("✓ Copiado: " + texto);
+                log.debug("Celda copiada al portapapeles");
             }
         }
     }

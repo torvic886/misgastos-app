@@ -108,7 +108,6 @@
                         onAction="#handleLogin"
                         styleClass="login-button"
                         style="-fx-font-size: 13.5px;"
-                        defaultButton="true"
                         focusTraversable="true">
                     <VBox.margin>
                         <Insets top="5"/>

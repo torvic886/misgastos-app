@@ -43,12 +43,15 @@ import javafx.stage.FileChooser;
 import java.io.File;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Pantalla "Consulta de totales": el usuario elige filtros (periodo, categoría,
  * subcategoría, producto, persona, quién registró) y ve al instante cuánto suman,
  * con el desglose y la lista exacta de gastos que forman ese total.
  */
+
+@Slf4j
 @Component
 public class ConsultaTotalesController {
 
@@ -318,7 +321,7 @@ public class ConsultaTotalesController {
             ultimoResultado = r;
             ultimaDescripcion = lblFiltros.getText();
         } catch (Exception e) {
-            e.printStackTrace();
+        	log.error("No se pudo hacer la consulta de totales", e);
             mostrarAlerta("Error", "No se pudo hacer la consulta:\n" + e.getMessage());
         }
     }
@@ -523,7 +526,7 @@ public class ConsultaTotalesController {
             ok.setContentText("El archivo quedó en:\n" + destino);
             ok.showAndWait();
         } catch (Exception e) {
-            e.printStackTrace();
+        	log.error("No se pudo exportar la consulta a Excel", e);
             mostrarAlerta("No se pudo guardar",
                     "Si tienes ese archivo abierto en Excel, ciérralo e inténtalo de nuevo.\n\nMotivo: " + e.getMessage());
         }

@@ -14,7 +14,9 @@ import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.util.Locale;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 public class ModalBilleteroController {
 
@@ -46,7 +48,7 @@ public class ModalBilleteroController {
     
     @FXML
     public void initialize() {
-        System.out.println("📝 Inicializando Modal Billetero");
+    	log.debug("Inicializando modal de billetero");
         
         // Configurar fecha por defecto
         dpFecha.setValue(LocalDate.now());
@@ -239,7 +241,7 @@ public class ModalBilleteroController {
             
             billeteroService.guardar(billetero);
             
-            System.out.println("✅ Billetero guardado correctamente");
+            log.info("Billetero guardado correctamente");
             
             if (onGuardarCallback != null) {
                 onGuardarCallback.run();
@@ -249,7 +251,7 @@ public class ModalBilleteroController {
             
         } catch (Exception e) {
             mostrarError("Error al guardar: " + e.getMessage());
-            e.printStackTrace();
+            log.error("No se pudo guardar el billetero", e);
         }
     }
     

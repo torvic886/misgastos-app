@@ -4,240 +4,161 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox xmlns="http://javafx.com/javafx" 
-      xmlns:fx="http://javafx.com/fxml" 
-      fx:controller="com.misgastos.controller.ReportesBilleterosController"
-      spacing="10"
-      style="-fx-background-color: #f1f5f9;">
-    
-    <padding>
-        <Insets top="15" right="15" bottom="15" left="15"/>
-    </padding>
+<ScrollPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.misgastos.controller.ReportesBilleterosController"
+            fitToWidth="true" fitToHeight="true" hbarPolicy="NEVER"
+            style="-fx-background-color: transparent; -fx-background: transparent;">
 
-    <!-- Título Principal - MÁS COMPACTO -->
-    <HBox alignment="CENTER_LEFT" spacing="10" 
-          style="-fx-background-color: white; -fx-padding: 10; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2); -fx-border-color: #cbd5e1; -fx-border-width: 1.5; -fx-border-radius: 12;">
-        <Label text="📊" style="-fx-font-size: 20px;"/>
-        <VBox spacing="0">
-            <Label text="Reportes de Billeteros" 
-                   style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-            <Label text="Genera reportes completos con análisis financiero detallado" 
-                   style="-fx-font-size: 10px; -fx-text-fill: #64748b;"/>
-        </VBox>
-    </HBox>
+    <VBox spacing="12" styleClass="content">
+        <padding>
+            <Insets top="16" right="20" bottom="16" left="20"/>
+        </padding>
 
-    <!-- Grid: Generadores de Reportes - MÁS COMPACTO -->
-    <GridPane hgap="10" vgap="10">
-        <columnConstraints>
-            <ColumnConstraints percentWidth="50"/>
-            <ColumnConstraints percentWidth="50"/>
-        </columnConstraints>
+        <!-- Encabezado con los totales a la derecha -->
+        <HBox styleClass="header-box" alignment="CENTER_LEFT" spacing="10"
+              style="-fx-padding: 10 16;">
+            <Label text="📊" style="-fx-font-size: 20px;"/>
+            <VBox spacing="0">
+                <Label text="Reportes de Billeteros" styleClass="section-title"/>
+                <Label text="Genera reportes completos con análisis financiero detallado"
+                       styleClass="caption"/>
+            </VBox>
 
-        <!-- COLUMNA 1: Reporte Mensual -->
-        <VBox spacing="8" GridPane.columnIndex="0" GridPane.rowIndex="0"
-              style="-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2); -fx-border-color: #cbd5e1; -fx-border-width: 1.5; -fx-border-radius: 12;">
-            
-            <HBox spacing="8" alignment="CENTER_LEFT">
-                <Label text="📅" style="-fx-font-size: 16px;"/>
-                <VBox spacing="0">
-                    <Label text="Reporte Mensual" 
-                           style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-                    <Label text="Agrupa datos por mes con totales acumulados" 
-                           style="-fx-font-size: 9px; -fx-text-fill: #64748b;"/>
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <HBox spacing="20" alignment="CENTER_RIGHT">
+                <VBox spacing="0" alignment="CENTER_RIGHT">
+                    <Label text="Total Billetero" styleClass="caption"/>
+                    <Label fx:id="lblTotalBilletero" text="0.00"
+                           style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #2563eb;"/>
+                </VBox>
+                <Separator orientation="VERTICAL"/>
+                <VBox spacing="0" alignment="CENTER_RIGHT">
+                    <Label text="Total Premios" styleClass="caption"/>
+                    <Label fx:id="lblTotalPremios" text="0.00"
+                           style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #dc2626;"/>
+                </VBox>
+                <Separator orientation="VERTICAL"/>
+                <VBox spacing="0" alignment="CENTER_RIGHT">
+                    <Label text="Utilidad Total" styleClass="caption"/>
+                    <Label fx:id="lblUtilidadTotal" text="0.00"
+                           style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #10b981;"/>
                 </VBox>
             </HBox>
-            
-            <Separator style="-fx-background-color: #e2e8f0;"/>
-
-            <HBox spacing="8">
-                <VBox spacing="2" HBox.hgrow="ALWAYS">
-                    <Label text="Fecha Inicio:" 
-                           style="-fx-font-weight: 600; -fx-text-fill: #334155; -fx-font-size: 9px;"/>
-                    <DatePicker fx:id="dpMensualInicio" 
-                               maxWidth="Infinity"
-                               prefHeight="20"
-                               style="-fx-font-size: 9px;"/>
-                </VBox>
-
-                <VBox spacing="2" HBox.hgrow="ALWAYS">
-                    <Label text="Fecha Fin:" 
-                           style="-fx-font-weight: 600; -fx-text-fill: #334155; -fx-font-size: 9px;"/>
-                    <DatePicker fx:id="dpMensualFin" 
-                               maxWidth="Infinity"
-                               prefHeight="20"
-                               style="-fx-font-size: 9px;"/>
-                </VBox>
-            </HBox>
-
-            <Button text="👁 Vista Previa" 
-                    onAction="#handleVistaPreviaMensual" 
-                    prefHeight="30"
-                    maxWidth="Infinity"
-                    style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 10px; -fx-background-radius: 8; -fx-cursor: hand;"/>
-
-            <Separator style="-fx-background-color: #e2e8f0;"/>
-
-            <HBox spacing="8">
-                <Button text="📊 Excel" 
-                        onAction="#handleMensualExcel" 
-                        prefHeight="30"
-                        HBox.hgrow="ALWAYS"
-                        maxWidth="Infinity"
-                        style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 10px; -fx-background-radius: 8; -fx-cursor: hand;"/>
-                <Button text="📄 PDF" 
-                        onAction="#handleMensualPDF" 
-                        prefHeight="30"
-                        HBox.hgrow="ALWAYS"
-                        maxWidth="Infinity"
-                        style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 10px; -fx-background-radius: 8; -fx-cursor: hand;"/>
-            </HBox>
-        </VBox>
-
-        <!-- COLUMNA 2: Reporte Diario -->
-        <VBox spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="0"
-              style="-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2); -fx-border-color: #cbd5e1; -fx-border-width: 1.5; -fx-border-radius: 12;">
-            
-            <HBox spacing="8" alignment="CENTER_LEFT">
-                <Label text="📆" style="-fx-font-size: 16px;"/>
-                <VBox spacing="0">
-                    <Label text="Reporte Diario" 
-                           style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-                    <Label text="Detalle día por día con utilidades" 
-                           style="-fx-font-size: 9px; -fx-text-fill: #64748b;"/>
-                </VBox>
-            </HBox>
-            
-            <Separator style="-fx-background-color: #e2e8f0;"/>
-
-            <HBox spacing="8">
-                <VBox spacing="2" HBox.hgrow="ALWAYS">
-                    <Label text="Fecha Inicio:" 
-                           style="-fx-font-weight: 600; -fx-text-fill: #334155; -fx-font-size: 9px;"/>
-                    <DatePicker fx:id="dpDiarioInicio" 
-                               maxWidth="Infinity"
-                               prefHeight="24"
-                               style="-fx-font-size: 9px;"/>
-                </VBox>
-
-                <VBox spacing="2" HBox.hgrow="ALWAYS">
-                    <Label text="Fecha Fin:" 
-                           style="-fx-font-weight: 600; -fx-text-fill: #334155; -fx-font-size: 9px;"/>
-                    <DatePicker fx:id="dpDiarioFin" 
-                               maxWidth="Infinity"
-                               prefHeight="24"
-                               style="-fx-font-size: 9px;"/>
-                </VBox>
-            </HBox>
-
-            <Button text="👁 Vista Previa" 
-                    onAction="#handleVistaPreviaDiario" 
-                    prefHeight="30"
-                    maxWidth="Infinity"
-                    style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 10px; -fx-background-radius: 8; -fx-cursor: hand;"/>
-
-            <Separator style="-fx-background-color: #e2e8f0;"/>
-
-            <HBox spacing="8">
-                <Button text="📊 Excel" 
-                        onAction="#handleDiarioExcel" 
-                        prefHeight="30"
-                        HBox.hgrow="ALWAYS"
-                        maxWidth="Infinity"
-                        style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 10px; -fx-background-radius: 8; -fx-cursor: hand;"/>
-                <Button text="📄 PDF" 
-                        onAction="#handleDiarioPDF" 
-                        prefHeight="30"
-                        HBox.hgrow="ALWAYS"
-                        maxWidth="Infinity"
-                        style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 10px; -fx-background-radius: 8; -fx-cursor: hand;"/>
-            </HBox>
-        </VBox>
-    </GridPane>
-
-    <!-- Vista Previa del Reporte - MÁS COMPACTA -->
-    <VBox spacing="6" VBox.vgrow="ALWAYS" prefHeight="350"
-          style="-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2); -fx-border-color: #cbd5e1; -fx-border-width: 1.5; -fx-border-radius: 12;">
-        
-        <HBox alignment="CENTER_LEFT" spacing="8">
-            <HBox spacing="8" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
-                <Label text="📊" style="-fx-font-size: 16px;"/>
-                <VBox spacing="0">
-                    <Label text="Vista Previa del Reporte" 
-                           style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-                    <Label fx:id="lblRangoFechas"
-                           text="Seleccione fechas y presione 'Vista Previa' para generar el reporte" 
-                           style="-fx-font-size: 9px; -fx-text-fill: #64748b;"/>
-                </VBox>
-            </HBox>
-            
-            <Button text="🔄 Limpiar" 
-                    onAction="#handleLimpiarVista"
-                    style="-fx-background-color: #64748b; -fx-text-fill: white; -fx-font-weight: 600; -fx-padding: 4 8; -fx-background-radius: 6; -fx-cursor: hand; -fx-font-size: 9px;"/>
         </HBox>
 
-        <Separator style="-fx-background-color: #e2e8f0;"/>
+        <!-- Generadores de reportes -->
+        <HBox spacing="12">
 
-        <!-- Tabla de Vista Previa con ScrollPane -->
-        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
-                    style="-fx-background-color: transparent; -fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 8;">
-            <TableView fx:id="tblVistaPrevia" 
-                      prefHeight="240"
-                      style="-fx-background-color: transparent; -fx-font-size: 10px;">
+            <!-- Reporte mensual -->
+            <VBox styleClass="form-card" spacing="10" HBox.hgrow="ALWAYS" prefWidth="400"
+                  style="-fx-padding: 12 16;">
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <Label text="📅" style="-fx-font-size: 16px;"/>
+                    <VBox spacing="0">
+                        <Label text="Reporte Mensual"
+                               style="-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #1e293b;"/>
+                        <Label text="Agrupa datos por mes con totales acumulados" styleClass="caption"/>
+                    </VBox>
+                </HBox>
+
+                <HBox spacing="10">
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <Label text="Fecha inicio" styleClass="form-label"/>
+                        <DatePicker fx:id="dpMensualInicio" maxWidth="Infinity"/>
+                    </VBox>
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <Label text="Fecha fin" styleClass="form-label"/>
+                        <DatePicker fx:id="dpMensualFin" maxWidth="Infinity"/>
+                    </VBox>
+                </HBox>
+
+                <HBox spacing="8">
+                    <Button text="👁 Vista previa" onAction="#handleVistaPreviaMensual"
+                            styleClass="search-button" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                    <Button text="📊 Excel" onAction="#handleMensualExcel"
+                            styleClass="secondary-button" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                    <Button text="📄 PDF" onAction="#handleMensualPDF"
+                            styleClass="danger-button" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                </HBox>
+            </VBox>
+
+            <!-- Reporte diario -->
+            <VBox styleClass="form-card" spacing="10" HBox.hgrow="ALWAYS" prefWidth="400"
+                  style="-fx-padding: 12 16;">
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <Label text="📆" style="-fx-font-size: 16px;"/>
+                    <VBox spacing="0">
+                        <Label text="Reporte Diario"
+                               style="-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #1e293b;"/>
+                        <Label text="Detalle día por día con utilidades" styleClass="caption"/>
+                    </VBox>
+                </HBox>
+
+                <HBox spacing="10">
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <Label text="Fecha inicio" styleClass="form-label"/>
+                        <DatePicker fx:id="dpDiarioInicio" maxWidth="Infinity"/>
+                    </VBox>
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <Label text="Fecha fin" styleClass="form-label"/>
+                        <DatePicker fx:id="dpDiarioFin" maxWidth="Infinity"/>
+                    </VBox>
+                </HBox>
+
+                <HBox spacing="8">
+                    <Button text="👁 Vista previa" onAction="#handleVistaPreviaDiario"
+                            styleClass="search-button" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                    <Button text="📊 Excel" onAction="#handleDiarioExcel"
+                            styleClass="secondary-button" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                    <Button text="📄 PDF" onAction="#handleDiarioPDF"
+                            styleClass="danger-button" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                </HBox>
+            </VBox>
+        </HBox>
+
+        <!-- Vista previa: ocupa todo el espacio que sobra -->
+        <VBox styleClass="table-card" spacing="8" VBox.vgrow="ALWAYS"
+              style="-fx-padding: 12 16;">
+
+            <HBox alignment="CENTER_LEFT" spacing="8">
+                <Label text="📊" style="-fx-font-size: 16px;"/>
+                <VBox spacing="0" HBox.hgrow="ALWAYS">
+                    <Label text="Vista previa del reporte"
+                           style="-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #1e293b;"/>
+                    <Label fx:id="lblRangoFechas"
+                           text="Seleccione fechas y presione 'Vista Previa' para generar el reporte"
+                           styleClass="caption"/>
+                </VBox>
+                <Button text="🔄 Limpiar" onAction="#handleLimpiarVista" styleClass="neutral-button"/>
+            </HBox>
+
+            <!-- Sin ScrollPane propio: así el encabezado de la tabla queda fijo -->
+            <TableView fx:id="tblVistaPrevia" styleClass="tabla-reporte"
+                       minHeight="260" VBox.vgrow="ALWAYS">
+                <columnResizePolicy>
+                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                </columnResizePolicy>
                 <columns>
-                    <TableColumn fx:id="colPeriodo" text="Periodo" prefWidth="90" minWidth="70"/>
-                    <TableColumn fx:id="colBilletero" text="Acum. Billetero" prefWidth="120" minWidth="90"/>
-                    <TableColumn fx:id="colPremios" text="Acum. Premios" prefWidth="120" minWidth="90"/>
-                    <TableColumn fx:id="colDiferencia" text="Diferencia" prefWidth="100" minWidth="80"/>
-                    <TableColumn fx:id="colGastosLocal" text="Gastos Local" prefWidth="100" minWidth="80"/>
-                    <TableColumn fx:id="colPagosManuel" text="Pagos Manuel" prefWidth="110" minWidth="90"/>
-                    <TableColumn fx:id="colInversion" text="Inversión" prefWidth="90" minWidth="70"/>
-                    <TableColumn fx:id="colGastoTotal" text="Gasto Total" prefWidth="100" minWidth="80"/>
-                    <TableColumn fx:id="colUtilidadNeta" text="Utilidad Neta" prefWidth="100" minWidth="80"/>
+                    <TableColumn fx:id="colPeriodo" text="Periodo" prefWidth="90" minWidth="80"/>
+                    <TableColumn fx:id="colBilletero" text="Acum. Billetero" prefWidth="115" minWidth="90"/>
+                    <TableColumn fx:id="colPremios" text="Acum. Premios" prefWidth="115" minWidth="90"/>
+                    <TableColumn fx:id="colDiferencia" text="Diferencia" prefWidth="105" minWidth="85"/>
+                    <TableColumn fx:id="colGastosLocal" text="Gastos Local" prefWidth="105" minWidth="85"/>
+                    <TableColumn fx:id="colPagosManuel" text="Pagos Manuel" prefWidth="105" minWidth="85"/>
+                    <TableColumn fx:id="colInversion" text="Inversión" prefWidth="100" minWidth="80"/>
+                    <TableColumn fx:id="colGastoTotal" text="Gasto Total" prefWidth="105" minWidth="85"/>
+                    <TableColumn fx:id="colUtilidadNeta" text="Utilidad Neta" prefWidth="110" minWidth="90"/>
                 </columns>
                 <placeholder>
-                    <VBox alignment="CENTER" spacing="8" style="-fx-padding: 30;">
-                        <Label text="📋" style="-fx-font-size: 40px; -fx-opacity: 0.3;"/>
-                        <Label text="No hay datos para mostrar" 
-                               style="-fx-font-size: 12px; -fx-text-fill: #64748b; -fx-font-weight: 500;"/>
-                        <Label text="Seleccione un rango de fechas y presione 'Vista Previa'" 
-                               style="-fx-font-size: 10px; -fx-text-fill: #94a3b8;"/>
+                    <VBox alignment="CENTER" spacing="6">
+                        <Label text="No hay datos para mostrar"/>
+                        <Label text="Seleccione un rango de fechas y presione 'Vista previa'"
+                               styleClass="caption"/>
                     </VBox>
                 </placeholder>
             </TableView>
-        </ScrollPane>
-
-        <!-- Footer con totales -->
-        <HBox spacing="12" alignment="CENTER" 
-              style="-fx-background-color: linear-gradient(to right, #f8fafc, #f1f5f9); -fx-padding: 6; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 8;">
-            
-            <VBox spacing="0" alignment="CENTER">
-                <Label text="Total Billetero" 
-                       style="-fx-font-size: 9px; -fx-text-fill: #64748b; -fx-font-weight: 500;"/>
-                <Label fx:id="lblTotalBilletero" 
-                       text="0.00" 
-                       style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #2563eb;"/>
-            </VBox>
-
-            <Separator orientation="VERTICAL"/>
-
-            <VBox spacing="0" alignment="CENTER">
-                <Label text="Total Premios" 
-                       style="-fx-font-size: 9px; -fx-text-fill: #64748b; -fx-font-weight: 500;"/>
-                <Label fx:id="lblTotalPremios" 
-                       text="0.00" 
-                       style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #dc2626;"/>
-            </VBox>
-
-            <Separator orientation="VERTICAL"/>
-
-            <VBox spacing="0" alignment="CENTER">
-                <Label text="Utilidad Total" 
-                       style="-fx-font-size: 9px; -fx-text-fill: #64748b; -fx-font-weight: 500;"/>
-                <Label fx:id="lblUtilidadTotal" 
-                       text="0.00" 
-                       style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #10b981;"/>
-            </VBox>
-        </HBox>
+        </VBox>
     </VBox>
-
-</VBox>
+</ScrollPane>

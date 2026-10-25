@@ -4,8 +4,10 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
 
+@Slf4j
 public class SceneManager {
 
     public static void applyStyles(Scene scene) {
@@ -18,8 +20,7 @@ public class SceneManager {
             scene.getStylesheets().add(css);
 
         } catch (Exception e) {
-            System.err.println("Error al cargar estilos CSS");
-            e.printStackTrace();
+            log.error("Error al cargar estilos CSS", e);
         }
     }
 
@@ -49,8 +50,7 @@ public class SceneManager {
             stage.centerOnScreen();
 
         } catch (Exception e) {
-            e.printStackTrace();
-            System.err.println("Error al cambiar escena: " + fxmlPath);
+            log.error("Error al cambiar escena: {}", fxmlPath, e);
         }
     }
 }

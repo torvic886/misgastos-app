@@ -33,9 +33,10 @@ import java.util.prefs.Preferences;
 import javafx.geometry.Bounds;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Popup;
+import lombok.extern.slf4j.Slf4j;
 
 
-
+@Slf4j
 @Component
 public class LoginController implements Initializable {
     
@@ -119,12 +120,12 @@ public class LoginController implements Initializable {
                     stage.setHeight(loginHeight);
                     stage.centerOnScreen();
                     
-                    System.out.println("✅ Ventana de login configurada (" + 
-                                      (int)loginWidth + "x" + (int)loginHeight + ")");
+                    log.debug("Ventana de login configurada ({}x{})",
+                            (int) loginWidth, (int) loginHeight);
                 }
             });
         } catch (Exception e) {
-            System.err.println("⚠️ No se pudo configurar ventana de login: " + e.getMessage());
+        	log.warn("No se pudo configurar la ventana de login", e);
         }
     }
     
@@ -445,7 +446,7 @@ public class LoginController implements Initializable {
             
             if (usuarioOpt.isPresent()) {
                 Usuario usuario = usuarioOpt.get();
-                System.out.println("🚀 Auto-login para: " + usuario.getUsername());
+                log.info("Auto-login para: {}", usuario.getUsername());
                 abrirDashboard(usuario.getUsername(), usuario.getRol());
             }
         }
@@ -520,7 +521,7 @@ public class LoginController implements Initializable {
                         stage.setWidth(width);
                         stage.setHeight(height);
                         stage.centerOnScreen();
-                        System.out.println("✅ Ventana restaurada: " + (int) width + "x" + (int) height);
+                        log.debug("Ventana restaurada: {}x{}", (int) width, (int) height);
                     });
                 }
             });
@@ -541,10 +542,10 @@ public class LoginController implements Initializable {
                 });
             });
 
-            System.out.println("✅ Dashboard abierto para: " + username + " | Rol: " + rol);
+            log.info("Dashboard abierto para: {} | Rol: {}", username, rol);
 
         } catch (Exception e) {
-            e.printStackTrace();
+        	log.error("No se pudo abrir el dashboard para el usuario {}", username, e);
             mostrarAlerta("Error Crítico",
                          "No se pudo abrir el dashboard. Contacte al administrador.",
                          Alert.AlertType.ERROR);
@@ -595,9 +596,9 @@ public class LoginController implements Initializable {
                 checkRecordarme.setSelected(false);
                 txtUsername.requestFocus();
                 
-                System.out.println("✅ Campos de login limpiados");
+                log.debug("Campos de login limpiados");
             } catch (Exception e) {
-                System.err.println("⚠️ Error al limpiar campos: " + e.getMessage());
+            	log.warn("Error al limpiar campos de login", e);
             }
         });
     }

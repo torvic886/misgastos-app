@@ -9,10 +9,12 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+@Slf4j
 @Component
 public class GestionUsuariosController {
 
@@ -46,7 +48,7 @@ public class GestionUsuariosController {
         cargarUsuarios();
         configurarSeleccionTabla();
         
-        System.out.println("✅ Módulo de Gestión de Usuarios cargado");
+        log.debug("Módulo de gestión de usuarios cargado");
     }
     
     public void setUsuarioActual(String username) {

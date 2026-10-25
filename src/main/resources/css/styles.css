@@ -952,6 +952,108 @@
 }
 
 /* ===========================
+   DIAGNOSTICO Y REGISTROS
+   =========================== */
+.log-badge {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+    -fx-padding: 2 10;
+    -fx-background-radius: 4;
+    -fx-alignment: CENTER;
+    -fx-min-width: 56;
+}
+.log-error { -fx-background-color: #ef4444; }
+.log-warn  { -fx-background-color: #f59e0b; }
+.log-info  { -fx-background-color: #3b82f6; }
+.log-debug { -fx-background-color: #22c55e; }
+.log-trace { -fx-background-color: #94a3b8; }
+
+.log-field-label {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -text-muted;
+}
+.log-detail-value {
+    -fx-font-size: 12px;
+    -fx-text-fill: -text-body;
+}
+/* La clase "content" del contenedor raiz (padding 15) tambien alcanza al interior del TextArea */
+.log-text-area .content {
+    -fx-padding: 4 6;
+}
+.log-trace-area {
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 11px;
+}
+.log-trace-area .content {
+    -fx-background-color: #f8fafc;
+}
+
+/* Tarjeta de ubicacion de logs (Diagnostico y registros) */
+.log-info-card {
+    -fx-background-color: #eff6ff;
+    -fx-background-radius: 12;
+    -fx-padding: 16;
+    -fx-border-color: #bfdbfe;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+}
+
+.log-path {
+    -fx-background-color: #dbeafe;
+    -fx-background-radius: 6;
+    -fx-padding: 6 10;
+    -fx-text-fill: #1d4ed8;
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 12px;
+}
+
+/* Vista de archivo estilo consola (Diagnostico y registros) */
+.log-console {
+    -fx-background-color: #0f172a;
+    -fx-background-radius: 10;
+    -fx-border-color: #1e293b;
+    -fx-border-radius: 10;
+}
+
+.log-console-tab-bar {
+    -fx-background-color: #1e293b;
+    -fx-background-radius: 10 10 0 0;
+    -fx-padding: 8 12;
+}
+
+.log-console-tab {
+    -fx-text-fill: #e2e8f0;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+.log-console-hint {
+    -fx-text-fill: #94a3b8;
+    -fx-font-size: 11px;
+}
+
+.log-console-text {
+    -fx-background-color: #0f172a;
+    -fx-border-color: transparent;
+    -fx-background-radius: 0 0 10 10;
+    -fx-padding: 0;
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 11px;
+    -fx-text-inner-color: #e2e8f0;
+}
+
+.log-console-text .content {
+    -fx-background-color: #0f172a;
+    -fx-padding: 10 12;
+}
+
+.log-console-text .scroll-pane,
+.log-console-text .scroll-pane > .viewport {
+    -fx-background-color: #0f172a;
+}
+/* ===========================
    NOTA SOBRE TRANSICIONES
    =========================== */
 /* JavaFX no soporta transiciones en CSS (la propiedad -fx-transition no existe), asi que los

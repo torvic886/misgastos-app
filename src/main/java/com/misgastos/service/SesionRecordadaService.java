@@ -2,6 +2,7 @@ package com.misgastos.service;
 
 import com.misgastos.model.SesionRecordada;
 import com.misgastos.repository.SesionRecordadaRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,6 +11,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.prefs.Preferences;
 
+@Slf4j
 @Service
 public class SesionRecordadaService {
     
@@ -40,7 +42,7 @@ public class SesionRecordadaService {
         // 5. Guardar token en PC del usuario
         guardarTokenLocal(token);
         
-        System.out.println("✅ Sesión creada - Token: " + token);
+        log.info("Sesión recordada creada para usuario {}", usuarioId);
     }
     
     /**
@@ -58,6 +60,7 @@ public class SesionRecordadaService {
         Optional<SesionRecordada> sesionOpt = sesionRepository.findByToken(tokenLocal);
         
         if (sesionOpt.isEmpty()) {
+            log.debug("Token local sin sesión en BD; se borra el token local");
             borrarTokenLocal(); // Token no existe en BD
             return Optional.empty();
         }
@@ -66,12 +69,13 @@ public class SesionRecordadaService {
         
         // 3. Verificar si expiró
         if (sesion.getFechaExpiracion().isBefore(LocalDateTime.now())) {
+            log.debug("Sesión recordada expirada para usuario {}", sesion.getUsuarioId());
             eliminarSesion(sesion.getUsuarioId());
             return Optional.empty();
         }
         
         // 4. Token válido, retornar usuario_id
-        System.out.println("✅ Sesión válida encontrada para usuario ID: " + sesion.getUsuarioId());
+        log.debug("Sesión recordada válida para usuario {}", sesion.getUsuarioId());
         return Optional.of(sesion.getUsuarioId());
     }
     
@@ -82,7 +86,7 @@ public class SesionRecordadaService {
     public void eliminarSesion(Long usuarioId) {
         sesionRepository.deleteByUsuarioId(usuarioId);
         borrarTokenLocal();
-        System.out.println("🗑️ Sesión eliminada para usuario ID: " + usuarioId);
+        log.info("Sesión recordada eliminada para usuario {}", usuarioId);
     }
     
     /**

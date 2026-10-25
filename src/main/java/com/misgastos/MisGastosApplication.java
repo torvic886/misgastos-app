@@ -22,6 +22,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
@@ -31,6 +32,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.event.ContextRefreshedEvent;
 
+@Slf4j
 @SpringBootApplication
 public class MisGastosApplication extends Application {
 
@@ -233,8 +235,8 @@ public class MisGastosApplication extends Application {
         stage.centerOnScreen();
         stage.show();
 
-        System.out.println("✅ ExpenseFlow iniciado correctamente (" +
-                          (int)loginWidth + "x" + (int)loginHeight + ")");
+        log.info("ExpenseFlow iniciado correctamente ({}x{})",
+                (int) loginWidth, (int) loginHeight);
     }
 
     @Override

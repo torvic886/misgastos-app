@@ -17,7 +17,9 @@ import java.time.LocalDate;
 import java.util.List;
 import java.text.NumberFormat;
 import java.util.Locale;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 public class InformesController {
 
@@ -47,7 +49,7 @@ public class InformesController {
         txtPreview.setText("📊 Selecciona el tipo de informe, configura las fechas y presiona 'Generar Vista Previa'\n\n" +
                           "El informe aparecerá aquí antes de exportarlo a PDF o Excel.");
         
-        System.out.println("✅ Módulo de Informes cargado correctamente");
+        log.debug("Módulo de informes cargado");
     }
 
     private void configurarTiposInforme() {
@@ -107,16 +109,16 @@ public class InformesController {
         LocalDate inicio = dpFechaInicio.getValue();
         LocalDate fin = dpFechaFin.getValue();
         
-        System.out.println("✅ Fecha Inicio: " + inicio);
-        System.out.println("✅ Fecha fin: " + fin);
+        log.debug("Fecha inicio: {}", inicio);
+        log.debug("Fecha fin: {}", fin);
 
         try {
             String informe = "";
 
             if (tipoInforme.contains("General Mensual")) {
                 informe = informeService.generarInformeGeneralMensual(inicio, fin);
-                System.out.println("✅ Fecha Inicio InformeGeneralMensual: " + inicio);
-                System.out.println("✅ Fecha fin InformeGeneralMensual: " + fin);
+                log.debug("Fecha inicio InformeGeneralMensual: {}", inicio);
+                log.debug("Fecha fin InformeGeneralMensual: {}", fin);
             }
             else if (tipoInforme.contains("Categoría")) {
                 Categoria categoria = cmbCategoria.getValue();
@@ -125,8 +127,8 @@ public class InformesController {
                     return;
                 }
                 informe = informeService.generarInformePorCategoria(categoria.getNombre(), inicio, fin);
-                System.out.println("✅ Fecha Inicio InformePorCategoria: " + inicio);
-                System.out.println("✅ Fecha fin InformePorCategoria: " + fin);
+                log.debug("Fecha inicio InformePorCategoria: {}", inicio);
+                log.debug("Fecha fin InformePorCategoria: {}", fin);
             }
             else if (tipoInforme.contains("Producto")) {
                 String producto = txtProducto.getText();
@@ -135,37 +137,37 @@ public class InformesController {
                     return;
                 }
                 
-                System.out.println("✅ Fecha Inicio InformePorProducto: " + inicio);
-                System.out.println("✅ Fecha fin InformePorProducto: " + fin);
+                log.debug("Fecha inicio InformePorProducto: {}", inicio);
+                log.debug("Fecha fin InformePorProducto: {}", fin);
                 
                 informe = informeService.generarInformePorProducto(producto.trim(), inicio, fin);
             }
             else if (tipoInforme.contains("Comparativo")) {
             	
-                System.out.println("✅ Fecha Inicio InformeComparativo: " + inicio);
-                System.out.println("✅ Fecha fin InformeComparativo: " + fin);
+                log.debug("Fecha inicio InformeComparativo: {}", inicio);
+                log.debug("Fecha fin InformeComparativo: {}", fin);
             	
                 informe = informeService.generarInformeComparativo(inicio, fin);
             }
             else if (tipoInforme.contains("Dashboard")) {
             	
-                System.out.println("✅ Fecha Inicio DashboardEjecutivo: " + inicio);
-                System.out.println("✅ Fecha fin DashboardEjecutivo: " + fin);
+                log.debug("Fecha inicio DashboardEjecutivo: {}", inicio);
+                log.debug("Fecha fin DashboardEjecutivo: {}", fin);
             	
                 informe = informeService.generarDashboardEjecutivo(inicio, fin);
             }
             else if (tipoInforme.contains("Subcategorías")) {
             	
-                System.out.println("✅ Fecha Inicio InformeSubcategorias: " + inicio);
-                System.out.println("✅ Fecha fin InformeSubcategorias: " + fin);
+                log.debug("Fecha inicio InformeSubcategorias: {}", inicio);
+                log.debug("Fecha fin InformeSubcategorias: {}", fin);
             	
                 informe = informeService.generarInformeSubcategorias(inicio, fin);
             }
             else if (tipoInforme.contains("Anual")) {
                 int anio = inicio.getYear();
                 
-                System.out.println("✅ Fecha Inicio InformeAnual: " + inicio);
-                System.out.println("✅ Fecha fin InformeAnual: " + fin);
+                log.debug("Fecha inicio InformeAnual: {}", inicio);
+                log.debug("Fecha fin InformeAnual: {}", fin);
                 
                 informe = informeService.generarInformeAnual(anio);
             }
@@ -176,10 +178,10 @@ public class InformesController {
             // Actualizar estadísticas
             actualizarEstadisticas(inicio, fin);
             
-            System.out.println("✅ Informe generado: " + tipoInforme);
+            log.info("Informe generado: {}", tipoInforme);
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("No se pudo generar el informe '{}'", tipoInforme, e);
             mostrarAlerta("Error", "No se pudo generar el informe:\n" + e.getMessage(), Alert.AlertType.ERROR);
         }
     }
@@ -222,7 +224,7 @@ public class InformesController {
             lblCategorias.setText(String.valueOf(categorias));
             
         } catch (Exception e) {
-            System.err.println("Error al actualizar estadísticas: " + e.getMessage());
+        	log.error("Error al actualizar estadísticas", e);
         }
     }
 
@@ -279,7 +281,7 @@ public class InformesController {
                 mostrarAlerta("Éxito", "Informe PDF exportado correctamente a:\n" + archivo.getAbsolutePath(), Alert.AlertType.INFORMATION);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+        	log.error("No se pudo exportar el informe a PDF", e);
             mostrarAlerta("Error", "No se pudo exportar el PDF:\n" + e.getMessage(), Alert.AlertType.ERROR);
         }
     }
@@ -335,7 +337,7 @@ public class InformesController {
                 mostrarAlerta("Éxito", "Informe Excel exportado correctamente a:\n" + archivo.getAbsolutePath(), Alert.AlertType.INFORMATION);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+        	log.error("No se pudo exportar el informe a Excel", e);
             mostrarAlerta("Error", "No se pudo exportar el Excel:\n" + e.getMessage(), Alert.AlertType.ERROR);
         }
     }

@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Stream;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Pantalla "Respaldo de datos": abrir la carpeta de datos, exportar una copia
@@ -40,6 +41,7 @@ import java.util.stream.Stream;
  * reemplazar un archivo en uso). La copia se deja preparada y MisGastosLauncher la
  * aplica en el siguiente arranque, después de guardar un respaldo de lo actual.
  */
+@Slf4j
 @Component
 public class RespaldoController {
 
@@ -200,7 +202,7 @@ public class RespaldoController {
                     "La copia quedó guardada en:\n" + destino
                             + "\n\nPuedes llevarla a otro computador o guardarla como respaldo.");
         } catch (Exception e) {
-            e.printStackTrace();
+        	log.error("No se pudo exportar la copia de la base de datos", e);
             alerta(Alert.AlertType.ERROR, "No se pudo exportar", "Motivo: " + e.getMessage());
         }
     }
@@ -214,7 +216,7 @@ public class RespaldoController {
         try (Connection c = dataSource.getConnection(); Statement st = c.createStatement()) {
             st.execute("VACUUM INTO '" + destino.toString().replace("'", "''") + "'");
         } catch (Exception e) {
-            System.err.println("VACUUM INTO no disponible, se copia el archivo: " + e.getMessage());
+        	log.warn("VACUUM INTO no disponible, se copia el archivo: {}", e.getMessage());
             Files.copy(archivoBase(), destino, StandardCopyOption.REPLACE_EXISTING);
         }
     }
@@ -284,7 +286,7 @@ public class RespaldoController {
             alerta(Alert.AlertType.INFORMATION, "Copia lista para aplicar",
                     "Cierra el programa y vuelve a abrirlo. Al iniciar se cargarán los datos de la copia importada.");
         } catch (Exception e) {
-            e.printStackTrace();
+        	log.error("No se pudo importar la copia de la base de datos", e);
             try {
                 Files.deleteIfExists(preparado);
             } catch (Exception ignorada) {

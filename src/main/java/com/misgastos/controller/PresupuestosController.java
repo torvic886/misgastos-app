@@ -20,8 +20,10 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 
 /** Pantalla "Presupuestos": fija el tope mensual de cada categoría. Solo administradores. */
+@Slf4j
 @Component
 public class PresupuestosController {
 
@@ -108,7 +110,7 @@ public class PresupuestosController {
             presupuestoService.fijarTope(fila.categoriaId(), new BigDecimal(soloNumeros));
             recargar();
         } catch (Exception e) {
-            e.printStackTrace();
+        	log.error("No se pudo fijar el tope de la categoría {}", fila.categoriaId(), e);
             alerta(Alert.AlertType.ERROR, "No se pudo guardar", "Motivo: " + e.getMessage());
         }
     }
@@ -128,7 +130,7 @@ public class PresupuestosController {
             presupuestoService.quitarTope(fila.categoriaId());
             recargar();
         } catch (Exception e) {
-            e.printStackTrace();
+        	log.error("No se pudo quitar el tope de la categoría {}", fila.categoriaId(), e);
             alerta(Alert.AlertType.ERROR, "No se pudo quitar", "Motivo: " + e.getMessage());
         }
     }

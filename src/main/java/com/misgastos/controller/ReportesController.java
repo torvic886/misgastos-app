@@ -8,9 +8,11 @@ import javafx.stage.FileChooser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import lombok.extern.slf4j.Slf4j;
 import java.io.File;
 import java.time.LocalDate;
 
+@Slf4j
 @Component
 public class ReportesController {
 
@@ -42,7 +44,7 @@ public class ReportesController {
                 mostrarAlerta("Éxito", "Reporte Excel exportado correctamente a:\n" + archivo.getAbsolutePath(), Alert.AlertType.INFORMATION);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+        	log.error("No se pudo exportar el reporte de todos los gastos a Excel", e);
             mostrarAlerta("Error", "No se pudo exportar el reporte Excel: " + e.getMessage(), Alert.AlertType.ERROR);
         }
     }
@@ -56,7 +58,7 @@ public class ReportesController {
                 mostrarAlerta("Éxito", "Reporte PDF exportado correctamente a:\n" + archivo.getAbsolutePath(), Alert.AlertType.INFORMATION);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+        	log.error("No se pudo exportar el reporte de todos los gastos a PDF", e);
             mostrarAlerta("Error", "No se pudo exportar el reporte PDF: " + e.getMessage(), Alert.AlertType.ERROR);
         }
     }
@@ -79,7 +81,7 @@ public class ReportesController {
                 mostrarAlerta("Éxito", "Reporte Excel exportado correctamente a:\n" + archivo.getAbsolutePath(), Alert.AlertType.INFORMATION);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+        	log.error("No se pudo exportar el reporte por fechas {} a {} a Excel", inicio, fin, e);
             mostrarAlerta("Error", "No se pudo exportar el reporte Excel: " + e.getMessage(), Alert.AlertType.ERROR);
         }
     }
@@ -100,7 +102,7 @@ public class ReportesController {
                 mostrarAlerta("Éxito", "Reporte PDF exportado correctamente a:\n" + archivo.getAbsolutePath(), Alert.AlertType.INFORMATION);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+        	log.error("No se pudo exportar el reporte por fechas {} a {} a PDF", inicio, fin, e);
             mostrarAlerta("Error", "No se pudo exportar el reporte PDF: " + e.getMessage(), Alert.AlertType.ERROR);
         }
     }

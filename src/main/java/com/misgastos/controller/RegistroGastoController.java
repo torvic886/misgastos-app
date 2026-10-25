@@ -47,9 +47,11 @@ import java.util.Map;
 import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import com.misgastos.service.UsuarioService;
 import com.misgastos.service.PresupuestoService;
 
+@Slf4j
 @Component
 public class RegistroGastoController {
 
@@ -178,11 +180,11 @@ public class RegistroGastoController {
                 return;
             }
 
-            System.out.println("🔍 textProperty cambió: '" + oldText + "' -> '" + newText + "'");
+            log.debug("Texto del producto cambió");
 
             if (newText == null || !newText.equals(ultimoProductoAutocompletado)) {
                 productoNuevoYaConfigurado = false;
-                System.out.println("   🔄 Flag reseteado (producto diferente)");
+                log.debug("Flag reseteado (producto diferente)");
             }
 
             if (newText == null || newText.isBlank()) {
@@ -228,7 +230,7 @@ public class RegistroGastoController {
             }
 
             if (newVal != null && !newVal.isBlank()) {
-                System.out.println("✅ Producto seleccionado del autocomplete: '" + newVal + "'");
+                log.debug("Producto seleccionado del autocomplete");
 
                 autocompletarDatosPorProducto(newVal);
                 productosYaUsados.add(newVal.trim());
@@ -242,14 +244,13 @@ public class RegistroGastoController {
 
         String textoProducto = producto.trim();
 
-        System.out.println("🔄 Autocompletando datos para: '" + textoProducto + "'");
+        log.debug("Autocompletando datos del producto");
 
         gastoService.buscarUltimoGastoPorProducto(textoProducto).ifPresentOrElse(
             gasto -> {
-                System.out.println("   ✅ Gasto anterior encontrado");
-                System.out.println("      → Categoría: " + gasto.getCategoria().getNombre());
-                System.out.println("      → Subcategoría: " + gasto.getSubcategoria().getNombre());
-                System.out.println("      → Valor: " + gasto.getValorUnitario());
+            	log.debug("Gasto anterior encontrado");
+            	log.debug("Categoría: {} | Subcategoría: {}",
+            	        gasto.getCategoria().getNombre(), gasto.getSubcategoria().getNombre());
 
                 cargarCategoriasIniciales();
                 cmbCategoria.setValue(gasto.getCategoria());
@@ -269,13 +270,13 @@ public class RegistroGastoController {
 
                     // ✅ SIEMPRE mantener foco en producto
                     cmbProducto.requestFocus();
-                    System.out.println("   → Foco mantenido en Producto");
+                    log.debug("Foco mantenido en Producto");
                 });
 
                 productoNuevoYaConfigurado = true;
             },
             () -> {
-                System.out.println("   ⚠️ No se encontró gasto anterior para este producto");
+                log.debug("No se encontró gasto anterior para este producto");
                 productoNuevoYaConfigurado = false;
             }
         );
@@ -314,7 +315,7 @@ public class RegistroGastoController {
 
     @FXML
     public void handleGuardar() {
-        System.out.println("🟢 handleGuardar() ejecutado");
+    	log.debug("handleGuardar() ejecutado");
 
         String producto = obtenerProductoSeleccionado();
 
@@ -328,16 +329,15 @@ public class RegistroGastoController {
         try {
             if (!productoNuevoYaConfigurado) {
                 boolean productoExiste = gastoService.existeProducto(producto);
-                System.out.println("📦 Producto: " + producto);
-                System.out.println("   Existe: " + (productoExiste ? "SÍ" : "NO"));
+                log.debug("Producto existe: {}", productoExiste);
 
                 if (!productoExiste) {
-                    System.out.println("🆕 Producto nuevo, abriendo popup...");
+                	log.debug("Producto nuevo, abriendo popup");
 
                     SeleccionProductoNueva resultado = mostrarPopupProductoNuevo(producto);
 
                     if (resultado == null) {
-                        System.out.println("❌ Popup cancelado");
+                    	log.debug("Popup cancelado");
                         return;
                     }
 
@@ -350,9 +350,8 @@ public class RegistroGastoController {
                     ultimoProductoAutocompletado = producto;
                     productosYaUsados.add(producto); // ✅ Agregar al historial
 
-                    System.out.println("✅ Popup completado:");
-                    System.out.println("   → Categoría: " + resultado.categoria.getNombre());
-                    System.out.println("   → Subcategoría: " + resultado.subcategoria.getNombre());
+                    log.debug("Popup completado. Categoría: {} | Subcategoría: {}",
+                            resultado.categoria.getNombre(), resultado.subcategoria.getNombre());
 
                     txtCantidad.setText("");
 
@@ -369,7 +368,7 @@ public class RegistroGastoController {
                     }
                 }
             } else {
-                System.out.println("✅ Producto ya configurado anteriormente, omitiendo popup");
+            	log.debug("Producto ya configurado anteriormente, omitiendo popup");
             }
 
             if (cmbCategoria.getValue() == null) {
@@ -411,7 +410,7 @@ public class RegistroGastoController {
                     txtNombre.requestFocus();
                     return;
                 }
-                System.out.println("📋 Cédula ingresada: " + cedula);
+                log.debug("Cédula ingresada para el gasto");
             }
 
             // ✅ Limpiar formato de moneda antes de guardar
@@ -430,14 +429,14 @@ public class RegistroGastoController {
                 nombrePersona
             );
 
-            System.out.println("✅ Gasto guardado exitosamente");
+            log.info("Gasto guardado exitosamente");
 
             // CAMBIO 2: calcula el aviso de presupuesto y lo muestra junto al mensaje de éxito
             String aviso = null;
             try {
                 aviso = presupuestoService.avisoTrasGasto(guardado);
             } catch (Exception ex) {
-                System.err.println("No se pudo calcular el aviso de presupuesto: " + ex.getMessage());
+            	log.warn("No se pudo calcular el aviso de presupuesto", ex);
             }
             if (aviso == null) {
                 mostrarAlerta("Éxito", "Gasto registrado correctamente", Alert.AlertType.INFORMATION);
@@ -451,7 +450,7 @@ public class RegistroGastoController {
         } catch (NumberFormatException e) {
             mostrarAlerta("Error", "Cantidad o valor inválido", Alert.AlertType.ERROR);
         } catch (Exception e) {
-            e.printStackTrace();
+        	log.error("No se pudo guardar el gasto", e);
             mostrarAlerta("Error", "No se pudo guardar: " + e.getMessage(), Alert.AlertType.ERROR);
         }
     }
@@ -487,7 +486,7 @@ public class RegistroGastoController {
 
         Platform.runLater(() -> cmbProducto.requestFocus());
 
-        System.out.println("🧹 Formulario limpiado (historial de productos preservado)");
+        log.debug("Formulario limpiado (historial de productos preservado)");
     }
 
     private void cargarCategoriasIniciales() {
@@ -550,41 +549,16 @@ public class RegistroGastoController {
     }
 
     private void cargarUltimosGastos() {
-        System.out.println("\n══════════════════════════════════════════");
-        System.out.println("🔍 CARGANDO ÚLTIMOS GASTOS");
-        System.out.println("══════════════════════════════════════════");
-        System.out.println("👤 Usuario ID: " + usuarioId);
+        log.debug("Cargando últimos gastos para usuario {}", usuarioId);
 
         try {
                 List<Gasto> gastos = gastoService.obtenerUltimosGastosGeneral(100000);
 
-            System.out.println("📊 Total de gastos obtenidos: " + gastos.size());
-            System.out.println("──────────────────────────────────────────");
+            log.debug("Total de gastos obtenidos: {}", gastos.size());
 
             if (gastos.isEmpty()) {
-                System.out.println("⚠️  NO HAY GASTOS REGISTRADOS");
-                System.out.println("    Verifica que:");
-                System.out.println("    1. Existen registros en la tabla 'gastos'");
-                System.out.println("    2. El usuario_id = " + usuarioId + " tiene gastos");
-                System.out.println("    3. La consulta SQL está funcionando");
-            } else {
-                System.out.println("✅ GASTOS ENCONTRADOS:");
-                int contador = 1;
-                for (Gasto g : gastos) {
-                    System.out.println(String.format(
-                        "  %d. ID: %-3d | %s | %-20s | Cant: %-2d | $%s",
-                        contador++,
-                        g.getId(),
-                        g.getFecha(),
-                        g.getProducto(),
-                        g.getCantidad(),
-                        g.getValorTotal()
-                    ));
-                }
+                log.debug("No hay gastos registrados para el usuario {}", usuarioId);
             }
-
-            System.out.println("──────────────────────────────────────────");
-            System.out.println("🔄 Actualizando tabla en UI...");
 
             seleccionados.clear();
             gastosMaestro.setAll(gastos);
@@ -592,17 +566,11 @@ public class RegistroGastoController {
 
             actualizarTotal();
 
-            System.out.println("✅ Tabla actualizada correctamente");
-            System.out.println("   Items en tabla: " + tblUltimosGastos.getItems().size());
+            log.debug("Tabla actualizada: {} items", tblUltimosGastos.getItems().size());
 
         } catch (Exception e) {
-            System.err.println("❌ ERROR AL CARGAR GASTOS:");
-            System.err.println("   Mensaje: " + e.getMessage());
-            System.err.println("   Tipo: " + e.getClass().getName());
-            e.printStackTrace();
+            log.error("No se pudieron cargar los últimos gastos", e);
         }
-
-        System.out.println("══════════════════════════════════════════\n");
     }
 
     private SeleccionProductoNueva mostrarPopupProductoNuevo(String producto) {
@@ -753,7 +721,7 @@ public class RegistroGastoController {
 
                 return new SeleccionProductoNueva(cat, sub);
             } catch (Exception e) {
-                e.printStackTrace();
+            	log.error("No se pudo crear la categoría o subcategoría del producto nuevo", e);
                 return null;
             }
         });
@@ -774,16 +742,16 @@ public class RegistroGastoController {
 
         if (cmbProducto.getValue() != null && !cmbProducto.getValue().isBlank()) {
             producto = cmbProducto.getValue();
-            System.out.println("📦 Producto obtenido de ComboBox.getValue(): '" + producto + "'");
+            log.debug("Producto obtenido de ComboBox.getValue()");
         }
         else if (cmbProducto.getEditor().getText() != null && !cmbProducto.getEditor().getText().isBlank()) {
             producto = cmbProducto.getEditor().getText();
-            System.out.println("📦 Producto obtenido de Editor.getText(): '" + producto + "'");
+            log.debug("Producto obtenido de Editor.getText()");
         }
 
         if (producto != null) {
             producto = producto.trim().replaceAll("\\s+", " ");
-            System.out.println("   → Normalizado: '" + producto + "'");
+            log.debug("Producto normalizado");
         }
 
         return producto;
@@ -871,11 +839,11 @@ public class RegistroGastoController {
 
             } catch (NumberFormatException e) {
                 // Si hay error, no hacer nada
-                System.err.println("Error formateando: " + e.getMessage());
+            	log.warn("Error formateando el valor unitario: {}", e.getMessage());
             }
         });
 
-        System.out.println("✅ Formato de moneda configurado");
+        log.debug("Formato de moneda configurado");
     }
 
     // ✅ NUEVO: Contar separadores de miles en una cadena
@@ -936,7 +904,7 @@ public class RegistroGastoController {
             txtNombre.setEditable(true);
         }
 
-        System.out.println("🔍 Campo cedula: " + (mostrar ? "VISIBLE" : "OCULTO"));
+        log.debug("Campo cédula: {}", mostrar ? "VISIBLE" : "OCULTO");
     }
 
     private static class SeleccionProductoNueva {
@@ -1158,7 +1126,7 @@ public class RegistroGastoController {
         content.putString(clipboardString.toString());
         Clipboard.getSystemClipboard().setContent(content);
 
-        System.out.println("📋 Copiadas " + posList.size() + " celdas");
+        log.debug("Copiadas {} celdas", posList.size());
     }
 
     // ✅ LLAMAR este método en initialize(), agregar esta línea:

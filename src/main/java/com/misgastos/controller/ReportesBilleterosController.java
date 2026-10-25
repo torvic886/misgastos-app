@@ -11,12 +11,15 @@ import javafx.stage.FileChooser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.io.File;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 public class ReportesBilleterosController {
 
@@ -50,7 +53,7 @@ public class ReportesBilleterosController {
 
     @FXML
     public void initialize() {
-        System.out.println("📊 Inicializando Reportes de Billeteros");
+    	log.debug("Inicializando reportes de billeteros");
         
         // Configurar fechas por defecto
         LocalDate hoy = LocalDate.now();
@@ -99,13 +102,11 @@ public class ReportesBilleterosController {
             return;
         }
 
-        // Aquí deberías cargar datos reales desde el servicio
-        // Por ahora usamos datos de ejemplo
-        ObservableList<ReporteRow> datos = generarDatosEjemploMensual(inicio, fin);
+        ObservableList<ReporteRow> datos = aFilas(reporteService.vistaPreviaMensual(inicio, fin));
         tblVistaPrevia.setItems(datos);
         actualizarTotales(datos);
-        
-        lblRangoFechas.setText(String.format("Reporte Mensual: %s - %s", 
+
+        lblRangoFechas.setText(String.format("Reporte Mensual: %s - %s",
             inicio.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
             fin.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))));
     }
@@ -119,13 +120,11 @@ public class ReportesBilleterosController {
             return;
         }
 
-        // Aquí deberías cargar datos reales desde el servicio
-        // Por ahora usamos datos de ejemplo
-        ObservableList<ReporteRow> datos = generarDatosEjemploDiario(inicio, fin);
+        ObservableList<ReporteRow> datos = aFilas(reporteService.vistaPreviaDiario(inicio, fin));
         tblVistaPrevia.setItems(datos);
         actualizarTotales(datos);
-        
-        lblRangoFechas.setText(String.format("Reporte Diario: %s - %s", 
+
+        lblRangoFechas.setText(String.format("Reporte Diario: %s - %s",
             inicio.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
             fin.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))));
     }
@@ -137,51 +136,12 @@ public class ReportesBilleterosController {
         lblRangoFechas.setText("Seleccione fechas y presione 'Vista Previa' para generar el reporte");
     }
 
-    private ObservableList<ReporteRow> generarDatosEjemploMensual(LocalDate inicio, LocalDate fin) {
+    private ObservableList<ReporteRow> aFilas(List<ReporteBilleteroService.FilaVista> filas) {
         ObservableList<ReporteRow> datos = FXCollections.observableArrayList();
-        
-        // Generar datos de ejemplo por mes
-        LocalDate fecha = inicio.withDayOfMonth(1);
-        while (!fecha.isAfter(fin)) {
-            String periodo = fecha.format(DateTimeFormatter.ofPattern("MMMM yyyy", new Locale("es")));
-            datos.add(new ReporteRow(
-                periodo,
-                15000000 + (Math.random() * 5000000),
-                8000000 + (Math.random() * 3000000),
-                7000000 + (Math.random() * 2000000),
-                1200000 + (Math.random() * 300000),
-                500000 + (Math.random() * 200000),
-                800000 + (Math.random() * 200000),
-                2500000 + (Math.random() * 500000),
-                4500000 + (Math.random() * 1000000)
-            ));
-            fecha = fecha.plusMonths(1);
+        for (ReporteBilleteroService.FilaVista f : filas) {
+            datos.add(new ReporteRow(f.periodo(), f.bill(), f.premios(), f.diferencia(),
+                    f.gastosLocal(), f.pagosManuel(), f.inversion(), f.gastoTotal(), f.utilidadNeta()));
         }
-        
-        return datos;
-    }
-
-    private ObservableList<ReporteRow> generarDatosEjemploDiario(LocalDate inicio, LocalDate fin) {
-        ObservableList<ReporteRow> datos = FXCollections.observableArrayList();
-        
-        // Generar datos de ejemplo por día
-        LocalDate fecha = inicio;
-        while (!fecha.isAfter(fin)) {
-            String periodo = fecha.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-            datos.add(new ReporteRow(
-                periodo,
-                500000 + (Math.random() * 200000),
-                250000 + (Math.random() * 100000),
-                250000 + (Math.random() * 100000),
-                40000 + (Math.random() * 10000),
-                15000 + (Math.random() * 5000),
-                25000 + (Math.random() * 10000),
-                80000 + (Math.random() * 20000),
-                170000 + (Math.random() * 50000)
-            ));
-            fecha = fecha.plusDays(1);
-        }
-        
         return datos;
     }
 
@@ -340,7 +300,7 @@ public class ReportesBilleterosController {
     }
     
     private void mostrarError(String mensaje, Exception e) {
-        e.printStackTrace();
+        log.error(mensaje, e);
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Error");
         alert.setHeaderText(mensaje);
