@@ -354,6 +354,11 @@ public class RegistroGastoController {
                             resultado.categoria.getNombre(), resultado.subcategoria.getNombre());
 
                     txtCantidad.setText("");
+                    
+                    if (txtCedula.isVisible()) {
+                        txtCedula.requestFocus();
+                        return;
+                    }
 
                     if (txtCantidad.getText() == null || txtCantidad.getText().trim().isEmpty()) {
                         mostrarAlerta("Validación", "Ingrese la cantidad", Alert.AlertType.WARNING);
@@ -885,8 +890,10 @@ public class RegistroGastoController {
             String nombreCategoria = categoria.getNombre();
             String nombreSubcategoria = subcategoria.getNombre();
 
+            String sub = nombreSubcategoria.toLowerCase();
             mostrar = nombreCategoria.equalsIgnoreCase("Beneficios Clientes")
-                      && nombreSubcategoria.toLowerCase().contains("bono");
+                      && (sub.contains("bono") || sub.contains("parqueo")
+                          || sub.contains("parqueadero"));
         }
 
         lblCedula.setVisible(mostrar);
@@ -1064,6 +1071,11 @@ public class RegistroGastoController {
             b.setStyle(seleccionados.containsKey(c) ? ESTILO_FILTRO_ACTIVO : ESTILO_FILTRO_NORMAL));
         actualizarTotal();
         actualizarColumnaBeneficiario();
+        Platform.runLater(() -> {
+            tblUltimosGastos.scrollToColumnIndex(0);
+            tblUltimosGastos.scrollToColumnIndex(0);
+            tblUltimosGastos.scrollTo(0);
+        });
     }
 
     private String textoBeneficiario(Gasto g) {

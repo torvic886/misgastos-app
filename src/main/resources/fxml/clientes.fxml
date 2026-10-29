@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="12"
+      styleClass="content"
+      xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.misgastos.controller.ClientesController">
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <VBox spacing="10" VBox.vgrow="ALWAYS" styleClass="table-card" style="-fx-padding: 16;">
+
+        <Label text="Clientes"
+               style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+        <Label text="Clientes para bonos y parqueaderos. Al importar un Excel, la cédula no se repite."
+               style="-fx-text-fill: #64748b;"/>
+
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Button text="Importar clientes desde Excel" styleClass="primary-button" onAction="#handleImportar"/>
+                        <Button text="Eliminar seleccionados" styleClass="secondary-button" onAction="#handleEliminar"/>
+            <TextField fx:id="txtBuscar" promptText="Buscar por cédula o nombre" prefWidth="260"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="lblResumen" text="" style="-fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+        </HBox>
+
+        <TableView fx:id="tablaClientes" VBox.vgrow="ALWAYS" style="-fx-fixed-cell-size: 34px;">
+            <columns>
+                <TableColumn fx:id="colCedula" text="Cédula" prefWidth="160" minWidth="120"/>
+                <TableColumn fx:id="colNombre" text="Nombre" prefWidth="420" minWidth="200"/>
+            </columns>
+        </TableView>
+
+    </VBox>
+</VBox>

@@ -27,6 +27,7 @@ import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.util.*;
+import lombok.extern.slf4j.Slf4j;
 import java.util.stream.Collectors;
 import com.misgastos.service.diseno.ExcelEstilo;
 import com.misgastos.service.diseno.HojaExcel;
@@ -47,6 +48,7 @@ import com.misgastos.service.diseno.PdfEstilo.Fila;
 import java.text.Normalizer;
 import java.util.Locale;
 
+@Slf4j
 @Service
 public class InformeService {
 
@@ -2362,5 +2364,194 @@ public class InformeService {
     private String truncar(String texto, int max) {
         if (texto == null) return "";
         return texto.length() > max ? texto.substring(0, max - 3) + "..." : texto;
+    }
+    
+    // ==================== INFORME CATEGORÍA Y PRODUCTO ====================
+
+    /** Agrupa categoría > producto (suma por nombre normalizado), ordenado de mayor a menor. */
+    private Map<String, Map<String, BigDecimal>> agruparCategoriaProducto(List<Gasto> gastos) {
+        log.debug("Agrupando {} gastos por categoría y producto", gastos.size());
+        int sinProducto = 0;
+    	Map<String, Map<String, BigDecimal>> porCategoria = new HashMap<>();
+        Map<String, Map<String, String>> nombres = new HashMap<>();
+
+        for (Gasto g : gastos) {
+            String categoria = g.getCategoria().getNombre();
+            String producto = g.getProducto() != null && !g.getProducto().trim().isEmpty()
+                ? g.getProducto().trim() : "Producto no especificado";
+            String clave = normalizarProducto(producto);
+            String nombre = nombres.computeIfAbsent(categoria, k -> new HashMap<>())
+                .computeIfAbsent(clave, k -> producto);
+            porCategoria.computeIfAbsent(categoria, k -> new HashMap<>())
+                .merge(nombre, g.getValorTotal(), BigDecimal::add);
+        }
+
+        Map<String, Map<String, BigDecimal>> ordenado = new LinkedHashMap<>();
+        porCategoria.entrySet().stream()
+            .sorted((a, b) -> sumarMontos(b.getValue()).compareTo(sumarMontos(a.getValue())))
+            .forEach(e -> {
+                Map<String, BigDecimal> productos = new LinkedHashMap<>();
+                e.getValue().entrySet().stream()
+                    .sorted(Map.Entry.<String, BigDecimal>comparingByValue().reversed())
+                    .forEach(p -> productos.put(p.getKey(), p.getValue()));
+                ordenado.put(e.getKey(), productos);
+            });
+        return ordenado;
+    }
+
+    // ---------- Vista previa ----------
+
+    public String generarInformeCategoriaProducto(LocalDate inicio, LocalDate fin) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("INFORME DE GASTOS POR CATEGORÍA Y PRODUCTO\n");
+        sb.append(formatearFecha(inicio)).append(" - ").append(formatearFecha(fin)).append("\n");
+        sb.append("=".repeat(90)).append("\n\n");
+
+        List<Gasto> gastos = gastoService.listarPorPeriodo(inicio, fin);
+        if (gastos.isEmpty()) {
+            sb.append("No hay gastos registrados en este período.\n");
+            return sb.toString();
+        }
+
+        Map<String, Map<String, BigDecimal>> datos = agruparCategoriaProducto(gastos);
+        BigDecimal totalGeneral = sumarGastos(gastos);
+
+        sb.append(String.format("%-26s %-30s %16s %16s%n", "CATEGORÍA", "PRODUCTO", "VALOR", "TOTAL"));
+        sb.append("-".repeat(90)).append("\n");
+
+        for (Map.Entry<String, Map<String, BigDecimal>> cat : datos.entrySet()) {
+            sb.append(String.format("%-26s %-30s %16s %16s%n",
+                truncar(cat.getKey().toUpperCase(), 26), "", "", formatearMoneda(sumarMontos(cat.getValue()))));
+            for (Map.Entry<String, BigDecimal> prod : cat.getValue().entrySet()) {
+                sb.append(String.format("%-26s %-30s %16s %16s%n",
+                    "", truncar(prod.getKey(), 30), formatearMoneda(prod.getValue()), ""));
+            }
+        }
+
+        sb.append("=".repeat(90)).append("\n");
+        sb.append(String.format("%-26s %-30s %16s %16s%n", "TOTAL GENERAL", "", "", formatearMoneda(totalGeneral)));
+        return sb.toString();
+    }
+
+    // ---------- PDF ----------
+
+    public void exportarCategoriaProductoPDF(LocalDate inicio, LocalDate fin, String rutaArchivo) throws Exception {
+        List<Gasto> gastos = gastoService.listarPorPeriodo(inicio, fin);
+
+        try (PdfEstilo pdf = new PdfEstilo(rutaArchivo, "Informe por categoría y producto", false)) {
+            pdf.titulo("Informe de gastos por categoría y producto",
+                Diseno.fecha(inicio) + " al " + Diseno.fecha(fin));
+
+            if (gastos.isEmpty()) {
+                pdf.nota("No hay gastos registrados en este período.");
+                return;
+            }
+
+            Map<String, Map<String, BigDecimal>> datos = agruparCategoriaProducto(gastos);
+            BigDecimal totalGeneral = sumarGastos(gastos);
+            int totalProductos = datos.values().stream().mapToInt(Map::size).sum();
+
+            pdf.indicadores(
+                new String[] {"Total gastado", Diseno.moneda(totalGeneral)},
+                new String[] {"Categorías", Diseno.entero(datos.size())},
+                new String[] {"Productos", Diseno.entero(totalProductos)},
+                new String[] {"Transacciones", Diseno.entero(gastos.size())});
+
+            pdf.seccion("Gasto por categoría y producto");
+            Table tabla = pdf.tabla(3.2f, 3.8f, 2f, 2f);
+            pdf.encabezado(tabla,
+                new String[] {"Categoría", "Producto", "Valor", "Total"},
+                new TextAlignment[] {TextAlignment.LEFT, TextAlignment.LEFT, TextAlignment.RIGHT, TextAlignment.RIGHT});
+
+            for (Map.Entry<String, Map<String, BigDecimal>> cat : datos.entrySet()) {
+                tabla.addCell(pdf.celda(cat.getKey(), TextAlignment.LEFT, Fila.GRUPO));
+                tabla.addCell(pdf.celda("", TextAlignment.LEFT, Fila.GRUPO));
+                tabla.addCell(pdf.celda("", TextAlignment.RIGHT, Fila.GRUPO));
+                tabla.addCell(pdf.celda(Diseno.moneda(sumarMontos(cat.getValue())), TextAlignment.RIGHT, Fila.GRUPO));
+
+                boolean zebra = false;
+                for (Map.Entry<String, BigDecimal> prod : cat.getValue().entrySet()) {
+                    Fila tipo = zebra ? Fila.ZEBRA : Fila.DATO;
+                    tabla.addCell(pdf.celda("", TextAlignment.LEFT, tipo));
+                    tabla.addCell(pdf.celda(prod.getKey(), TextAlignment.LEFT, tipo));
+                    tabla.addCell(pdf.celda(Diseno.moneda(prod.getValue()), TextAlignment.RIGHT, tipo));
+                    tabla.addCell(pdf.celda("", TextAlignment.RIGHT, tipo));
+                    zebra = !zebra;
+                }
+            }
+
+            tabla.addCell(pdf.celda("Total general", TextAlignment.LEFT, Fila.TOTAL));
+            tabla.addCell(pdf.celda("", TextAlignment.LEFT, Fila.TOTAL));
+            tabla.addCell(pdf.celda("", TextAlignment.RIGHT, Fila.TOTAL));
+            tabla.addCell(pdf.celda(Diseno.moneda(totalGeneral), TextAlignment.RIGHT, Fila.TOTAL));
+
+            pdf.agregar(tabla);
+        }
+    }
+
+    // ---------- Excel ----------
+
+    public void exportarCategoriaProductoExcel(LocalDate inicio, LocalDate fin, String rutaArchivo) throws Exception {
+        List<Gasto> gastos = gastoService.listarPorPeriodo(inicio, fin);
+        String periodo = Diseno.fecha(inicio) + " al " + Diseno.fecha(fin);
+        String titulo = "Informe de gastos por categoría y producto";
+
+        if (gastos.isEmpty()) {
+            guardarExcelVacio("Categoría y producto", titulo, periodo,
+                "No hay gastos registrados en este período.", rutaArchivo);
+            return;
+        }
+
+        Map<String, Map<String, BigDecimal>> datos = agruparCategoriaProducto(gastos);
+        BigDecimal totalGeneral = sumarGastos(gastos);
+        int totalProductos = datos.values().stream().mapToInt(Map::size).sum();
+
+        ExcelEstilo estilos = new ExcelEstilo();
+        HojaExcel hoja = new HojaExcel(estilos, "Categoría y producto", 4, false);
+        hoja.titulo(titulo, periodo);
+
+        hoja.estadistica("Total gastado", Diseno.moneda(totalGeneral));
+        hoja.estadistica("Categorías", Diseno.entero(datos.size()));
+        hoja.estadistica("Productos", Diseno.entero(totalProductos));
+        hoja.estadistica("Transacciones", Diseno.entero(gastos.size()));
+
+        hoja.espacio();
+        hoja.seccion("Gasto por categoría y producto");
+        HorizontalAlignment izq = HorizontalAlignment.LEFT;
+        HorizontalAlignment der = HorizontalAlignment.RIGHT;
+        hoja.encabezado(
+            new String[] {"Categoría", "Producto", "Valor", "Total"},
+            new HorizontalAlignment[] {izq, izq, der, der});
+
+        int primeraDatos = hoja.siguienteFila();
+        for (Map.Entry<String, Map<String, BigDecimal>> cat : datos.entrySet()) {
+            int filaGrupo = hoja.siguienteFila();
+            int primeraProd = filaGrupo + 1;
+            int ultimaProd = filaGrupo + cat.getValue().size();
+
+            HojaExcel.FilaExcel grupo = hoja.fila(ExcelEstilo.Rol.GRUPO);
+            grupo.texto(cat.getKey());
+            grupo.vacio();
+            grupo.vacio();
+            grupo.formulaMoneda("SUM(" + HojaExcel.ref(2, primeraProd) + ":" + HojaExcel.ref(2, ultimaProd) + ")");
+
+            for (Map.Entry<String, BigDecimal> prod : cat.getValue().entrySet()) {
+                HojaExcel.FilaExcel fila = hoja.fila(ExcelEstilo.Rol.DATO);
+                fila.vacio();
+                fila.texto(prod.getKey());
+                fila.moneda(prod.getValue());
+                fila.vacio();
+            }
+        }
+        int ultimaDatos = hoja.siguienteFila() - 1;
+
+        HojaExcel.FilaExcel total = hoja.fila(ExcelEstilo.Rol.TOTAL);
+        total.texto("Total general");
+        total.vacio();
+        total.vacio();
+        total.formulaMoneda("SUM(" + HojaExcel.ref(2, primeraDatos) + ":" + HojaExcel.ref(2, ultimaDatos) + ")");
+
+        hoja.terminar(false, false);
+        estilos.guardar(rutaArchivo);
     }
 }

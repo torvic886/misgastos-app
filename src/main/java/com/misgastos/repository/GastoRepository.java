@@ -103,6 +103,10 @@ public interface GastoRepository extends JpaRepository<Gasto, Long> {
 	@Query(value = "SELECT COALESCE(SUM(valor_total), 0) FROM gastos WHERE fecha = :fecha AND categoria_id = :categoriaId AND fecha_eliminacion IS NULL", nativeQuery = true)
 	BigDecimal sumByFechaAndCategoriaId(@Param("fecha") String fecha, @Param("categoriaId") Long categoriaId);
 
+    // Días con al menos un gasto activo en el rango (fechas guardadas como texto AAAA-MM-DD)
+    @Query(value = "SELECT DISTINCT fecha FROM gastos WHERE fecha BETWEEN :inicio AND :fin AND fecha_eliminacion IS NULL ORDER BY fecha", nativeQuery = true)
+    List<String> fechasConGastos(@Param("inicio") String inicio, @Param("fin") String fin);
+
 	@Query("""
 			    SELECT g.nombrePersona FROM Gasto g
 			    WHERE g.cedula = :cedula AND g.nombrePersona IS NOT NULL AND g.nombrePersona <> ''
@@ -128,15 +132,16 @@ public interface GastoRepository extends JpaRepository<Gasto, Long> {
 	@Modifying(clearAutomatically = true, flushAutomatically = true)
 	@Query(value = "DELETE FROM gastos WHERE fecha_eliminacion IS NOT NULL", nativeQuery = true)
 	int vaciarPapelera();
-	
-    // Productos de gastos activos (sin los de la papelera)
-    @Query("SELECT DISTINCT g.producto FROM Gasto g WHERE g.producto IS NOT NULL")
-    List<String> productosActivos();
 
-    // Todas las escrituras guardadas (incluye papelera), de la más usada a la menos usada
-    @Query(value = "SELECT producto FROM gastos WHERE producto IS NOT NULL GROUP BY producto ORDER BY COUNT(*) DESC, producto", nativeQuery = true)
-    List<String> productosPorFrecuencia();
+	// Productos de gastos activos (sin los de la papelera)
+	@Query("SELECT DISTINCT g.producto FROM Gasto g WHERE g.producto IS NOT NULL")
+	List<String> productosActivos();
 
-    List<Gasto> findByProductoInOrderByFechaDescHoraDesc(Collection<String> productos);
+	// Todas las escrituras guardadas (incluye papelera), de la más usada a la menos
+	// usada
+	@Query(value = "SELECT producto FROM gastos WHERE producto IS NOT NULL GROUP BY producto ORDER BY COUNT(*) DESC, producto", nativeQuery = true)
+	List<String> productosPorFrecuencia();
+
+	List<Gasto> findByProductoInOrderByFechaDescHoraDesc(Collection<String> productos);
 
 }

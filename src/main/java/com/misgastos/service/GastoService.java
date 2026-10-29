@@ -11,6 +11,9 @@ import com.misgastos.repository.SubcategoriaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.misgastos.repository.SubcategoriaRepository;
+import com.misgastos.model.Cliente;
+import com.misgastos.repository.ClienteRepository;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
@@ -29,6 +32,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import com.misgastos.util.ProductoNormalizador;
 import java.util.LinkedHashMap;
+
 
 @Service
 @Transactional
@@ -51,6 +55,10 @@ public class GastoService {
     @Autowired
     private AuditoriaService auditoriaService;
 
+
+    @Autowired
+    private ClienteRepository clienteRepository;
+    
     public Gasto registrarGasto(Long usuarioId, Long categoriaId, Long subcategoriaId, String producto,
             Integer cantidad, BigDecimal valorUnitario, String notas, String cedula, String nombrePersona) {
 
@@ -76,6 +84,8 @@ public class GastoService {
         gasto.setNotas(notas);
         gasto.setCedula(cedula);
         gasto.setNombrePersona(nombrePersona);
+
+        guardarClienteSiNoExiste(cedula, nombrePersona);
 
         return gastoRepository.save(gasto);
     }
@@ -250,7 +260,25 @@ public class GastoService {
     public Optional<String> buscarNombrePorCedula(String cedula) {
         if (cedula == null || cedula.isBlank())
             return Optional.empty();
-        return gastoRepository.ultimoNombrePorCedula(cedula.trim());
+        String ced = cedula.trim();
+        // Primero la tabla de clientes; si no está, el historial de bonos como antes
+        Optional<String> deClientes = clienteRepository.findById(ced).map(Cliente::getNombre);
+        if (deClientes.isPresent())
+            return deClientes;
+        return gastoRepository.ultimoNombrePorCedula(ced);
+    }
+
+    /** Crea el cliente solo si no existe; nunca pisa el nombre de uno que ya está. */
+    private void guardarClienteSiNoExiste(String cedula, String nombre) {
+        if (cedula == null || cedula.isBlank() || nombre == null || nombre.isBlank())
+            return;
+        String ced = cedula.trim();
+        if (!clienteRepository.existsById(ced)) {
+            Cliente c = new Cliente();
+            c.setCedula(ced);
+            c.setNombre(nombre.trim());
+            clienteRepository.save(c);
+        }
     }
 
     public List<Gasto> listarEliminados() {

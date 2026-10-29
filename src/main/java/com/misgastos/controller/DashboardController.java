@@ -72,6 +72,8 @@ public class DashboardController {
     @Autowired
     private UsuarioService usuarioService;
 
+    @FXML private Button btnClientes;
+    
     private String username;
     private String rol;
     private Button botonActivo = null;
@@ -428,6 +430,13 @@ public class DashboardController {
         log.debug("Navegando a Reportes de Billeteros");
         establecerBotonActivo(btnReportesBilleteros);
         cargarVista("/fxml/reportes-billeteros.fxml");
+    }
+    
+    @FXML
+    public void handleClientes() {
+        log.debug("Navegando a Clientes");
+        establecerBotonActivo(btnClientes);
+        cargarVista("/fxml/clientes.fxml");
     }
 
     @FXML

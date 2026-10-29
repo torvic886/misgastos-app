@@ -61,6 +61,22 @@
                 <TextField fx:id="txtProducto" 
                            promptText="Buscar producto..." styleClass="search-field"/>
             </VBox>
+            
+                        <!-- Filtros del informe de parqueaderos y bonos -->
+            <VBox fx:id="boxFiltrosClientes" spacing="8" visible="false" managed="false">
+                <VBox spacing="5">
+                    <Label text="Tipo:" style="-fx-font-size: 11px;"/>
+                    <ComboBox fx:id="cmbTipoCliente" maxWidth="Infinity"/>
+                </VBox>
+                <VBox spacing="5">
+                    <Label text="Ordenar por:" style="-fx-font-size: 11px;"/>
+                    <ComboBox fx:id="cmbOrdenCliente" maxWidth="Infinity"/>
+                </VBox>
+                <VBox spacing="5">
+                    <Label text="Buscar (opcional):" style="-fx-font-size: 11px;"/>
+                    <TextField fx:id="txtBuscarCliente" promptText="Cédula o nombre..." styleClass="search-field"/>
+                </VBox>
+            </VBox>
 
             <!-- Botones de Acción -->
             <VBox spacing="8" style="-fx-padding: 5 0 0 0;">

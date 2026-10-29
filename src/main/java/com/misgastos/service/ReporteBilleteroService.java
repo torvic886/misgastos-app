@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.FillPatternType;
@@ -168,45 +169,51 @@ public class ReporteBilleteroService {
     
     private List<FilaReporte> generarDatosReporteDiario(LocalDate fechaInicio, LocalDate fechaFin) {
         List<FilaReporte> filas = new ArrayList<>();
-        
-        // 1. Buscar billeteros en el rango
+
+        // 1. Billeteros del rango, agrupados por fecha
         List<Billetero> billeteros = billeteroRepository.findByFechaBetweenOrderByFechaDesc(fechaInicio, fechaFin);
-        billeteros.sort(Comparator.comparing(Billetero::getFecha));
-        
-        // 2. Agrupar billeteros por fecha
-        Map<LocalDate, List<Billetero>> billeteroPorFecha = new TreeMap<>();
+        TreeMap<LocalDate, List<Billetero>> billeteroPorFecha = new TreeMap<>();
         for (Billetero b : billeteros) {
             billeteroPorFecha.computeIfAbsent(b.getFecha(), k -> new ArrayList<>()).add(b);
         }
-        
-        // 🆕 3. GENERAR TODOS LOS DÍAS DEL RANGO (aunque no tengan billeteros)
-        LocalDate fechaActual = fechaInicio;
-        
-        // 4. Iterar por TODOS los días del rango
-        while (!fechaActual.isAfter(fechaFin)) {
-            // Obtener billeteros del día (puede ser lista vacía si no hay)
+
+        // Sin billeteros en el rango no hay nada que mostrar
+        if (billeteroPorFecha.isEmpty()) {
+            return filas;
+        }
+
+        // 2. El reporte llega hasta el último día con billetero
+        LocalDate ultimoDia = billeteroPorFecha.lastKey();
+
+        // 3. Días con movimiento hasta ese día: los que tienen billetero o gasto
+        TreeSet<LocalDate> dias = new TreeSet<>(billeteroPorFecha.keySet());
+        for (String f : gastoRepository.fechasConGastos(fechaInicio.toString(), ultimoDia.toString())) {
+            dias.add(LocalDate.parse(f));
+        }
+
+        // 4. Una fila por cada día con movimiento
+        for (LocalDate fechaActual : dias) {
             List<Billetero> billeterosDelDia = billeteroPorFecha.getOrDefault(fechaActual, new ArrayList<>());
-            
-            // Calcular sumas de billeteros (será 0 si no hay)
+
             long billDia = billeterosDelDia.stream()
                 .mapToLong(b -> b.getBilletero().longValue())
                 .sum();
-            
+
             long premiosDia = billeterosDelDia.stream()
                 .mapToLong(b -> b.getPremios().longValue())
                 .sum();
-            
+
             long diferencia = billDia - premiosDia;
-            
+
             long pagosManuelVal = obtenerValor(gastoRepository.sumByFechaAndCategoriaId(fechaActual.toString(), 14L));
             long inversionVal = obtenerValor(gastoRepository.sumByFechaAndCategoriaId(fechaActual.toString(), 10L));
             long gastosTotalesVal = obtenerValor(gastoRepository.sumByFecha(fechaActual));
-            
+
             long gastosLocal = gastosTotalesVal - pagosManuelVal - inversionVal;
             long gastoTotal = gastosLocal + pagosManuelVal + inversionVal;
             long utilidadNeta = diferencia - gastoTotal;
-            
-            FilaReporte fila = new FilaReporte(
+
+            filas.add(new FilaReporte(
                 fechaActual.format(dateFormatter),
                 billDia,
                 premiosDia,
@@ -216,15 +223,10 @@ public class ReporteBilleteroService {
                 inversionVal,
                 gastoTotal,
                 utilidadNeta
-            );
-            
-            filas.add(fila);
-            
-            // 🆕 Avanzar al siguiente día
-            fechaActual = fechaActual.plusDays(1);
+            ));
         }
-        
-        return filas;
+
+        return acumular(filas);
     }
     
     // ==================== VISTA PREVIA (mismos datos que Excel y PDF) ====================
@@ -234,34 +236,62 @@ public class ReporteBilleteroService {
             long gastoTotal, long utilidadNeta) {
 }
 
-public List<FilaVista> vistaPreviaMensual(LocalDate fechaInicio, LocalDate fechaFin) {
-return generarDatosReporteMensual(fechaInicio, fechaFin).stream().map(this::aVista).toList();
-}
-
-public List<FilaVista> vistaPreviaDiario(LocalDate fechaInicio, LocalDate fechaFin) {
-return generarDatosReporteDiario(fechaInicio, fechaFin).stream().map(this::aVista).toList();
-}
-
-private FilaVista aVista(FilaReporte f) {
-return new FilaVista(f.periodo, f.acumuladoBill, f.acumuladoPremios, f.diferencia,
-f.gastosLocal, f.pagosManuel, f.inversion, f.gastoTotal, f.utilidadNeta);
-}
+	public List<FilaVista> vistaPreviaMensual(LocalDate fechaInicio, LocalDate fechaFin) {
+	return generarDatosReporteMensual(fechaInicio, fechaFin).stream().map(this::aVista).toList();
+	}
+	
+	public List<FilaVista> vistaPreviaDiario(LocalDate fechaInicio, LocalDate fechaFin) {
+	return generarDatosReporteDiario(fechaInicio, fechaFin).stream().map(this::aVista).toList();
+	}
+	
+	private FilaVista aVista(FilaReporte f) {
+	return new FilaVista(f.periodo, f.acumuladoBill, f.acumuladoPremios, f.diferencia,
+	f.gastosLocal, f.pagosManuel, f.inversion, f.gastoTotal, f.utilidadNeta);
+	}
     
+    /** Convierte los valores de cada día en acumulados: cada fila suma su día más todos los anteriores. */
+    private List<FilaReporte> acumular(List<FilaReporte> dias) {
+        List<FilaReporte> resultado = new ArrayList<>();
+        long bill = 0;
+        long premios = 0;
+        long diferencia = 0;
+        long gastosLocal = 0;
+        long pagosManuel = 0;
+        long inversion = 0;
+        long gastoTotal = 0;
+        long utilidadNeta = 0;
+
+        for (FilaReporte d : dias) {
+            bill += d.acumuladoBill;
+            premios += d.acumuladoPremios;
+            diferencia += d.diferencia;
+            gastosLocal += d.gastosLocal;
+            pagosManuel += d.pagosManuel;
+            inversion += d.inversion;
+            gastoTotal += d.gastoTotal;
+            utilidadNeta += d.utilidadNeta;
+
+            resultado.add(new FilaReporte(d.periodo, bill, premios, diferencia,
+                    gastosLocal, pagosManuel, inversion, gastoTotal, utilidadNeta));
+        }
+        return resultado;
+    }
+	
     // ==================== EXPORTAR A EXCEL ====================
     
     public void exportarReporteMensualExcel(LocalDate fechaInicio, LocalDate fechaFin, String rutaArchivo) throws Exception {
         List<FilaReporte> datos = generarDatosReporteMensual(fechaInicio, fechaFin);
         String subtitulo = "Período: " + fechaInicio.format(dateFormatter) + " al " + fechaFin.format(dateFormatter);
-        exportarExcel(datos, rutaArchivo, "REPORTE MENSUAL BILLETEROS", subtitulo);
+        exportarExcel(datos, rutaArchivo, "REPORTE MENSUAL BILLETEROS", subtitulo, false);
     }
     
     public void exportarReporteDiarioExcel(LocalDate fechaInicio, LocalDate fechaFin, String rutaArchivo) throws Exception {
         List<FilaReporte> datos = generarDatosReporteDiario(fechaInicio, fechaFin);
         String subtitulo = "Período: " + fechaInicio.format(dateFormatter) + " al " + fechaFin.format(dateFormatter);
-        exportarExcel(datos, rutaArchivo, "REPORTE DIARIO BILLETEROS", subtitulo);
+        exportarExcel(datos, rutaArchivo, "REPORTE DIARIO BILLETEROS", subtitulo, true);
     }
     
-    private void exportarExcel(List<FilaReporte> datos, String rutaArchivo, String titulo, String subtitulo) throws Exception {
+    private void exportarExcel(List<FilaReporte> datos, String rutaArchivo, String titulo, String subtitulo, boolean acumulado) throws Exception {
         XSSFWorkbook workbook = new XSSFWorkbook();
         XSSFSheet sheet = workbook.createSheet("Reporte Billeteros");
         
@@ -348,14 +378,14 @@ f.gastosLocal, f.pagosManuel, f.inversion, f.gastoTotal, f.utilidadNeta);
             cellUtilidad.setCellValue(fila.utilidadNeta);
             cellUtilidad.setCellStyle(fila.utilidadNeta >= 0 ? estiloMoneda : estiloTotal);
             
-            totalBill += fila.acumuladoBill;
-            totalPremios += fila.acumuladoPremios;
-            totalDiferencia += fila.diferencia;
-            totalGastosLocal += fila.gastosLocal;
-            totalPagosManuel += fila.pagosManuel;
-            totalInversion += fila.inversion;
-            totalGastoTotal += fila.gastoTotal;
-            totalUtilidadNeta += fila.utilidadNeta;
+            totalBill = acumulado ? fila.acumuladoBill : totalBill + fila.acumuladoBill;
+            totalPremios = acumulado ? fila.acumuladoPremios : totalPremios + fila.acumuladoPremios;
+            totalDiferencia = acumulado ? fila.diferencia : totalDiferencia + fila.diferencia;
+            totalGastosLocal = acumulado ? fila.gastosLocal : totalGastosLocal + fila.gastosLocal;
+            totalPagosManuel = acumulado ? fila.pagosManuel : totalPagosManuel + fila.pagosManuel;
+            totalInversion = acumulado ? fila.inversion : totalInversion + fila.inversion;
+            totalGastoTotal = acumulado ? fila.gastoTotal : totalGastoTotal + fila.gastoTotal;
+            totalUtilidadNeta = acumulado ? fila.utilidadNeta : totalUtilidadNeta + fila.utilidadNeta;
         }
         
         if (!datos.isEmpty()) {
@@ -414,16 +444,16 @@ f.gastosLocal, f.pagosManuel, f.inversion, f.gastoTotal, f.utilidadNeta);
     public void exportarReporteMensualPDF(LocalDate fechaInicio, LocalDate fechaFin, String rutaArchivo) throws Exception {
         List<FilaReporte> datos = generarDatosReporteMensual(fechaInicio, fechaFin);
         String subtitulo = "Período: " + fechaInicio.format(dateFormatter) + " al " + fechaFin.format(dateFormatter);
-        exportarPDF(datos, rutaArchivo, "REPORTE MENSUAL BILLETEROS", subtitulo);
+        exportarPDF(datos, rutaArchivo, "REPORTE MENSUAL BILLETEROS", subtitulo, false);
     }
     
     public void exportarReporteDiarioPDF(LocalDate fechaInicio, LocalDate fechaFin, String rutaArchivo) throws Exception {
         List<FilaReporte> datos = generarDatosReporteDiario(fechaInicio, fechaFin);
         String subtitulo = "Período: " + fechaInicio.format(dateFormatter) + " al " + fechaFin.format(dateFormatter);
-        exportarPDF(datos, rutaArchivo, "REPORTE DIARIO BILLETEROS", subtitulo);
+        exportarPDF(datos, rutaArchivo, "REPORTE DIARIO BILLETEROS", subtitulo, true);
     }
     
-    private void exportarPDF(List<FilaReporte> datos, String rutaArchivo, String titulo, String subtitulo) throws Exception {
+    private void exportarPDF(List<FilaReporte> datos, String rutaArchivo, String titulo, String subtitulo, boolean acumulado) throws Exception {
         PdfWriter writer = new PdfWriter(rutaArchivo);
         PdfDocument pdf = new PdfDocument(writer);
         
@@ -517,14 +547,14 @@ f.gastosLocal, f.pagosManuel, f.inversion, f.gastoTotal, f.utilidadNeta);
             }
             table.addCell(cellUtilidad);
             
-            totalBill += fila.acumuladoBill;
-            totalPremios += fila.acumuladoPremios;
-            totalDiferencia += fila.diferencia;
-            totalGastosLocal += fila.gastosLocal;
-            totalPagosManuel += fila.pagosManuel;
-            totalInversion += fila.inversion;
-            totalGastoTotal += fila.gastoTotal;
-            totalUtilidadNeta += fila.utilidadNeta;
+            totalBill = acumulado ? fila.acumuladoBill : totalBill + fila.acumuladoBill;
+            totalPremios = acumulado ? fila.acumuladoPremios : totalPremios + fila.acumuladoPremios;
+            totalDiferencia = acumulado ? fila.diferencia : totalDiferencia + fila.diferencia;
+            totalGastosLocal = acumulado ? fila.gastosLocal : totalGastosLocal + fila.gastosLocal;
+            totalPagosManuel = acumulado ? fila.pagosManuel : totalPagosManuel + fila.pagosManuel;
+            totalInversion = acumulado ? fila.inversion : totalInversion + fila.inversion;
+            totalGastoTotal = acumulado ? fila.gastoTotal : totalGastoTotal + fila.gastoTotal;
+            totalUtilidadNeta = acumulado ? fila.utilidadNeta : totalUtilidadNeta + fila.utilidadNeta;
             
             alternar = !alternar;
         }

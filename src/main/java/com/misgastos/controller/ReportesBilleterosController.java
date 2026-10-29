@@ -11,11 +11,11 @@ import javafx.stage.FileChooser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.io.File;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Locale;
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,15 +53,15 @@ public class ReportesBilleterosController {
 
     @FXML
     public void initialize() {
-    	log.debug("Inicializando reportes de billeteros");
-        
+        log.debug("Inicializando reportes de billeteros");
+
         // Configurar fechas por defecto
         LocalDate hoy = LocalDate.now();
         LocalDate inicioAnio = hoy.withDayOfYear(1);
-        
+
         dpMensualInicio.setValue(inicioAnio);
         dpMensualFin.setValue(hoy);
-        
+
         dpDiarioInicio.setValue(hoy.withDayOfMonth(1));
         dpDiarioFin.setValue(hoy);
 
@@ -104,7 +104,7 @@ public class ReportesBilleterosController {
 
         ObservableList<ReporteRow> datos = aFilas(reporteService.vistaPreviaMensual(inicio, fin));
         tblVistaPrevia.setItems(datos);
-        actualizarTotales(datos);
+        actualizarTotales(datos, false);
 
         lblRangoFechas.setText(String.format("Reporte Mensual: %s - %s",
             inicio.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
@@ -122,7 +122,7 @@ public class ReportesBilleterosController {
 
         ObservableList<ReporteRow> datos = aFilas(reporteService.vistaPreviaDiario(inicio, fin));
         tblVistaPrevia.setItems(datos);
-        actualizarTotales(datos);
+        actualizarTotales(datos, true);
 
         lblRangoFechas.setText(String.format("Reporte Diario: %s - %s",
             inicio.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
@@ -145,15 +145,27 @@ public class ReportesBilleterosController {
         return datos;
     }
 
-    private void actualizarTotales(ObservableList<ReporteRow> datos) {
+    private void actualizarTotales(ObservableList<ReporteRow> datos, boolean acumulado) {
         if (datos.isEmpty()) {
             limpiarTotales();
             return;
         }
 
-        double totalBill = datos.stream().mapToDouble(r -> r.getBilleteroNum()).sum();
-        double totalPrem = datos.stream().mapToDouble(r -> r.getPremiosNum()).sum();
-        double totalUtil = datos.stream().mapToDouble(r -> r.getUtilidadNetaNum()).sum();
+        double totalBill;
+        double totalPrem;
+        double totalUtil;
+
+        if (acumulado) {
+            // Cada fila ya trae lo acumulado: el total es la última fila
+            ReporteRow ultima = datos.get(datos.size() - 1);
+            totalBill = ultima.getBilleteroNum();
+            totalPrem = ultima.getPremiosNum();
+            totalUtil = ultima.getUtilidadNetaNum();
+        } else {
+            totalBill = datos.stream().mapToDouble(r -> r.getBilleteroNum()).sum();
+            totalPrem = datos.stream().mapToDouble(r -> r.getPremiosNum()).sum();
+            totalUtil = datos.stream().mapToDouble(r -> r.getUtilidadNetaNum()).sum();
+        }
 
         lblTotalBilletero.setText(formatoMoneda.format(totalBill));
         lblTotalPremios.setText(formatoMoneda.format(totalPrem));
@@ -167,7 +179,7 @@ public class ReportesBilleterosController {
     }
 
     // ==================== REPORTE MENSUAL ====================
-    
+
     @FXML
     private void handleMensualExcel() {
         LocalDate inicio = dpMensualInicio.getValue();
@@ -187,7 +199,7 @@ public class ReportesBilleterosController {
             mostrarError("No se pudo generar el reporte Excel", e);
         }
     }
-    
+
     @FXML
     private void handleMensualPDF() {
         LocalDate inicio = dpMensualInicio.getValue();
@@ -209,7 +221,7 @@ public class ReportesBilleterosController {
     }
 
     // ==================== REPORTE DIARIO ====================
-    
+
     @FXML
     private void handleDiarioExcel() {
         LocalDate inicio = dpDiarioInicio.getValue();
@@ -229,7 +241,7 @@ public class ReportesBilleterosController {
             mostrarError("No se pudo generar el reporte Excel", e);
         }
     }
-    
+
     @FXML
     private void handleDiarioPDF() {
         LocalDate inicio = dpDiarioInicio.getValue();
@@ -251,7 +263,7 @@ public class ReportesBilleterosController {
     }
 
     // ==================== MÉTODOS AUXILIARES ====================
-    
+
     private boolean validarFechas(LocalDate inicio, LocalDate fin) {
         if (inicio == null || fin == null) {
             mostrarAdvertencia("Seleccione ambas fechas (inicio y fin)");
@@ -262,19 +274,19 @@ public class ReportesBilleterosController {
             mostrarAdvertencia("La fecha de inicio debe ser anterior o igual a la fecha fin");
             return false;
         }
-        
+
         return true;
     }
-    
+
     private File seleccionarArchivo(String titulo, String extension) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle(titulo);
-        
-        String nombreArchivo = "reporte_billeteros_" + 
-                              LocalDate.now().toString().replace("-", "") + 
+
+        String nombreArchivo = "reporte_billeteros_" +
+                              LocalDate.now().toString().replace("-", "") +
                               "." + extension;
         fileChooser.setInitialFileName(nombreArchivo);
-        
+
         String descripcion = extension.equals("xlsx") ? "Excel Files (*.xlsx)" : "PDF Files (*.pdf)";
         fileChooser.getExtensionFilters().add(
             new FileChooser.ExtensionFilter(descripcion, "*." + extension)
@@ -298,7 +310,7 @@ public class ReportesBilleterosController {
         alert.setContentText(mensaje);
         alert.showAndWait();
     }
-    
+
     private void mostrarError(String mensaje, Exception e) {
         log.error(mensaje, e);
         Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -309,7 +321,7 @@ public class ReportesBilleterosController {
     }
 
     // ==================== CLASE INTERNA PARA LA TABLA ====================
-    
+
     public static class ReporteRow {
         private final SimpleStringProperty periodo;
         private final SimpleStringProperty billetero;

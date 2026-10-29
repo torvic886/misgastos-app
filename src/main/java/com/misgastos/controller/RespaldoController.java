@@ -198,6 +198,7 @@ public class RespaldoController {
         try {
             Files.deleteIfExists(destino);
             copiarBaseConsistente(destino);
+            log.info("Copia exportada: {}", destino);
             alerta(Alert.AlertType.INFORMATION, "Copia exportada",
                     "La copia quedó guardada en:\n" + destino
                             + "\n\nPuedes llevarla a otro computador o guardarla como respaldo.");
@@ -256,6 +257,7 @@ public class RespaldoController {
             String problema = validarBase(preparado);
             if (problema != null) {
                 Files.deleteIfExists(preparado);
+                log.warn("Importación rechazada, el archivo no sirve: {}", problema);
                 alerta(Alert.AlertType.ERROR, "Esa copia no sirve", problema);
                 actualizarResumen();
                 return;
@@ -278,11 +280,13 @@ public class RespaldoController {
             Optional<ButtonType> respuesta = confirmar.showAndWait();
             if (respuesta.isEmpty() || respuesta.get() != si) {
                 Files.deleteIfExists(preparado);
+                log.info("Importación cancelada por el usuario");
                 actualizarResumen();
                 return;
             }
 
             actualizarResumen();
+            log.info("Importación preparada desde {}. Se aplicará al reiniciar el programa", origen);
             alerta(Alert.AlertType.INFORMATION, "Copia lista para aplicar",
                     "Cierra el programa y vuelve a abrirlo. Al iniciar se cargarán los datos de la copia importada.");
         } catch (Exception e) {
@@ -301,6 +305,7 @@ public class RespaldoController {
     public void handleCancelarPendiente() {
         try {
             Files.deleteIfExists(archivoPendiente());
+            log.info("Importación pendiente cancelada");
         } catch (Exception e) {
             alerta(Alert.AlertType.ERROR, "No se pudo cancelar", "Motivo: " + e.getMessage());
         }

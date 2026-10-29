@@ -3,10 +3,16 @@ package com.misgastos.controller;
 import com.misgastos.model.Categoria;
 import com.misgastos.model.Gasto;
 import com.misgastos.service.CategoriaService;
+import com.misgastos.service.ClienteInformeService;
+import com.misgastos.service.ClienteInformeService.Orden;
+import com.misgastos.service.ClienteInformeService.Resultado;
+import com.misgastos.service.ClienteInformeService.Tipo;
 import com.misgastos.service.GastoService;
 import com.misgastos.service.InformeService;
+import com.misgastos.service.diseno.Diseno;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -23,379 +29,475 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class InformesController {
 
-    @FXML private ComboBox<String> cmbTipoInforme;
-    @FXML private DatePicker dpFechaInicio;
-    @FXML private DatePicker dpFechaFin;
-    @FXML private ComboBox<Categoria> cmbCategoria;
-    @FXML private TextField txtProducto;
-    @FXML private TextArea txtPreview;
-    @FXML private Label lblTotalGastos;
-    @FXML private Label lblMontoTotal;
-    @FXML private Label lblCategorias;
+	// NUEVO: texto que identifica el informe de parqueaderos y bonos
+	private static final String CLAVE_CLIENTES = "Consolidado por cliente";
+	private static final String CLAVE_CAT_PROD = "categoría y producto";
 
-    @Autowired private GastoService gastoService;
-    @Autowired private CategoriaService categoriaService;
-    @Autowired private InformeService informeService;
+	@FXML
+	private ComboBox<String> cmbTipoInforme;
+	@FXML
+	private DatePicker dpFechaInicio;
+	@FXML
+	private DatePicker dpFechaFin;
+	@FXML
+	private ComboBox<Categoria> cmbCategoria;
+	@FXML
+	private TextField txtProducto;
+	@FXML
+	private TextArea txtPreview;
+	@FXML
+	private Label lblTotalGastos;
+	@FXML
+	private Label lblMontoTotal;
+	@FXML
+	private Label lblCategorias;
 
-    private String informeActual = "";
+	// NUEVO: filtros del informe de parqueaderos y bonos
+	@FXML
+	private VBox boxFiltrosClientes;
+	@FXML
+	private ComboBox<String> cmbTipoCliente;
+	@FXML
+	private ComboBox<String> cmbOrdenCliente;
+	@FXML
+	private TextField txtBuscarCliente;
 
-    @FXML
-    public void initialize() {
-        configurarTiposInforme();
-        configurarFechasPorDefecto();
-        cargarCategorias();
-        configurarListeners();
-        
-        txtPreview.setText("📊 Selecciona el tipo de informe, configura las fechas y presiona 'Generar Vista Previa'\n\n" +
-                          "El informe aparecerá aquí antes de exportarlo a PDF o Excel.");
-        
-        log.debug("Módulo de informes cargado");
-    }
+	@Autowired
+	private GastoService gastoService;
+	@Autowired
+	private CategoriaService categoriaService;
+	@Autowired
+	private InformeService informeService;
+	@Autowired
+	private ClienteInformeService clienteInformeService; // NUEVO
 
-    private void configurarTiposInforme() {
-        cmbTipoInforme.getItems().addAll(
-            "📊 Informe General Mensual",
-            "📂 Informe por Categoría",
-            "📦 Informe por Producto",
-            "⚖️ Informe Comparativo",
-            "🎯 Dashboard Ejecutivo",
-            "📋 Desglose por Subcategorías",
-            "📅 Informe Anual"
-        );
-        cmbTipoInforme.getSelectionModel().selectFirst();
-    }
+	private String informeActual = "";
 
-    private void configurarFechasPorDefecto() {
-        LocalDate hoy = LocalDate.now();
-        dpFechaInicio.setValue(hoy.withDayOfMonth(1));
-        dpFechaFin.setValue(hoy);
-    }
+	@FXML
+	public void initialize() {
+		configurarTiposInforme();
+		configurarFechasPorDefecto();
+		cargarCategorias();
+		configurarListeners();
+		configurarFiltrosClientes(); // NUEVO
 
-    private void cargarCategorias() {
-        List<Categoria> categorias = categoriaService.listarCategorias();
-        cmbCategoria.getItems().clear();
-        cmbCategoria.getItems().addAll(categorias);
-        cmbCategoria.setPromptText("Todas las categorías");
-    }
+		txtPreview
+				.setText("📊 Selecciona el tipo de informe, configura las fechas y presiona 'Generar Vista Previa'\n\n"
+						+ "El informe aparecerá aquí antes de exportarlo a PDF o Excel.");
 
-    private void configurarListeners() {
-        // Mostrar/ocultar filtros según el tipo de informe
-        cmbTipoInforme.setOnAction(e -> {
-            String tipo = cmbTipoInforme.getValue();
-            
-            // Resetear visibilidad
-            cmbCategoria.setVisible(false);
-            cmbCategoria.setManaged(false);
-            txtProducto.setVisible(false);
-            txtProducto.setManaged(false);
-            
-            if (tipo != null) {
-                if (tipo.contains("Categoría")) {
-                    cmbCategoria.setVisible(true);
-                    cmbCategoria.setManaged(true);
-                } else if (tipo.contains("Producto")) {
-                    txtProducto.setVisible(true);
-                    txtProducto.setManaged(true);
-                }
-            }
-        });
-    }
+		log.debug("Módulo de informes cargado");
+	}
 
-    @FXML
-    public void handleGenerarVista() {
-        if (!validarFechas()) return;
+	private void configurarTiposInforme() {
+		cmbTipoInforme.getItems().addAll("📊 Informe General Mensual", 
+				"👥 Consolidado por cliente",
+				"📦 Gastos por categoría y producto",// NUEVO
+				"📂 Informe por Categoría",
+				"📦 Informe por Producto", 
+				"⚖️ Informe Comparativo", 
+				"🎯 Dashboard Ejecutivo",
+				"📋 Desglose por Subcategorías", 
+				"📅 Informe Anual"
+		);
+		cmbTipoInforme.getSelectionModel().selectFirst();
+	}
 
-        String tipoInforme = cmbTipoInforme.getValue();
-        LocalDate inicio = dpFechaInicio.getValue();
-        LocalDate fin = dpFechaFin.getValue();
-        
-        log.debug("Fecha inicio: {}", inicio);
-        log.debug("Fecha fin: {}", fin);
+	// NUEVO
+	private void configurarFiltrosClientes() {
+		cmbTipoCliente.getItems().addAll("Todos", "Solo bonos", "Solo parqueaderos");
+		cmbTipoCliente.getSelectionModel().selectFirst();
+		cmbOrdenCliente.getItems().addAll("Mayor total", "Nombre");
+		cmbOrdenCliente.getSelectionModel().selectFirst();
+	}
 
-        try {
-            String informe = "";
+	private void configurarFechasPorDefecto() {
+		LocalDate hoy = LocalDate.now();
+		dpFechaInicio.setValue(hoy.withDayOfMonth(1));
+		dpFechaFin.setValue(hoy);
+	}
 
-            if (tipoInforme.contains("General Mensual")) {
-                informe = informeService.generarInformeGeneralMensual(inicio, fin);
-                log.debug("Fecha inicio InformeGeneralMensual: {}", inicio);
-                log.debug("Fecha fin InformeGeneralMensual: {}", fin);
-            }
-            else if (tipoInforme.contains("Categoría")) {
-                Categoria categoria = cmbCategoria.getValue();
-                if (categoria == null) {
-                    mostrarAlerta("Validación", "Por favor seleccione una categoría", Alert.AlertType.WARNING);
-                    return;
-                }
-                informe = informeService.generarInformePorCategoria(categoria.getNombre(), inicio, fin);
-                log.debug("Fecha inicio InformePorCategoria: {}", inicio);
-                log.debug("Fecha fin InformePorCategoria: {}", fin);
-            }
-            else if (tipoInforme.contains("Producto")) {
-                String producto = txtProducto.getText();
-                if (producto == null || producto.trim().isEmpty()) {
-                    mostrarAlerta("Validación", "Por favor ingrese el nombre del producto", Alert.AlertType.WARNING);
-                    return;
-                }
-                
-                log.debug("Fecha inicio InformePorProducto: {}", inicio);
-                log.debug("Fecha fin InformePorProducto: {}", fin);
-                
-                informe = informeService.generarInformePorProducto(producto.trim(), inicio, fin);
-            }
-            else if (tipoInforme.contains("Comparativo")) {
-            	
-                log.debug("Fecha inicio InformeComparativo: {}", inicio);
-                log.debug("Fecha fin InformeComparativo: {}", fin);
-            	
-                informe = informeService.generarInformeComparativo(inicio, fin);
-            }
-            else if (tipoInforme.contains("Dashboard")) {
-            	
-                log.debug("Fecha inicio DashboardEjecutivo: {}", inicio);
-                log.debug("Fecha fin DashboardEjecutivo: {}", fin);
-            	
-                informe = informeService.generarDashboardEjecutivo(inicio, fin);
-            }
-            else if (tipoInforme.contains("Subcategorías")) {
-            	
-                log.debug("Fecha inicio InformeSubcategorias: {}", inicio);
-                log.debug("Fecha fin InformeSubcategorias: {}", fin);
-            	
-                informe = informeService.generarInformeSubcategorias(inicio, fin);
-            }
-            else if (tipoInforme.contains("Anual")) {
-                int anio = inicio.getYear();
-                
-                log.debug("Fecha inicio InformeAnual: {}", inicio);
-                log.debug("Fecha fin InformeAnual: {}", fin);
-                
-                informe = informeService.generarInformeAnual(anio);
-            }
+	private void cargarCategorias() {
+		List<Categoria> categorias = categoriaService.listarCategorias();
+		cmbCategoria.getItems().clear();
+		cmbCategoria.getItems().addAll(categorias);
+		cmbCategoria.setPromptText("Todas las categorías");
+	}
 
-            informeActual = informe;
-            txtPreview.setText(informe);
-            
-            // Actualizar estadísticas
-            actualizarEstadisticas(inicio, fin);
-            
-            log.info("Informe generado: {}", tipoInforme);
+	private void configurarListeners() {
+		// Mostrar/ocultar filtros según el tipo de informe
+		cmbTipoInforme.setOnAction(e -> {
+			String tipo = cmbTipoInforme.getValue();
 
-        } catch (Exception e) {
-            log.error("No se pudo generar el informe '{}'", tipoInforme, e);
-            mostrarAlerta("Error", "No se pudo generar el informe:\n" + e.getMessage(), Alert.AlertType.ERROR);
-        }
-    }
+			// Resetear visibilidad
+			cmbCategoria.setVisible(false);
+			cmbCategoria.setManaged(false);
+			txtProducto.setVisible(false);
+			txtProducto.setManaged(false);
+			boxFiltrosClientes.setVisible(false); // NUEVO
+			boxFiltrosClientes.setManaged(false); // NUEVO
 
-    private void actualizarEstadisticas(LocalDate inicio, LocalDate fin) {
-        try {
-            List<Gasto> gastos = gastoService.listarPorPeriodo(inicio, fin);
-            
-            // Filtrar si hay categoría seleccionada
-            Categoria categoria = cmbCategoria.getValue();
-            if (categoria != null && cmbCategoria.isVisible()) {
-                Long catId = categoria.getId();
-                gastos = gastos.stream()
-                    .filter(g -> g.getCategoria().getId().equals(catId))
-                    .toList();
-            }
-            
-            // Filtrar si hay producto ingresado
-            String producto = txtProducto.getText();
-            if (producto != null && !producto.trim().isEmpty() && txtProducto.isVisible()) {
-            	gastos = gastos.stream()
-            		    .filter(g -> InformeService.mismoProducto(g.getProducto(), producto))
-            		    .toList();
-            }
-            
-            // Actualizar labels
-            lblTotalGastos.setText(String.valueOf(gastos.size()));
-            
-            BigDecimal total = gastos.stream()
-                .map(Gasto::getValorTotal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-            NumberFormat formatoCOP = NumberFormat.getCurrencyInstance(new Locale("es", "CO"));
-            formatoCOP.setMaximumFractionDigits(0);
-            lblMontoTotal.setText(formatoCOP.format(total));
-            
-            long categorias = gastos.stream()
-                .map(g -> g.getCategoria().getId())
-                .distinct()
-                .count();
-            lblCategorias.setText(String.valueOf(categorias));
-            
-        } catch (Exception e) {
-        	log.error("Error al actualizar estadísticas", e);
-        }
-    }
+			if (tipo != null) {
+				if (tipo.contains(CLAVE_CLIENTES)) { // NUEVO
+					boxFiltrosClientes.setVisible(true);
+					boxFiltrosClientes.setManaged(true);
+				} else if (tipo.contains("Categoría")) {
+					cmbCategoria.setVisible(true);
+					cmbCategoria.setManaged(true);
+				} else if (tipo.contains("Producto")) {
+					txtProducto.setVisible(true);
+					txtProducto.setManaged(true);
+				}
+			}
+		});
+	}
 
-    @FXML
-    public void handleExportarPDF() {
-        if (informeActual.isEmpty()) {
-            mostrarAlerta("Advertencia", "Primero genere un informe", Alert.AlertType.WARNING);
-            return;
-        }
+	@FXML
+	public void handleGenerarVista() {
+		if (!validarFechas())
+			return;
 
-        if (!validarFechas()) return;
+		String tipoInforme = cmbTipoInforme.getValue();
+		LocalDate inicio = dpFechaInicio.getValue();
+		LocalDate fin = dpFechaFin.getValue();
 
-        try {
-            File archivo = seleccionarArchivo("Exportar Informe - PDF", "pdf");
-            if (archivo != null) {
-                String tipoInforme = cmbTipoInforme.getValue();
-                LocalDate inicio = dpFechaInicio.getValue();
-                LocalDate fin = dpFechaFin.getValue();
+		log.debug("Fecha inicio: {}", inicio);
+		log.debug("Fecha fin: {}", fin);
 
-                if (tipoInforme.contains("General Mensual")) {
-                    informeService.exportarInformeGeneralPDF(inicio, fin, archivo.getAbsolutePath());
-                }
-                else if (tipoInforme.contains("Categoría")) {
-                    Categoria categoria = cmbCategoria.getValue();
-                    if (categoria == null) {
-                        mostrarAlerta("Validación", "Seleccione una categoría", Alert.AlertType.WARNING);
-                        return;
-                    }
-                    informeService.exportarInformeCategoriaPDF(categoria.getNombre(), inicio, fin, archivo.getAbsolutePath());
-                }
-                else if (tipoInforme.contains("Producto")) {
-                    String producto = txtProducto.getText();
-                    if (producto == null || producto.trim().isEmpty()) {
-                        mostrarAlerta("Validación", "Ingrese un producto", Alert.AlertType.WARNING);
-                        return;
-                    }
-                    informeService.exportarInformeProductoPDF(producto.trim(), inicio, fin, archivo.getAbsolutePath());
-                }
-                else if (tipoInforme.contains("Dashboard")) {
-                    informeService.exportarDashboardPDF(inicio, fin, archivo.getAbsolutePath());
-                }
-                else if (tipoInforme.contains("Comparativo")) {
-                	informeService.exportarComparativoPDF(inicio, fin, archivo.getAbsolutePath());
-                } 
-                else if (tipoInforme.contains("Subcategorías")) {
-                	informeService.exportarSubCategoriasPDF(inicio, fin, archivo.getAbsolutePath());
-                }                  
-                else {
-                    // Para otros informes, usar exportación genérica de texto
-                	int anio = inicio.getYear();
-                	informeService.exportarAnualPDF(anio, archivo.getAbsolutePath());
-                }
+		try {
+			String informe = "";
+			boolean esClientes = false;
 
-                mostrarAlerta("Éxito", "Informe PDF exportado correctamente a:\n" + archivo.getAbsolutePath(), Alert.AlertType.INFORMATION);
-            }
-        } catch (Exception e) {
-        	log.error("No se pudo exportar el informe a PDF", e);
-            mostrarAlerta("Error", "No se pudo exportar el PDF:\n" + e.getMessage(), Alert.AlertType.ERROR);
-        }
-    }
+			if (tipoInforme.contains(CLAVE_CAT_PROD)) {
+				informe = informeService.generarInformeCategoriaProducto(inicio, fin);
+			} else if (tipoInforme.contains(CLAVE_CLIENTES)) { // NUEVO
+				esClientes = true;
+				Resultado r = clienteInformeService.generar(inicio, fin, tipoCliente(), txtBuscarCliente.getText(),
+						ordenCliente());
+				informe = clienteInformeService.textoVistaPrevia(r, periodoCliente(inicio, fin), filtrosCliente());
+				lblTotalGastos.setText(String.valueOf(r.filas().size()));
+				lblMontoTotal.setText(Diseno.moneda(r.total()));
+				lblCategorias.setText("1");
+			} else if (tipoInforme.contains("General Mensual")) {
+				informe = informeService.generarInformeGeneralMensual(inicio, fin);
+				log.debug("Fecha inicio InformeGeneralMensual: {}", inicio);
+				log.debug("Fecha fin InformeGeneralMensual: {}", fin);
+			} else if (tipoInforme.contains("Categoría")) {
+				Categoria categoria = cmbCategoria.getValue();
+				if (categoria == null) {
+					mostrarAlerta("Validación", "Por favor seleccione una categoría", Alert.AlertType.WARNING);
+					return;
+				}
+				informe = informeService.generarInformePorCategoria(categoria.getNombre(), inicio, fin);
+				log.debug("Fecha inicio InformePorCategoria: {}", inicio);
+				log.debug("Fecha fin InformePorCategoria: {}", fin);
+			} else if (tipoInforme.contains("Producto")) {
+				String producto = txtProducto.getText();
+				if (producto == null || producto.trim().isEmpty()) {
+					mostrarAlerta("Validación", "Por favor ingrese el nombre del producto", Alert.AlertType.WARNING);
+					return;
+				}
 
-    @FXML
-    public void handleExportarExcel() {
-        if (informeActual.isEmpty()) {
-            mostrarAlerta("Advertencia", "Primero genere un informe", Alert.AlertType.WARNING);
-            return;
-        }
+				log.debug("Fecha inicio InformePorProducto: {}", inicio);
+				log.debug("Fecha fin InformePorProducto: {}", fin);
 
-        if (!validarFechas()) return;
+				informe = informeService.generarInformePorProducto(producto.trim(), inicio, fin);
+			} else if (tipoInforme.contains("Comparativo")) {
 
-        try {
-            File archivo = seleccionarArchivo("Exportar Informe - Excel", "xlsx");
-            if (archivo != null) {
-                String tipoInforme = cmbTipoInforme.getValue();
-                LocalDate inicio = dpFechaInicio.getValue();
-                LocalDate fin = dpFechaFin.getValue();
+				log.debug("Fecha inicio InformeComparativo: {}", inicio);
+				log.debug("Fecha fin InformeComparativo: {}", fin);
 
-                if (tipoInforme.contains("General Mensual")) {
-                    informeService.exportarInformeGeneralExcel(inicio, fin, archivo.getAbsolutePath());
-                }
-                else if (tipoInforme.contains("Categoría")) {
-                    Categoria categoria = cmbCategoria.getValue();
-                    if (categoria == null) {
-                        mostrarAlerta("Validación", "Seleccione una categoría", Alert.AlertType.WARNING);
-                        return;
-                    }
-                    informeService.exportarInformeCategoriaExcel(categoria.getNombre(), inicio, fin, archivo.getAbsolutePath());
-                }
-                else if (tipoInforme.contains("Producto")) {
-                    String producto = txtProducto.getText();
-                    if (producto == null || producto.trim().isEmpty()) {
-                        mostrarAlerta("Validación", "Ingrese un producto", Alert.AlertType.WARNING);
-                        return;
-                    }
-                    informeService.exportarInformeProductoExcel(producto.trim(), inicio, fin, archivo.getAbsolutePath());
-                }
-                else if (tipoInforme.contains("Dashboard")) {
-                    informeService.exportarDashboardExcel(inicio, fin, archivo.getAbsolutePath());
-                }
-                else if (tipoInforme.contains("Comparativo")) {
-                    informeService.exportarComparativoExcel(inicio, fin, archivo.getAbsolutePath());
-                }
-                else if (tipoInforme.contains("Subcategorías")) {
-                    informeService.exportarSubCategoriasExcel(inicio, fin, archivo.getAbsolutePath());
-                }
-                else {
-                    informeService.exportarAnualExcel(inicio.getYear(), archivo.getAbsolutePath());
-                }
+				informe = informeService.generarInformeComparativo(inicio, fin);
+			} else if (tipoInforme.contains("Dashboard")) {
 
-                mostrarAlerta("Éxito", "Informe Excel exportado correctamente a:\n" + archivo.getAbsolutePath(), Alert.AlertType.INFORMATION);
-            }
-        } catch (Exception e) {
-        	log.error("No se pudo exportar el informe a Excel", e);
-            mostrarAlerta("Error", "No se pudo exportar el Excel:\n" + e.getMessage(), Alert.AlertType.ERROR);
-        }
-    }
+				log.debug("Fecha inicio DashboardEjecutivo: {}", inicio);
+				log.debug("Fecha fin DashboardEjecutivo: {}", fin);
 
-    @FXML
-    public void handleLimpiar() {
-        configurarFechasPorDefecto();
-        cmbCategoria.setValue(null);
-        txtProducto.clear();
-        informeActual = "";
-        
-        txtPreview.setText("📊 Selecciona el tipo de informe, configura las fechas y presiona 'Generar Vista Previa'\n\n" +
-                          "El informe aparecerá aquí antes de exportarlo a PDF o Excel.");
-        
-        lblTotalGastos.setText("0");
-        lblMontoTotal.setText("$ 0");
-        lblCategorias.setText("0");
-        
-        cmbTipoInforme.getSelectionModel().selectFirst();
-    }
+				informe = informeService.generarDashboardEjecutivo(inicio, fin);
+			} else if (tipoInforme.contains("Subcategorías")) {
 
-    private boolean validarFechas() {
-        LocalDate inicio = dpFechaInicio.getValue();
-        LocalDate fin = dpFechaFin.getValue();
+				log.debug("Fecha inicio InformeSubcategorias: {}", inicio);
+				log.debug("Fecha fin InformeSubcategorias: {}", fin);
 
-        if (inicio == null || fin == null) {
-            mostrarAlerta("Validación", "Por favor seleccione ambas fechas", Alert.AlertType.WARNING);
-            return false;
-        }
+				informe = informeService.generarInformeSubcategorias(inicio, fin);
+			} else if (tipoInforme.contains("Anual")) {
+				int anio = inicio.getYear();
 
-        if (inicio.isAfter(fin)) {
-            mostrarAlerta("Validación", "La fecha de inicio debe ser anterior a la fecha fin", Alert.AlertType.WARNING);
-            return false;
-        }
+				log.debug("Fecha inicio InformeAnual: {}", inicio);
+				log.debug("Fecha fin InformeAnual: {}", fin);
 
-        return true;
-    }
+				informe = informeService.generarInformeAnual(anio);
+			}
 
-    private File seleccionarArchivo(String titulo, String extension) {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle(titulo);
-        
-        String timestamp = String.valueOf(System.currentTimeMillis());
-        fileChooser.setInitialFileName("informe_" + timestamp + "." + extension);
+			informeActual = informe;
+			txtPreview.setText(informe);
 
-        String descripcion = extension.equals("xlsx") ? "Excel Files" : "PDF Files";
-        fileChooser.getExtensionFilters().add(
-            new FileChooser.ExtensionFilter(descripcion, "*." + extension)
-        );
+			// Actualizar estadísticas (el informe de parqueaderos y bonos ya puso las
+			// suyas)
+			if (!esClientes) {
+				actualizarEstadisticas(inicio, fin);
+			}
 
-        return fileChooser.showSaveDialog(txtPreview.getScene().getWindow());
-    }
+			log.info("Informe generado: {}", tipoInforme);
 
-    private void mostrarAlerta(String titulo, String mensaje, Alert.AlertType tipo) {
-        Alert alert = new Alert(tipo);
-        alert.setTitle(titulo);
-        alert.setHeaderText(null);
-        alert.setContentText(mensaje);
-        alert.showAndWait();
-    }
+		} catch (Exception e) {
+			log.error("No se pudo generar el informe '{}'", tipoInforme, e);
+			mostrarAlerta("Error", "No se pudo generar el informe:\n" + e.getMessage(), Alert.AlertType.ERROR);
+		}
+	}
+
+	private void actualizarEstadisticas(LocalDate inicio, LocalDate fin) {
+		try {
+			List<Gasto> gastos = gastoService.listarPorPeriodo(inicio, fin);
+
+			// Filtrar si hay categoría seleccionada
+			Categoria categoria = cmbCategoria.getValue();
+			if (categoria != null && cmbCategoria.isVisible()) {
+				Long catId = categoria.getId();
+				gastos = gastos.stream().filter(g -> g.getCategoria().getId().equals(catId)).toList();
+			}
+
+			// Filtrar si hay producto ingresado
+			String producto = txtProducto.getText();
+			if (producto != null && !producto.trim().isEmpty() && txtProducto.isVisible()) {
+				gastos = gastos.stream().filter(g -> InformeService.mismoProducto(g.getProducto(), producto)).toList();
+			}
+
+			// Actualizar labels
+			lblTotalGastos.setText(String.valueOf(gastos.size()));
+
+			BigDecimal total = gastos.stream().map(Gasto::getValorTotal).reduce(BigDecimal.ZERO, BigDecimal::add);
+			NumberFormat formatoCOP = NumberFormat.getCurrencyInstance(new Locale("es", "CO"));
+			formatoCOP.setMaximumFractionDigits(0);
+			lblMontoTotal.setText(formatoCOP.format(total));
+
+			long categorias = gastos.stream().map(g -> g.getCategoria().getId()).distinct().count();
+			lblCategorias.setText(String.valueOf(categorias));
+
+		} catch (Exception e) {
+			log.error("Error al actualizar estadísticas", e);
+		}
+	}
+
+	@FXML
+	public void handleExportarPDF() {
+		if (informeActual.isEmpty()) {
+			mostrarAlerta("Advertencia", "Primero genere un informe", Alert.AlertType.WARNING);
+			return;
+		}
+
+		if (!validarFechas())
+			return;
+
+		try {
+			File archivo = seleccionarArchivo("Exportar Informe - PDF", "pdf");
+			if (archivo != null) {
+				String tipoInforme = cmbTipoInforme.getValue();
+				LocalDate inicio = dpFechaInicio.getValue();
+				LocalDate fin = dpFechaFin.getValue();
+
+				if (tipoInforme.contains(CLAVE_CAT_PROD)) {
+					informeService.exportarCategoriaProductoPDF(inicio, fin, archivo.getAbsolutePath());
+				} else if (tipoInforme.contains(CLAVE_CLIENTES)) { // NUEVO
+					exportarClientes(false, archivo, inicio, fin);
+				} else if (tipoInforme.contains("General Mensual")) {
+					informeService.exportarInformeGeneralPDF(inicio, fin, archivo.getAbsolutePath());
+				} else if (tipoInforme.contains("Categoría")) {
+					Categoria categoria = cmbCategoria.getValue();
+					if (categoria == null) {
+						mostrarAlerta("Validación", "Seleccione una categoría", Alert.AlertType.WARNING);
+						return;
+					}
+					informeService.exportarInformeCategoriaPDF(categoria.getNombre(), inicio, fin,
+							archivo.getAbsolutePath());
+				} else if (tipoInforme.contains("Producto")) {
+					String producto = txtProducto.getText();
+					if (producto == null || producto.trim().isEmpty()) {
+						mostrarAlerta("Validación", "Ingrese un producto", Alert.AlertType.WARNING);
+						return;
+					}
+					informeService.exportarInformeProductoPDF(producto.trim(), inicio, fin, archivo.getAbsolutePath());
+				} else if (tipoInforme.contains("Dashboard")) {
+					informeService.exportarDashboardPDF(inicio, fin, archivo.getAbsolutePath());
+				} else if (tipoInforme.contains("Comparativo")) {
+					informeService.exportarComparativoPDF(inicio, fin, archivo.getAbsolutePath());
+				} else if (tipoInforme.contains("Subcategorías")) {
+					informeService.exportarSubCategoriasPDF(inicio, fin, archivo.getAbsolutePath());
+				} else {
+					// Para otros informes, usar exportación genérica de texto
+					int anio = inicio.getYear();
+					informeService.exportarAnualPDF(anio, archivo.getAbsolutePath());
+				}
+
+				mostrarAlerta("Éxito", "Informe PDF exportado correctamente a:\n" + archivo.getAbsolutePath(),
+						Alert.AlertType.INFORMATION);
+			}
+		} catch (Exception e) {
+			log.error("No se pudo exportar el informe a PDF", e);
+			mostrarAlerta("Error", "No se pudo exportar el PDF:\n" + e.getMessage(), Alert.AlertType.ERROR);
+		}
+	}
+
+	@FXML
+	public void handleExportarExcel() {
+		if (informeActual.isEmpty()) {
+			mostrarAlerta("Advertencia", "Primero genere un informe", Alert.AlertType.WARNING);
+			return;
+		}
+
+		if (!validarFechas())
+			return;
+
+		try {
+			File archivo = seleccionarArchivo("Exportar Informe - Excel", "xlsx");
+			if (archivo != null) {
+				String tipoInforme = cmbTipoInforme.getValue();
+				LocalDate inicio = dpFechaInicio.getValue();
+				LocalDate fin = dpFechaFin.getValue();
+
+				if (tipoInforme.contains(CLAVE_CAT_PROD)) {
+					informeService.exportarCategoriaProductoExcel(inicio, fin, archivo.getAbsolutePath());
+				} else if (tipoInforme.contains(CLAVE_CLIENTES)) { // NUEVO
+					exportarClientes(true, archivo, inicio, fin);
+				} else if (tipoInforme.contains("General Mensual")) {
+					informeService.exportarInformeGeneralExcel(inicio, fin, archivo.getAbsolutePath());
+				} else if (tipoInforme.contains("Categoría")) {
+					Categoria categoria = cmbCategoria.getValue();
+					if (categoria == null) {
+						mostrarAlerta("Validación", "Seleccione una categoría", Alert.AlertType.WARNING);
+						return;
+					}
+					informeService.exportarInformeCategoriaExcel(categoria.getNombre(), inicio, fin,
+							archivo.getAbsolutePath());
+				} else if (tipoInforme.contains("Producto")) {
+					String producto = txtProducto.getText();
+					if (producto == null || producto.trim().isEmpty()) {
+						mostrarAlerta("Validación", "Ingrese un producto", Alert.AlertType.WARNING);
+						return;
+					}
+					informeService.exportarInformeProductoExcel(producto.trim(), inicio, fin,
+							archivo.getAbsolutePath());
+				} else if (tipoInforme.contains("Dashboard")) {
+					informeService.exportarDashboardExcel(inicio, fin, archivo.getAbsolutePath());
+				} else if (tipoInforme.contains("Comparativo")) {
+					informeService.exportarComparativoExcel(inicio, fin, archivo.getAbsolutePath());
+				} else if (tipoInforme.contains("Subcategorías")) {
+					informeService.exportarSubCategoriasExcel(inicio, fin, archivo.getAbsolutePath());
+				} else {
+					informeService.exportarAnualExcel(inicio.getYear(), archivo.getAbsolutePath());
+				}
+
+				mostrarAlerta("Éxito", "Informe Excel exportado correctamente a:\n" + archivo.getAbsolutePath(),
+						Alert.AlertType.INFORMATION);
+			}
+		} catch (Exception e) {
+			log.error("No se pudo exportar el informe a Excel", e);
+			mostrarAlerta("Error", "No se pudo exportar el Excel:\n" + e.getMessage(), Alert.AlertType.ERROR);
+		}
+	}
+
+	@FXML
+	public void handleLimpiar() {
+		configurarFechasPorDefecto();
+		cmbCategoria.setValue(null);
+		txtProducto.clear();
+		cmbTipoCliente.getSelectionModel().selectFirst(); // NUEVO
+		cmbOrdenCliente.getSelectionModel().selectFirst(); // NUEVO
+		txtBuscarCliente.clear(); // NUEVO
+		informeActual = "";
+
+		txtPreview
+				.setText("📊 Selecciona el tipo de informe, configura las fechas y presiona 'Generar Vista Previa'\n\n"
+						+ "El informe aparecerá aquí antes de exportarlo a PDF o Excel.");
+
+		lblTotalGastos.setText("0");
+		lblMontoTotal.setText("$ 0");
+		lblCategorias.setText("0");
+
+		cmbTipoInforme.getSelectionModel().selectFirst();
+	}
+
+	// ==================== NUEVO: parqueaderos y bonos ====================
+
+	private Tipo tipoCliente() {
+		return switch (cmbTipoCliente.getSelectionModel().getSelectedIndex()) {
+		case 1 -> Tipo.BONOS;
+		case 2 -> Tipo.PARQUEADEROS;
+		default -> Tipo.TODOS;
+		};
+	}
+
+	private Orden ordenCliente() {
+		return cmbOrdenCliente.getSelectionModel().getSelectedIndex() == 1 ? Orden.NOMBRE : Orden.MAYOR_TOTAL;
+	}
+
+	private String periodoCliente(LocalDate inicio, LocalDate fin) {
+		return Diseno.fecha(inicio) + " al " + Diseno.fecha(fin);
+	}
+
+	private String filtrosCliente() {
+		StringBuilder sb = new StringBuilder();
+		if (cmbTipoCliente.getSelectionModel().getSelectedIndex() > 0) {
+			sb.append(cmbTipoCliente.getValue());
+		}
+		String q = txtBuscarCliente.getText() == null ? "" : txtBuscarCliente.getText().trim();
+		if (!q.isEmpty()) {
+			if (sb.length() > 0)
+				sb.append(", ");
+			sb.append("búsqueda: ").append(q);
+		}
+		return sb.toString();
+	}
+
+	private void exportarClientes(boolean excel, File archivo, LocalDate inicio, LocalDate fin) throws Exception {
+		Resultado r = clienteInformeService.generar(inicio, fin, tipoCliente(), txtBuscarCliente.getText(),
+				ordenCliente());
+		if (excel) {
+			clienteInformeService.exportarExcel(r, periodoCliente(inicio, fin), filtrosCliente(),
+					archivo.getAbsolutePath());
+		} else {
+			clienteInformeService.exportarPDF(r, periodoCliente(inicio, fin), filtrosCliente(),
+					archivo.getAbsolutePath());
+		}
+		log.info("Informe parqueaderos y bonos exportado: {} clientes", r.filas().size());
+	}
+
+	// ==================== comunes ====================
+
+	private boolean validarFechas() {
+		LocalDate inicio = dpFechaInicio.getValue();
+		LocalDate fin = dpFechaFin.getValue();
+
+		if (inicio == null || fin == null) {
+			mostrarAlerta("Validación", "Por favor seleccione ambas fechas", Alert.AlertType.WARNING);
+			return false;
+		}
+
+		if (inicio.isAfter(fin)) {
+			mostrarAlerta("Validación", "La fecha de inicio debe ser anterior a la fecha fin", Alert.AlertType.WARNING);
+			return false;
+		}
+
+		return true;
+	}
+
+	private File seleccionarArchivo(String titulo, String extension) {
+		FileChooser fileChooser = new FileChooser();
+		fileChooser.setTitle(titulo);
+
+		String timestamp = String.valueOf(System.currentTimeMillis());
+		fileChooser.setInitialFileName("informe_" + timestamp + "." + extension);
+
+		String descripcion = extension.equals("xlsx") ? "Excel Files" : "PDF Files";
+		fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(descripcion, "*." + extension));
+
+		return fileChooser.showSaveDialog(txtPreview.getScene().getWindow());
+	}
+
+	private void mostrarAlerta(String titulo, String mensaje, Alert.AlertType tipo) {
+		Alert alert = new Alert(tipo);
+		alert.setTitle(titulo);
+		alert.setHeaderText(null);
+		alert.setContentText(mensaje);
+		alert.showAndWait();
+	}
 }
