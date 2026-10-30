@@ -3,10 +3,10 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.0.0</version>
-		<relativePath/> <!-- lookup parent from repository -->
+	    <groupId>org.springframework.boot</groupId>
+	    <artifactId>spring-boot-starter-parent</artifactId>
+	    <version>4.0.9</version>
+	    <relativePath/>
 	</parent>
 	<groupId>com.misgastos</groupId>
 	<artifactId>misgastos-app</artifactId>
@@ -30,6 +30,7 @@
 	    <java.version>17</java.version>
 	    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+	    <maven-surefire-plugin.version>3.5.4</maven-surefire-plugin.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -148,10 +149,11 @@
 	                </annotationProcessorPaths>
 	            </configuration>
 	        </plugin>
-	        
+
 	        <plugin>
 	            <groupId>org.springframework.boot</groupId>
 	            <artifactId>spring-boot-maven-plugin</artifactId>
+	            <version>4.0.0</version>
 	            <configuration>
 	                <mainClass>com.misgastos.MisGastosLauncher</mainClass>
 	                <excludes>
@@ -169,7 +171,7 @@
 	                </execution>
 	            </executions>
 	        </plugin>
-	        
+
 	        <!-- Plugin JavaFX -->
 	        <plugin>
 	            <groupId>org.openjfx</groupId>

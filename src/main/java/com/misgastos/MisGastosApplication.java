@@ -74,12 +74,12 @@ public class MisGastosApplication extends Application {
     private static Image cargarIcono() {
         try (InputStream in = MisGastosApplication.class.getResourceAsStream(RUTA_ICONO)) {
             if (in == null) {
-                System.err.println("No se encontró el icono: " + RUTA_ICONO);
+            	log.warn("No se encontró el icono: {}", RUTA_ICONO);
                 return null;
             }
             return new Image(in, 256, 256, true, true);
         } catch (Exception e) {
-            System.err.println("No se pudo cargar el icono: " + e.getMessage());
+        	log.warn("No se pudo cargar el icono", e);
             return null;
         }
     }

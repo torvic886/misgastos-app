@@ -12,7 +12,7 @@ set VERSION=1.0.0
 cd /d %PROYECTO%
 
 echo [1/3] Compilando el proyecto...
-call mvn clean package -DskipTests
+call mvn clean package -o -Dmaven.test.skip=true
 if errorlevel 1 goto error
 
 echo [2/3] Preparando carpeta de entrada...

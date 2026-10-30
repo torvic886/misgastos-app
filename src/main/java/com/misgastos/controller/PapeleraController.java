@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -26,6 +27,7 @@ import javafx.scene.control.TableView;
  * Papelera de gastos: lista los gastos eliminados y permite restaurarlos
  * o borrarlos de forma definitiva. Solo se muestra a administradores.
  */
+@Slf4j
 @Component
 public class PapeleraController {
 
@@ -95,6 +97,7 @@ public class PapeleraController {
             avisar("Seleccione uno o más gastos para restaurar");
             return;
         }
+        log.debug("Restaurando {} gasto(s) desde la papelera", seleccion.size());
         for (Gasto g : seleccion) {
             gastoService.restaurarGasto(g.getId());
         }
@@ -112,6 +115,7 @@ public class PapeleraController {
             "Se eliminarán " + seleccion.size() + " gasto(s) para siempre. Esta acción no se puede deshacer.")) {
             return;
         }
+        log.debug("Eliminando definitivamente {} gasto(s)", seleccion.size());
         for (Gasto g : seleccion) {
             gastoService.eliminarDefinitivamente(g.getId());
         }
@@ -128,6 +132,7 @@ public class PapeleraController {
             "Se eliminarán para siempre todos los gastos de la papelera. Esta acción no se puede deshacer.")) {
             return;
         }
+        log.debug("Vaciando la papelera");
         gastoService.vaciarPapelera();
         cargar();
     }

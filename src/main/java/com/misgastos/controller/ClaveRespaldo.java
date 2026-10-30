@@ -22,14 +22,22 @@ import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Clave propia de la pantalla "Respaldo de datos". No depende de ningún usuario del
  * programa: solo quien la sabe puede entrar, aunque sea administrador.
  *
  * La clave NO se guarda en texto: se guarda un resumen (PBKDF2 con sal) en
  * MisGastos\respaldo.clave. La primera vez que se abre la pantalla se pide crearla.
+ *
+ * Sobre los logs: nunca se registra la clave escrita, ni el resumen, ni la sal,
+ * ni el contenido del archivo. Solo se anotan los hechos (creada, acceso, intento fallido).
  */
 public final class ClaveRespaldo {
+
+    private static final Logger log = LoggerFactory.getLogger(ClaveRespaldo.class);
 
     private static final int ITERACIONES = 120_000;
     private static final int BITS = 256;
@@ -46,8 +54,10 @@ public final class ClaveRespaldo {
     /** Devuelve true si la persona puede entrar (clave correcta, o clave recién creada). */
     public static boolean pedirAcceso(Window ventana) {
         if (!Files.exists(archivo())) {
+            log.debug("No existe clave de respaldo: se pide crearla");
             return crearClave(ventana);
         }
+        log.debug("Se pide la clave de respaldo para entrar");
         return verificarClave(ventana);
     }
 
@@ -60,19 +70,24 @@ public final class ClaveRespaldo {
         while (true) {
             Optional<String[]> r = dialogo(ventana, "Crear clave de respaldo", aviso, true, error);
             if (r.isEmpty()) {
+                log.debug("Creación de la clave de respaldo cancelada por el usuario");
                 return false;
             }
             String uno = r.get()[0];
             String dos = r.get()[1];
             if (uno.length() < LARGO_MINIMO) {
+                log.debug("Clave de respaldo rechazada: muy corta");
                 error = "La clave debe tener al menos " + LARGO_MINIMO + " caracteres.";
             } else if (!uno.equals(dos)) {
+                log.debug("Clave de respaldo rechazada: las dos claves no coinciden");
                 error = "Las dos claves no coinciden.";
             } else {
                 try {
                     guardar(uno.toCharArray());
+                    log.info("Clave de respaldo creada");
                     return true;
                 } catch (Exception e) {
+                    log.error("No se pudo guardar la clave de respaldo", e);
                     alerta(ventana, Alert.AlertType.ERROR, "No se pudo guardar la clave", e.getMessage());
                     return false;
                 }
@@ -103,27 +118,34 @@ public final class ClaveRespaldo {
             sal = Base64.getDecoder().decode(partes[1]);
             esperado = Base64.getDecoder().decode(partes[2]);
         } catch (Exception e) {
+            log.error("No se pudo leer el archivo de la clave de respaldo (dañado o con formato no reconocido)", e);
             alerta(ventana, Alert.AlertType.ERROR, "Archivo de clave dañado",
                     "No se puede leer la clave guardada (" + archivo() + ").");
             return false;
         }
 
         String error = null;
+        int intentos = 0;
         while (true) {
             Optional<String[]> r = dialogo(ventana, "Respaldo de datos",
                     "Escribe la clave de respaldo para continuar.", false, error);
             if (r.isEmpty()) {
+                log.debug("Ingreso al respaldo cancelado por el usuario");
                 return false;
             }
             try {
                 byte[] intento = resumir(r.get()[0].toCharArray(), sal);
                 if (MessageDigest.isEqual(intento, esperado)) {
+                    log.info("Acceso concedido con la clave de respaldo");
                     return true;
                 }
             } catch (Exception e) {
+                log.error("No se pudo verificar la clave de respaldo", e);
                 alerta(ventana, Alert.AlertType.ERROR, "Error", e.getMessage());
                 return false;
             }
+            intentos++;
+            log.warn("Clave de respaldo incorrecta (intento {})", intentos);
             error = "Clave incorrecta.";
         }
     }
@@ -193,6 +215,7 @@ public final class ClaveRespaldo {
             panel.getStylesheets().add(ClaveRespaldo.class.getResource("/css/styles.css").toExternalForm());
         } catch (Exception ignorada) {
             // sin estilos, funciona igual
+            log.debug("No se pudieron aplicar los estilos al diálogo de la clave de respaldo");
         }
     }
 }

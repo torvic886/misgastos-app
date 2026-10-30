@@ -21,11 +21,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 @Transactional
 public class PresupuestoService {
 
+	private static final Logger log = LoggerFactory.getLogger(PresupuestoService.class);
     private static final BigDecimal CIEN = BigDecimal.valueOf(100);
 
     /** Una categoría con su tope (puede ser null) y lo gastado en el mes. */
@@ -87,11 +90,14 @@ public class PresupuestoService {
         String antes = anterior == null ? "sin tope" : dinero(anterior);
         auditoriaService.registrarCambioGasto("FIJAR_PRESUPUESTO",
                 "Presupuesto mensual de " + categoria.getNombre() + ": " + antes + " → " + dinero(monto));
+        log.info("Tope de presupuesto fijado");
+        log.debug("Tope fijado: categoría id {}", categoriaId);
     }
 
     public void quitarTope(Long categoriaId) {
         Optional<PresupuestoCategoria> actual = presupuestoRepository.findById(categoriaId);
         if (actual.isEmpty()) {
+        	log.debug("Quitar tope: la categoría id {} no tenía tope", categoriaId);
             return;
         }
         String nombre = categoriaRepository.findById(categoriaId).map(Categoria::getNombre).orElse("categoría " + categoriaId);
@@ -100,6 +106,8 @@ public class PresupuestoService {
 
         auditoriaService.registrarCambioGasto("QUITAR_PRESUPUESTO",
                 "Presupuesto mensual de " + nombre + ": " + dinero(anterior) + " → sin tope");
+        log.info("Tope de presupuesto quitado");
+        log.debug("Tope quitado: categoría id {}", categoriaId);
     }
 
     /**
@@ -125,11 +133,15 @@ public class PresupuestoService {
         String nombre = gasto.getCategoria().getNombre();
 
         if (alcanza(gastado, tope, 100)) {
-            return "🚨 Presupuesto superado en " + nombre + ": llevas " + dinero(gastado)
+        	log.info("Aviso de presupuesto: tope superado en una categoría");
+            log.debug("Presupuesto superado: categoría id {}, {} %", categoriaId, porcentaje);
+        	return "🚨 Presupuesto superado en " + nombre + ": llevas " + dinero(gastado)
                     + " de " + dinero(tope) + " este mes (" + porcentaje + " %).";
         }
         if (alcanza(gastado, tope, 80) && !alcanza(antes, tope, 80)) {
-            return "⚠ " + nombre + " ya va en el " + porcentaje + " % de su presupuesto mensual: "
+        	log.info("Aviso de presupuesto: se cruzó el 80 % en una categoría");
+            log.debug("Presupuesto al 80 %: categoría id {}, {} %", categoriaId, porcentaje);
+        	return "⚠ " + nombre + " ya va en el " + porcentaje + " % de su presupuesto mensual: "
                     + dinero(gastado) + " de " + dinero(tope) + ".";
         }
         return null;

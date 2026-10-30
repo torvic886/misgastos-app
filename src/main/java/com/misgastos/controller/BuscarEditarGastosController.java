@@ -393,7 +393,8 @@ public class BuscarEditarGastosController {
                 BigDecimal total = valorUnit.multiply(BigDecimal.valueOf(cantidad));
                 txtValorTotal.setText(formatoCOP.format(total));
             } catch (Exception e) {
-                txtValorTotal.setText(formatoCOP.format(0));
+            	log.debug("Cantidad o valor incompletos en la edición; el total queda en 0");
+            	txtValorTotal.setText(formatoCOP.format(0));
             }
         };
 
@@ -446,10 +447,12 @@ public class BuscarEditarGastosController {
                         dpFecha.getValue(),
                         hora
                     );
-
+                   
+                    
                     return gasto;
                 } catch (Exception e) {
-                    mostrarAlerta("Error", "Error al guardar: " + e.getMessage(), Alert.AlertType.ERROR);
+                	log.error("No se pudo actualizar el gasto", e);
+                	mostrarAlerta("Error", "Error al guardar: " + e.getMessage(), Alert.AlertType.ERROR);
                     return null;
                 }
             }
@@ -475,6 +478,7 @@ public class BuscarEditarGastosController {
         confirmacion.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
                 gastoService.eliminarGasto(gasto.getId());
+
                 mostrarAlerta("Éxito", "Gasto enviado a la papelera", Alert.AlertType.INFORMATION);
                 handleBuscar();
             }

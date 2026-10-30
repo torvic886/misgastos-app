@@ -122,7 +122,8 @@ public class ModalBilleteroController {
                     }
                 } catch (NumberFormatException e) {
                     // Si el número es demasiado grande, mantener el valor anterior
-                    textField.setText(oldValue);
+                	log.warn("Número demasiado grande en el campo; se mantiene el valor anterior");
+                	textField.setText(oldValue);
                 }
                 
             } finally {
@@ -163,7 +164,8 @@ public class ModalBilleteroController {
             }
             
         } catch (Exception e) {
-            txtDiferencia.setText("0");
+        	log.debug("No se pudo calcular la diferencia: {}", e.getMessage());
+        	txtDiferencia.setText("0");
             txtDiferencia.setStyle("-fx-text-fill: #6b7280;");
         }
     }
@@ -180,7 +182,8 @@ public class ModalBilleteroController {
                                  .trim();
             return cleaned.isEmpty() ? 0.0 : Double.parseDouble(cleaned);
         } catch (NumberFormatException e) {
-            return 0.0;
+        	log.debug("Valor no numérico en el modal de billetero; se toma como 0");
+        	return 0.0;
         }
     }
     
@@ -292,7 +295,8 @@ public class ModalBilleteroController {
                 return false;
             }
         } catch (Exception e) {
-            mostrarError("El valor del billetero no es válido");
+        	log.warn("Falló inesperadamente la validación del valor del billetero", e);
+        	mostrarError("El valor del billetero no es válido");
             return false;
         }
         
@@ -303,6 +307,7 @@ public class ModalBilleteroController {
                 return false;
             }
         } catch (Exception e) {
+        	log.warn("Falló inesperadamente la validación del valor de los premios", e);
             mostrarError("El valor de los premios no es válido");
             return false;
         }

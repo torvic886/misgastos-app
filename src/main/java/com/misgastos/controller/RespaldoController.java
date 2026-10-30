@@ -90,7 +90,8 @@ public class RespaldoController {
             double mb = Files.size(archivoBase()) / 1048576.0;
             lblBase.setText(String.format(CO, "misgastos.db  (%.2f MB)", mb));
         } catch (Exception e) {
-            lblBase.setText("No se encontró la base de datos");
+        	log.warn("No se pudo leer el tamaño de la base de datos: {}", e.getMessage());
+        	lblBase.setText("No se encontró la base de datos");
         }
 
         List<Path> respaldos = listarRespaldos();
@@ -104,7 +105,8 @@ public class RespaldoController {
                         .ofInstant(Instant.ofEpochMilli(Files.getLastModifiedTime(ultimo).toMillis()), ZoneId.systemDefault())
                         .format(FECHA_PANTALLA);
             } catch (Exception e) {
-                cuando = ultimo.getFileName().toString();
+            	log.debug("No se pudo leer la fecha de la última copia automática: {}", e.getMessage());
+            	cuando = ultimo.getFileName().toString();
             }
             lblRespaldos.setText(respaldos.size() + " copia(s) automática(s). La última: " + cuando);
         }
@@ -130,6 +132,7 @@ public class RespaldoController {
                     .sorted()
                     .toList();
         } catch (Exception e) {
+        	log.warn("No se pudo listar la carpeta de respaldos", e);
             return List.of();
         }
     }
@@ -160,7 +163,8 @@ public class RespaldoController {
             }
             pb.start();
         } catch (Exception e) {
-            alerta(Alert.AlertType.ERROR, "No se pudo abrir la carpeta",
+        	log.error("No se pudo abrir la carpeta {}", carpeta, e);
+        	alerta(Alert.AlertType.ERROR, "No se pudo abrir la carpeta",
                     "Puedes abrirla a mano desde el Explorador de archivos:\n" + carpeta);
         }
     }
@@ -307,7 +311,8 @@ public class RespaldoController {
             Files.deleteIfExists(archivoPendiente());
             log.info("Importación pendiente cancelada");
         } catch (Exception e) {
-            alerta(Alert.AlertType.ERROR, "No se pudo cancelar", "Motivo: " + e.getMessage());
+        	log.error("No se pudo cancelar la importación pendiente", e);
+        	alerta(Alert.AlertType.ERROR, "No se pudo cancelar", "Motivo: " + e.getMessage());
         }
         actualizarResumen();
     }
@@ -324,7 +329,8 @@ public class RespaldoController {
                 return "El archivo no es una base de datos de MisGastos.";
             }
         } catch (Exception e) {
-            return "No se pudo leer el archivo: " + e.getMessage();
+        	log.warn("No se pudo leer el archivo de la copia a importar", e);
+        	return "No se pudo leer el archivo: " + e.getMessage();
         }
 
         String url = "jdbc:sqlite:" + archivo.toString().replace('\\', '/');
@@ -341,7 +347,8 @@ public class RespaldoController {
                 }
             }
         } catch (Exception e) {
-            return "No se pudo revisar el archivo: " + e.getMessage();
+        	log.warn("No se pudo revisar la copia a importar", e);
+        	return "No se pudo revisar el archivo: " + e.getMessage();
         }
         return null;
     }
@@ -367,6 +374,7 @@ public class RespaldoController {
                     getClass().getResource("/css/styles.css").toExternalForm());
         } catch (Exception ignorada) {
             // sin estilos, el diálogo funciona igual
+        	log.debug("No se pudieron aplicar los estilos al diálogo");
         }
     }
 }

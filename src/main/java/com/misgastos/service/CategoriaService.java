@@ -4,6 +4,8 @@ import com.misgastos.model.Categoria;
 import com.misgastos.model.Subcategoria;
 import com.misgastos.repository.CategoriaRepository;
 import com.misgastos.repository.SubcategoriaRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +16,8 @@ import java.util.Optional;
 @Service
 @Transactional
 public class CategoriaService {
+
+    private static final Logger log = LoggerFactory.getLogger(CategoriaService.class);
     
     @Autowired
     private CategoriaRepository categoriaRepository;
@@ -26,19 +30,27 @@ public class CategoriaService {
         categoria.setNombre(nombre);
         categoria.setIcono(icono);
         categoria.setColor(color);
-        return categoriaRepository.save(categoria);
+        Categoria guardada = categoriaRepository.save(categoria);
+        log.info("Categoría creada");
+        log.debug("Categoría creada: id {}, nombre '{}'", guardada.getId(), nombre);
+        return guardada;
     }
     
     public Subcategoria crearSubcategoria(String nombre, Long categoriaId) {
         Optional<Categoria> categoria = categoriaRepository.findById(categoriaId);
         if (categoria.isEmpty()) {
+            log.warn("No se creó la subcategoría: la categoría no existe");
+            log.debug("Categoría inexistente al crear subcategoría: id {}", categoriaId);
             throw new RuntimeException("Categoría no encontrada");
         }
         
         Subcategoria subcategoria = new Subcategoria();
         subcategoria.setNombre(nombre);
         subcategoria.setCategoria(categoria.get());
-        return subcategoriaRepository.save(subcategoria);
+        Subcategoria guardada = subcategoriaRepository.save(subcategoria);
+        log.info("Subcategoría creada");
+        log.debug("Subcategoría creada: id {}, nombre '{}', categoría id {}", guardada.getId(), nombre, categoriaId);
+        return guardada;
     }
     
     public List<Categoria> listarCategorias() {
@@ -62,7 +74,10 @@ public class CategoriaService {
             .orElseGet(() -> {
                 Categoria c = new Categoria();
                 c.setNombre(limpio);
-                return categoriaRepository.save(c);
+                Categoria guardada = categoriaRepository.save(c);
+                log.info("Categoría creada (no existía)");
+                log.debug("Categoría creada: id {}, nombre '{}'", guardada.getId(), limpio);
+                return guardada;
             });
     }
 
@@ -80,7 +95,10 @@ public class CategoriaService {
                     categoriaRepository.findById(categoriaId)
                         .orElseThrow(() -> new RuntimeException("Categoría no encontrada"))
                 );
-                return subcategoriaRepository.save(s);
+                Subcategoria guardada = subcategoriaRepository.save(s);
+                log.info("Subcategoría creada (no existía)");
+                log.debug("Subcategoría creada: id {}, nombre '{}', categoría id {}", guardada.getId(), limpio, categoriaId);
+                return guardada;
             });
     }
 

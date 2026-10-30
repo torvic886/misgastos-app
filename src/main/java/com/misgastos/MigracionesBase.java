@@ -11,6 +11,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Migraciones de la base de datos. Se ejecutan en el arranque, ANTES de que Spring abra la base.
  *
@@ -21,6 +24,8 @@ import java.util.List;
  */
 public final class MigracionesBase {
 
+    private static final Logger log = LoggerFactory.getLogger(MigracionesBase.class);
+
     private static final String CARPETA = "/db/migraciones/";
     private static final int VERSION_BASE = 1;
 
@@ -28,6 +33,7 @@ public final class MigracionesBase {
     }
 
     public static void aplicar(Path db) {
+        log.debug("Migraciones: revisando la base {}", db);
         String url = "jdbc:sqlite:" + db.toString().replace('\\', '/');
         try (Connection c = DriverManager.getConnection(url)) {
             try (Statement st = c.createStatement()) {
@@ -38,16 +44,17 @@ public final class MigracionesBase {
             }
 
             int actual = versionActual(c);
+            log.debug("Migraciones: versión actual de la base: {}", actual);
 
             if (actual == 0) {
                 if (!existeTabla(c, "usuarios")) {
                     // Base sin tablas todavía: Hibernate las creará; se marcará la base en el próximo arranque
-                    System.out.println("Migraciones: la base aún no tiene tablas, se omite por ahora.");
+                    log.info("Migraciones: la base aún no tiene tablas, se omite por ahora");
                     return;
                 }
                 registrar(c, VERSION_BASE, "Esquema inicial (estado existente)");
                 actual = VERSION_BASE;
-                System.out.println("Migraciones: base marcada como versión " + VERSION_BASE);
+                log.info("Migraciones: base marcada como versión {}", VERSION_BASE);
             }
 
             int siguiente = actual + 1;
@@ -56,8 +63,9 @@ public final class MigracionesBase {
                 aplicarMigracion(c, siguiente, script);
                 siguiente++;
             }
-            System.out.println("Migraciones: base en versión " + (siguiente - 1));
+            log.info("Migraciones: base en versión {}", siguiente - 1);
         } catch (Exception e) {
+            log.error("No se pudieron aplicar las migraciones de la base de datos", e);
             throw new IllegalStateException(
                     "No se pudieron aplicar las migraciones de la base de datos. "
                   + "Tus datos están a salvo en la carpeta MisGastos\\respaldos. Motivo: " + e.getMessage(), e);
@@ -65,16 +73,21 @@ public final class MigracionesBase {
     }
 
     private static void aplicarMigracion(Connection c, int version, String script) throws Exception {
-        System.out.println("Migraciones: aplicando V" + version + "...");
+        log.info("Migraciones: aplicando V{}", version);
         c.setAutoCommit(false);
         try (Statement st = c.createStatement()) {
-            for (String sentencia : dividir(script)) {
+            List<String> sentencias = dividir(script);
+            log.debug("Migración V{}: {} sentencia(s)", version, sentencias.size());
+            for (String sentencia : sentencias) {
                 st.execute(sentencia);
             }
             registrar(c, version, descripcion(script, version));
             c.commit();
+            log.info("Migraciones: V{} aplicada", version);
         } catch (Exception e) {
             c.rollback();
+            // El error con su detalle lo registra quien llama (aplicar); aquí solo se anota el rollback
+            log.warn("Falló la migración V{}: se deshicieron sus cambios (rollback)", version);
             throw new IllegalStateException("Falló la migración V" + version + ": " + e.getMessage(), e);
         } finally {
             c.setAutoCommit(true);
@@ -112,6 +125,7 @@ public final class MigracionesBase {
     private static String leerScript(int version) throws Exception {
         try (var in = MigracionesBase.class.getResourceAsStream(CARPETA + "V" + version + ".sql")) {
             if (in == null) {
+                log.debug("Migraciones: no existe V{}.sql, fin de la cadena", version);
                 return null;
             }
             String texto = new String(in.readAllBytes(), StandardCharsets.UTF_8);

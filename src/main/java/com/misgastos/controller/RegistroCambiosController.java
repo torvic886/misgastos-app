@@ -22,11 +22,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Pantalla "Registro de cambios": muestra quién hizo qué y cuándo (tabla auditoria_logs).
  * Solo lectura. El acceso se limita a administradores desde el Dashboard.
  */
+@Slf4j
 @Component
 public class RegistroCambiosController {
 
@@ -153,7 +155,8 @@ public class RegistroCambiosController {
         String codigo = (accion == null || TODAS.equals(accion)) ? null : codigoPorEtiqueta.get(accion);
 
         List<AuditoriaLog> resultado = auditoriaService.buscar(usuarioId, codigo, desde, hasta);
-
+        log.debug("Registro de cambios: {} resultado(s)", resultado.size());
+        
         if (resultado.size() > MAX_FILAS) {
             lblResultados.setText("Se muestran los " + MAX_FILAS + " más recientes de " + resultado.size()
                     + ". Acota las fechas para ver el resto.");
@@ -183,6 +186,7 @@ public class RegistroCambiosController {
                     getClass().getResource("/css/styles.css").toExternalForm());
         } catch (Exception ignorada) {
             // sin estilos, el diálogo funciona igual
+        	log.debug("No se pudieron aplicar los estilos al diálogo");
         }
         a.showAndWait();
     }

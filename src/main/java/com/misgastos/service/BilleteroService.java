@@ -2,6 +2,8 @@ package com.misgastos.service;
 
 import com.misgastos.model.Billetero;
 import com.misgastos.repository.BilleteroRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,23 +18,34 @@ import java.util.Optional;
 @Service
 @Transactional
 public class BilleteroService {
+
+    private static final Logger log = LoggerFactory.getLogger(BilleteroService.class);
     
     @Autowired
     private BilleteroRepository billeteroRepository;
     
-    // Crear nuevo billetero
+    // Crear nuevo billetero (o guardar cambios si ya tiene id)
     public Billetero guardar(Billetero billetero) {
-        return billeteroRepository.save(billetero);
+        boolean nuevo = billetero.getId() == null;
+        Billetero guardado = billeteroRepository.save(billetero);
+        log.info(nuevo ? "Billetero creado" : "Billetero actualizado");
+        log.debug("Billetero {}: id {}", nuevo ? "creado" : "actualizado", guardado.getId());
+        return guardado;
     }
     
     // Actualizar billetero existente
     public Billetero actualizar(Billetero billetero) {
-        return billeteroRepository.save(billetero);
+        Billetero guardado = billeteroRepository.save(billetero);
+        log.info("Billetero actualizado");
+        log.debug("Billetero actualizado: id {}", guardado.getId());
+        return guardado;
     }
     
     // Eliminar billetero
     public void eliminar(Long id) {
         billeteroRepository.deleteById(id);
+        log.info("Billetero eliminado");
+        log.debug("Billetero eliminado: id {}", id);
     }
     
     // Obtener por ID

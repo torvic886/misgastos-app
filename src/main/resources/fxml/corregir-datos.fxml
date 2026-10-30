@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="12"
+      styleClass="content"
+      xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.misgastos.controller.CorregirDatosController">
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <VBox spacing="10" VBox.vgrow="ALWAYS" styleClass="table-card" style="-fx-padding: 16;">
+
+        <Label text="Corregir datos"
+               style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+        <Label wrapText="true"
+               text="Corrige de una vez un texto mal escrito en todos los gastos ya registrados (también los de la papelera). Selecciona uno o varios valores de la lista y escribe cómo debe quedar."
+               style="-fx-text-fill: #64748b;"/>
+
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Label text="Campo a corregir" style="-fx-font-weight: bold; -fx-text-fill: #1e293b;"
+                   minWidth="-Infinity"/>
+            <ComboBox fx:id="cmbCampo" prefWidth="220"/>
+            <TextField fx:id="txtBuscar" promptText="Buscar en la lista" prefWidth="260" minWidth="140"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="lblResumen" text="" minWidth="-Infinity"
+                   style="-fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+        </HBox>
+
+        <HBox spacing="16" VBox.vgrow="ALWAYS">
+
+            <TableView fx:id="tablaValores" HBox.hgrow="ALWAYS" style="-fx-fixed-cell-size: 34px;">
+                <columnResizePolicy>
+                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                </columnResizePolicy>
+                <columns>
+                    <TableColumn fx:id="colValor" text="Como está escrito ahora" prefWidth="420" minWidth="200"/>
+                    <TableColumn fx:id="colCantidad" text="Gastos" prefWidth="90" minWidth="70"/>
+                </columns>
+            </TableView>
+
+            <VBox spacing="10" prefWidth="330" minWidth="330" maxWidth="330">
+                <Label text="Cómo debe quedar" style="-fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                <TextField fx:id="txtCorrecto" promptText="Texto correcto"/>
+                <CheckBox fx:id="chkClientes" wrapText="true"
+                          text="Actualizar también la lista de Clientes con esa cédula"/>
+                <Label fx:id="lblAviso" wrapText="true" text=""
+                       style="-fx-text-fill: #64748b;"/>
+                <HBox spacing="10">
+                    <Button fx:id="btnAplicar" text="Aplicar corrección" styleClass="primary-button"
+                            onAction="#handleAplicar" minWidth="-Infinity"/>
+                    <Button text="Limpiar" styleClass="secondary-button"
+                            onAction="#handleLimpiar" minWidth="-Infinity"/>
+                </HBox>
+            </VBox>
+
+        </HBox>
+
+    </VBox>
+</VBox>

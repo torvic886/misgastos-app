@@ -139,12 +139,15 @@ public class GestionUsuariosController {
                 cmbAvatar.getValue()
             );
             
+            log.info("Usuario creado");
+            log.debug("Usuario creado: nombre '{}', rol {}", txtUsername.getText().trim(), cmbRol.getValue());
             mostrarAlerta("Éxito", "Usuario creado correctamente", Alert.AlertType.INFORMATION);
             handleLimpiar();
             cargarUsuarios();
             
         } catch (Exception e) {
-            mostrarAlerta("Error", "No se pudo crear el usuario: " + e.getMessage(), Alert.AlertType.ERROR);
+        	log.error("No se pudo crear el usuario", e);
+        	mostrarAlerta("Error", "No se pudo crear el usuario: " + e.getMessage(), Alert.AlertType.ERROR);
         }
     }
     
@@ -178,12 +181,16 @@ public class GestionUsuariosController {
                 alActualizarUsuarioActual.run();
             }
             
+            log.info("Usuario actualizado");
+            log.debug("Usuario actualizado: id {}, rol {}, activo {}, es el usuario de la sesión: {}",
+                usuarioSeleccionado.getId(), cmbRol.getValue(), chkActivo.isSelected(), esUsuarioActual);
             mostrarAlerta("Éxito", "Usuario actualizado correctamente", Alert.AlertType.INFORMATION);
             handleLimpiar();
             cargarUsuarios();
             
         } catch (Exception e) {
-            mostrarAlerta("Error", "No se pudo actualizar el usuario: " + e.getMessage(), Alert.AlertType.ERROR);
+        	log.error("No se pudo actualizar el usuario", e);
+        	mostrarAlerta("Error", "No se pudo actualizar el usuario: " + e.getMessage(), Alert.AlertType.ERROR);
         }
     }
     
@@ -206,11 +213,14 @@ public class GestionUsuariosController {
                 usuarioActual != null ? usuarioActual : "admin"
             );
             
+            log.info("Contraseña de un usuario cambiada");
+            log.debug("Contraseña cambiada: usuario id {}", usuarioSeleccionado.getId());
             mostrarAlerta("Éxito", "Contraseña cambiada correctamente", Alert.AlertType.INFORMATION);
             txtPassword.clear();
             
         } catch (Exception e) {
-            mostrarAlerta("Error", "No se pudo cambiar la contraseña: " + e.getMessage(), Alert.AlertType.ERROR);
+        	log.error("No se pudo cambiar la contraseña de un usuario", e);
+        	mostrarAlerta("Error", "No se pudo cambiar la contraseña: " + e.getMessage(), Alert.AlertType.ERROR);
         }
     }
     
@@ -233,11 +243,15 @@ public class GestionUsuariosController {
                     usuarioActual != null ? usuarioActual : "admin"
                 );
                 
+                log.info("Usuario eliminado");
+                log.debug("Usuario eliminado: id {}, nombre '{}'",
+                    usuarioSeleccionado.getId(), usuarioSeleccionado.getUsername());
                 mostrarAlerta("Éxito", "Usuario eliminado correctamente", Alert.AlertType.INFORMATION);
                 handleLimpiar();
                 cargarUsuarios();
                 
             } catch (Exception e) {
+            	log.error("No se pudo eliminar el usuario", e);
                 mostrarAlerta("Error", "No se pudo eliminar el usuario: " + e.getMessage(), Alert.AlertType.ERROR);
             }
         }

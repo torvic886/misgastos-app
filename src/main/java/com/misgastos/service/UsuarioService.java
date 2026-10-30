@@ -3,6 +3,8 @@ package com.misgastos.service;
 import com.misgastos.model.Usuario;
 import com.misgastos.model.Rol;
 import com.misgastos.repository.UsuarioRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -15,7 +17,9 @@ import java.util.Optional;
 @Service
 @Transactional
 public class UsuarioService {
-    
+
+    private static final Logger log = LoggerFactory.getLogger(UsuarioService.class);
+
     @Autowired
     private UsuarioRepository usuarioRepository;
     
@@ -32,6 +36,8 @@ public class UsuarioService {
     // Misma creación, con avatar opcional ("HOMBRE" o "MUJER")
     public Usuario crearUsuario(String username, String password, String rol, String usuarioCreador, String avatar) {
         if (usuarioRepository.existsByUsername(username)) {
+            log.warn("No se creó el usuario: el nombre ya existe");
+            log.debug("Nombre de usuario duplicado al crear: '{}'", username);
             throw new RuntimeException("El usuario ya existe");
         }
         
@@ -44,6 +50,8 @@ public class UsuarioService {
         usuario.setAvatar(avatar);
         
         Usuario saved = usuarioRepository.save(usuario);
+        log.info("Usuario creado");
+        log.debug("Usuario creado: id {}, nombre '{}', rol {}", saved.getId(), username, rol);
         
         // ✅ Auditoría: obtener ID del usuario creador
         Optional<Usuario> creador = usuarioRepository.findByUsername(usuarioCreador);
@@ -93,6 +101,8 @@ public class UsuarioService {
         Usuario updated = usuarioRepository.save(usuario);
         
         if (!cambios.isEmpty()) {
+            log.info("Usuario actualizado");
+            log.debug("Usuario actualizado: id {}, cambios: {}", id, cambios);
             Optional<Usuario> modificador = usuarioRepository.findByUsername(usuarioModificador);
             if (modificador.isPresent()) {
                 auditoriaService.registrarAccion(
@@ -101,6 +111,8 @@ public class UsuarioService {
                     "Usuario modificado: " + username + " - Cambios: " + cambios
                 );
             }
+        } else {
+            log.debug("Actualización de usuario sin cambios: id {}", id);
         }
         
         return updated;
@@ -113,6 +125,8 @@ public class UsuarioService {
         
         usuario.setPassword(passwordEncoder.encode(nuevaPassword));
         usuarioRepository.save(usuario);
+        log.info("Contraseña de un usuario cambiada");
+        log.debug("Contraseña cambiada: usuario id {}", id);
         
         Optional<Usuario> modificador = usuarioRepository.findByUsername(usuarioModificador);
         if (modificador.isPresent()) {
@@ -131,6 +145,8 @@ public class UsuarioService {
         
         String username = usuario.getUsername();
         usuarioRepository.delete(usuario);
+        log.info("Usuario eliminado");
+        log.debug("Usuario eliminado: id {}, nombre '{}'", id, username);
         
         Optional<Usuario> eliminador = usuarioRepository.findByUsername(usuarioEliminador);
         if (eliminador.isPresent()) {
@@ -149,14 +165,27 @@ public class UsuarioService {
             boolean autenticado = passwordEncoder.matches(password, usuario.get().getPassword());
             
             if (autenticado) {
+                log.info("Inicio de sesión exitoso");
+                log.debug("Inicio de sesión exitoso: usuario '{}'", username);
                 auditoriaService.registrarAccion(
                     usuario.get().getId(),
                     "LOGIN",
                     "Inicio de sesión exitoso"
                 );
+            } else {
+                log.warn("Inicio de sesión fallido: contraseña incorrecta");
+                log.debug("Contraseña incorrecta para el usuario '{}'", username);
             }
             
             return autenticado;
+        }
+        
+        if (usuario.isEmpty()) {
+            log.warn("Inicio de sesión fallido: el usuario no existe");
+            log.debug("Usuario inexistente al iniciar sesión: '{}'", username);
+        } else {
+            log.warn("Inicio de sesión fallido: el usuario está inactivo");
+            log.debug("Usuario inactivo al iniciar sesión: '{}'", username);
         }
         return false;
     }

@@ -19,11 +19,19 @@ import java.util.List;
 import java.util.Optional;
 import java.util.prefs.Preferences;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Prueba de 3 meses + activación con clave firmada (Ed25519) atada al equipo.
  * Sin Spring: se puede usar directamente con new LicenciaService().
+ *
+ * Sobre los logs: nunca se registra la clave de licencia, el secreto, el código
+ * del equipo ni las rutas de los archivos de control (están escondidas a propósito).
  */
 public final class LicenciaService {
+
+    private static final Logger log = LoggerFactory.getLogger(LicenciaService.class);
 
     public enum Estado { LICENCIADA, PRUEBA, VENCIDA }
 
@@ -52,6 +60,7 @@ public final class LicenciaService {
     // ==================== API PÚBLICA ====================
 
     public Resultado evaluar() {
+        log.debug("Evaluando la licencia");
         LocalDate hoy = LocalDate.now();
 
         // 1. Leer fecha de inicio y último uso (3 copias firmadas)
@@ -66,6 +75,7 @@ public final class LicenciaService {
             Datos d = parsear(c);
             if (d == null) alterado = true; else validos.add(d);
         }
+        log.debug("Copias de datos de la prueba: {} válida(s), alterada(s): {}", validos.size(), alterado);
 
         Datos datos;
         if (!validos.isEmpty()) {
@@ -73,13 +83,16 @@ public final class LicenciaService {
             LocalDate uso = validos.stream().map(Datos::uso).max(LocalDate::compareTo).get();
             datos = new Datos(ini, uso);
         } else if (alterado) {
+            log.warn("Licencia vencida: los datos de la prueba fueron alterados");
             return new Resultado(Estado.VENCIDA, 0, "Los datos de la prueba fueron alterados");
         } else {
+            log.info("Primer arranque: se inicia el periodo de prueba");
             datos = new Datos(hoy, hoy); // primer arranque
         }
 
         // 2. Reloj atrasado
         if (hoy.isBefore(datos.uso().minusDays(1))) {
+            log.warn("Licencia vencida: la fecha del equipo es anterior al último uso registrado");
             return new Resultado(Estado.VENCIDA, 0, "La fecha del equipo es anterior al último uso. Corrígela.");
         }
         datos = new Datos(datos.inicio(), hoy.isAfter(datos.uso()) ? hoy : datos.uso());
@@ -96,25 +109,39 @@ public final class LicenciaService {
         if (lic != null) {
             Optional<LocalDate> vence = validarClave(lic);
             if (vence.isPresent()) {
-                return new Resultado(Estado.LICENCIADA, ChronoUnit.DAYS.between(hoy, vence.get()), "");
+                long diasLicencia = ChronoUnit.DAYS.between(hoy, vence.get());
+                log.info("Licencia válida; días restantes: {}", diasLicencia);
+                return new Resultado(Estado.LICENCIADA, diasLicencia, "");
             }
+            log.warn("Hay una licencia guardada pero no es válida (otro equipo, vencida o dañada)");
+        } else {
+            log.debug("No hay licencia guardada");
         }
 
         // 4. Periodo de prueba
         long dias = ChronoUnit.DAYS.between(hoy, datos.inicio().plusMonths(MESES_PRUEBA));
         if (dias >= 0) {
+            log.debug("Periodo de prueba: quedan {} día(s)", dias);
             return new Resultado(Estado.PRUEBA, dias, "");
         }
+        log.warn("Licencia vencida: el periodo de prueba terminó");
         return new Resultado(Estado.VENCIDA, 0, "El periodo de prueba terminó");
     }
 
     /** Devuelve true y guarda la clave si es válida para ESTE equipo y no ha vencido. */
     public boolean activar(String clave) {
-        if (clave == null) return false;
+        if (clave == null) {
+            log.debug("Activación sin clave");
+            return false;
+        }
         clave = clave.trim();
-        if (validarClave(clave).isEmpty()) return false;
+        if (validarClave(clave).isEmpty()) {
+            log.warn("Activación rechazada: la clave no es válida para este equipo");
+            return false;
+        }
         prefs.put(K_LICENCIA, clave);
         for (Path p : archivosLicencia) escribirArchivo(p, clave);
+        log.info("Licencia activada correctamente");
         return true;
     }
 
@@ -131,7 +158,10 @@ public final class LicenciaService {
     private Optional<LocalDate> validarClave(String clave) {
         try {
             String[] p = clave.trim().split("\\.");
-            if (p.length != 2) return Optional.empty();
+            if (p.length != 2) {
+                log.debug("Clave de licencia con formato incorrecto");
+                return Optional.empty();
+            }
             Base64.Decoder dec = Base64.getUrlDecoder();
             byte[] payload = dec.decode(p[0]);
             byte[] firma = dec.decode(p[1]);
@@ -140,14 +170,26 @@ public final class LicenciaService {
             s.initVerify(KeyFactory.getInstance("Ed25519")
                 .generatePublic(new X509EncodedKeySpec(Base64.getDecoder().decode(CLAVE_PUBLICA))));
             s.update(payload);
-            if (!s.verify(firma)) return Optional.empty();
+            if (!s.verify(firma)) {
+                log.debug("Clave de licencia con firma no válida");
+                return Optional.empty();
+            }
 
             String[] d = new String(payload, StandardCharsets.UTF_8).split("\\|");
-            if (d.length != 2 || !d[0].equals(codigoEquipo())) return Optional.empty();
+            if (d.length != 2 || !d[0].equals(codigoEquipo())) {
+                log.debug("Clave de licencia de otro equipo o con contenido incorrecto");
+                return Optional.empty();
+            }
 
             LocalDate vence = LocalDate.parse(d[1]);
-            return vence.isBefore(LocalDate.now()) ? Optional.empty() : Optional.of(vence);
+            if (vence.isBefore(LocalDate.now())) {
+                log.debug("Clave de licencia vencida el {}", vence);
+                return Optional.empty();
+            }
+            return Optional.of(vence);
         } catch (Exception e) {
+            // Sin stacktrace completo: puede venir de una clave mal escrita por el usuario
+            log.warn("No se pudo validar la clave de licencia ({})", e.getClass().getSimpleName());
             return Optional.empty();
         }
     }
@@ -164,10 +206,17 @@ public final class LicenciaService {
     private Datos parsear(String raw) {
         try {
             String[] p = raw.trim().split("\\|");
-            if (p.length != 3) return null;
-            if (!hmac(p[0] + "|" + p[1]).equals(p[2])) return null;
+            if (p.length != 3) {
+                log.warn("Una copia de los datos de la prueba tiene formato incorrecto");
+                return null;
+            }
+            if (!hmac(p[0] + "|" + p[1]).equals(p[2])) {
+                log.warn("Una copia de los datos de la prueba no pasó la verificación de firma");
+                return null;
+            }
             return new Datos(LocalDate.parse(p[0]), LocalDate.parse(p[1]));
         } catch (Exception e) {
+            log.warn("Una copia de los datos de la prueba no se pudo leer ({})", e.getClass().getSimpleName());
             return null;
         }
     }
@@ -180,6 +229,7 @@ public final class LicenciaService {
             mac.init(new SecretKeySpec(SECRETO.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
             return HexFormat.of().formatHex(mac.doFinal(texto.getBytes(StandardCharsets.UTF_8)));
         } catch (Exception e) {
+            log.error("No se pudo calcular la firma de los datos de la licencia", e);
             throw new IllegalStateException(e);
         }
     }
@@ -188,6 +238,7 @@ public final class LicenciaService {
         try {
             return MessageDigest.getInstance("SHA-256").digest(datos);
         } catch (Exception e) {
+            log.error("No se pudo calcular el SHA-256 del código del equipo", e);
             throw new IllegalStateException(e);
         }
     }
@@ -205,7 +256,12 @@ public final class LicenciaService {
                     return t[t.length - 1];
                 }
             }
-        } catch (Exception ignored) { }
+            log.warn("No se encontró el identificador de la máquina en el registro; se usa el nombre del equipo");
+        } catch (Exception ignored) {
+            // Si cae al plan B, el código del equipo cambia: conviene que quede anotado
+            log.warn("No se pudo leer el identificador de la máquina ({}); se usa el nombre del equipo",
+                ignored.getClass().getSimpleName());
+        }
         return System.getenv().getOrDefault("COMPUTERNAME", "?") + "|" + System.getProperty("user.name");
     }
 
@@ -213,6 +269,8 @@ public final class LicenciaService {
         try {
             return Files.exists(p) ? Files.readString(p).trim() : null;
         } catch (Exception e) {
+            // No se escribe la ruta: los archivos de control están escondidos a propósito
+            log.warn("No se pudo leer un archivo de control de la licencia ({})", e.getClass().getSimpleName());
             return null;
         }
     }
@@ -221,6 +279,9 @@ public final class LicenciaService {
         try {
             Files.createDirectories(p.getParent());
             Files.writeString(p, contenido);
-        } catch (Exception ignored) { }
+        } catch (Exception ignored) {
+            log.warn("No se pudo escribir un archivo de control de la licencia ({})",
+                ignored.getClass().getSimpleName());
+        }
     }
 }

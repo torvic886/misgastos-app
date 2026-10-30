@@ -105,7 +105,7 @@
 
 		<TableView fx:id="tblUltimosGastos" VBox.vgrow="ALWAYS" style="-fx-fixed-cell-size: 34px;">
 		    <columns>
-		        <TableColumn fx:id="colFecha" text="Fecha" prefWidth="76" minWidth="71"/>
+		        <TableColumn fx:id="colFecha" text="Fecha" prefWidth="100" minWidth="96"/>
 		        <TableColumn fx:id="colHora" text="Hora" prefWidth="69" minWidth="64"/>
 		        <TableColumn fx:id="colUsuario" text="Registrado por" prefWidth="91" minWidth="86"/>
 		        <TableColumn fx:id="colCategoria" text="Categoría" prefWidth="135" minWidth="115"/>

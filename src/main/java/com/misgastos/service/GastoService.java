@@ -32,12 +32,16 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import com.misgastos.util.ProductoNormalizador;
 import java.util.LinkedHashMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 @Service
 @Transactional
 public class GastoService {
 
+    private static final Logger log = LoggerFactory.getLogger(GastoService.class);
+	
     private static final String FLECHA = " → ";
 
     @Autowired
@@ -87,7 +91,13 @@ public class GastoService {
 
         guardarClienteSiNoExiste(cedula, nombrePersona);
 
-        return gastoRepository.save(gasto);
+        guardarClienteSiNoExiste(cedula, nombrePersona);
+
+        Gasto guardado = gastoRepository.save(gasto);
+        log.info("Gasto registrado");
+        log.debug("Gasto registrado: id {}, usuario id {}, categoría id {}, subcategoría id {}",
+                guardado.getId(), usuarioId, categoriaId, subcategoriaId);
+        return guardado;
     }
 
     public List<Gasto> listarTodos() {
@@ -150,6 +160,8 @@ public class GastoService {
 
         auditoriaService.registrarCambioGasto("BORRAR_GASTO",
                 "Borrado a la papelera del " + etiqueta + ": " + resumen);
+        log.info("Gasto enviado a la papelera");
+        log.debug("Gasto enviado a la papelera: id {}", id);
     }
 
     public Optional<Gasto> buscarUltimoGastoPorProducto(String producto) {
@@ -242,6 +254,10 @@ public class GastoService {
         if (!cambios.isEmpty()) {
             auditoriaService.registrarCambioGasto("EDITAR_GASTO",
                     "Edición del " + etiqueta + ": " + String.join(", ", cambios));
+            log.info("Gasto editado");
+            log.debug("Gasto editado: id {}, {} cambio(s)", id, cambios.size());
+        } else {
+            log.debug("Edición sin cambios en el gasto id {}", id);
         }
 
         return guardado;
@@ -278,6 +294,8 @@ public class GastoService {
             c.setCedula(ced);
             c.setNombre(nombre.trim());
             clienteRepository.save(c);
+            log.info("Cliente creado automáticamente al registrar un gasto");
+            log.debug("Cliente creado automáticamente: cédula {}", ced);
         }
     }
 
@@ -287,16 +305,32 @@ public class GastoService {
 
     public void restaurarGasto(Long id) {
         Optional<Gasto> antes = buscarEnPapelera(id);
+        if (antes.isEmpty()) {
+            log.warn("Restaurar gasto: no se encontró en la papelera");
+            log.debug("Restaurar gasto: id {} no está en la papelera", id);
+        }
         gastoRepository.restaurar(id);
-        antes.ifPresent(g -> auditoriaService.registrarCambioGasto("RESTAURAR_GASTO",
-                "Restauración del " + etiqueta(g) + ": " + resumen(g)));
+        antes.ifPresent(g -> {
+            auditoriaService.registrarCambioGasto("RESTAURAR_GASTO",
+                    "Restauración del " + etiqueta(g) + ": " + resumen(g));
+            log.info("Gasto restaurado desde la papelera");
+            log.debug("Gasto restaurado: id {}", id);
+        });
     }
 
     public void eliminarDefinitivamente(Long id) {
         Optional<Gasto> antes = buscarEnPapelera(id);
+        if (antes.isEmpty()) {
+            log.warn("Eliminar definitivamente: el gasto no se encontró en la papelera");
+            log.debug("Eliminar definitivamente: id {} no está en la papelera", id);
+        }
         gastoRepository.borrarDefinitivo(id);
-        antes.ifPresent(g -> auditoriaService.registrarCambioGasto("ELIMINAR_DEFINITIVO",
-                "Eliminación definitiva del " + etiqueta(g) + ": " + resumen(g)));
+        antes.ifPresent(g -> {
+            auditoriaService.registrarCambioGasto("ELIMINAR_DEFINITIVO",
+                    "Eliminación definitiva del " + etiqueta(g) + ": " + resumen(g));
+            log.info("Gasto eliminado definitivamente");
+            log.debug("Gasto eliminado definitivamente: id {}", id);
+        });
     }
 
     public int vaciarPapelera() {
@@ -311,6 +345,7 @@ public class GastoService {
             auditoriaService.registrarCambioGasto("VACIAR_PAPELERA",
                     "Papelera vaciada: " + eliminados + " gasto(s) eliminados definitivamente");
         }
+        log.info("Papelera vaciada: {} gasto(s) eliminados definitivamente", eliminados);
         return eliminados;
     }
 
@@ -367,7 +402,10 @@ public class GastoService {
         String limpio = ProductoNormalizador.limpiar(producto);
         String clave = ProductoNormalizador.clave(limpio);
         for (String existente : gastoRepository.productosPorFrecuencia()) {
-            if (ProductoNormalizador.clave(existente).equals(clave)) {
+        	if (ProductoNormalizador.clave(existente).equals(clave)) {
+                if (!existente.equals(limpio)) {
+                    log.debug("Producto unificado con la escritura que ya existe");
+                }
                 return existente;
             }
         }

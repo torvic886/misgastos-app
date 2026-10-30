@@ -23,6 +23,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import java.util.List;
+import javafx.scene.Cursor;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,12 +59,14 @@ public class DashboardController {
     @FXML private Button btnRegistroCambios;
     @FXML private Button btnDiagnostico;
     @FXML private Button btnPresupuestos;
+    @FXML private Button btnCorregirDatos;
     @FXML private Button btnToggleMenu;
     @FXML private Label lblGrupoGastos;
     @FXML private Label lblGrupoPersonas;
     @FXML private Label lblGrupoSistema;
     private boolean menuColapsado = false;
-
+    private boolean sistemaAbierto = false;
+    
     @Autowired
     private ApplicationContext springContext;
 
@@ -85,7 +89,8 @@ public class DashboardController {
     public void initialize() {
         log.debug("Dashboard inicializado");
         cargarVista("/fxml/inicio.fxml");
-
+        configurarGrupoSistema();
+        
         // Modo compacto (responsive): con ventana angosta se reducen menú y márgenes
         mainBorderPane.sceneProperty().addListener((obs, antes, escena) -> {
             if (escena != null) {
@@ -217,6 +222,11 @@ public class DashboardController {
         if (nuevoBotonActivo != null && !nuevoBotonActivo.getStyleClass().contains("active")) {
             nuevoBotonActivo.getStyleClass().add("active");
         }
+        
+        if (nuevoBotonActivo != null && botonesSistema().contains(nuevoBotonActivo) && !sistemaAbierto) {
+            sistemaAbierto = true;
+            actualizarGrupoSistema();
+        }
 
         botonActivo = nuevoBotonActivo;
     }
@@ -244,10 +254,47 @@ public class DashboardController {
                             btn.getText().contains("Respaldo") ||
                             btn.getText().contains("Registro de cambios") ||
                             btn.getText().contains("Presupuestos") ||
-                            btn.getText().contains("Diagnóstico");
+                            btn.getText().contains("Diagnóstico") ||
+                            btn.getText().contains("Registro de cambios") ||
+                            btn.getText().contains("Corregir datos") ||
+                            btn.getText().contains("Presupuestos");
                 }
                 return false;
             });
+        }
+    }
+    
+    private List<Button> botonesSistema() {
+        return List.of(btnPresupuestos, btnRegistroCambios, btnCorregirDatos, btnRespaldo, btnDiagnostico);
+    }
+
+    /** Hace clicable el título SISTEMA y lo deja cerrado al iniciar. */
+    private void configurarGrupoSistema() {
+        if (lblGrupoSistema == null) {
+            return;
+        }
+        lblGrupoSistema.setCursor(Cursor.HAND);
+        lblGrupoSistema.setOnMouseClicked(e -> {
+            sistemaAbierto = !sistemaAbierto;
+            log.debug("Grupo SISTEMA {}", sistemaAbierto ? "abierto" : "cerrado");
+            actualizarGrupoSistema();
+        });
+        actualizarGrupoSistema();
+    }
+
+    /**
+     * Muestra u oculta los botones de SISTEMA según la flecha.
+     * Con el menú contraído (solo íconos) siempre se muestran, porque
+     * ahí no hay título que se pueda pulsar para abrirlos.
+     */
+    private void actualizarGrupoSistema() {
+        if (lblGrupoSistema != null) {
+            lblGrupoSistema.setText((sistemaAbierto ? "▾ " : "▸ ") + "SISTEMA");
+        }
+        boolean mostrar = sistemaAbierto || menuColapsado;
+        for (Button b : botonesSistema()) {
+            b.setVisible(mostrar);
+            b.setManaged(mostrar);
         }
     }
 
@@ -275,6 +322,7 @@ public class DashboardController {
                 l.setManaged(!menuColapsado);
             }
         }
+        actualizarGrupoSistema();
         btnToggleMenu.setTooltip(new Tooltip(menuColapsado ? "Expandir menú" : "Contraer menú"));
     }
 
@@ -383,6 +431,17 @@ public class DashboardController {
         log.debug("Navegando a Diagnóstico y registros");
         establecerBotonActivo(btnDiagnostico);
         cargarVista("/fxml/diagnostico.fxml");
+    }
+    
+    @FXML
+    public void handleCorregirDatos() {
+        if (esUsuarioNormal()) {
+            mostrarAlerta("Acceso Denegado", "No tiene permisos para acceder a esta sección");
+            return;
+        }
+        log.debug("Navegando a Corregir datos");
+        establecerBotonActivo(btnCorregirDatos);
+        cargarVista("/fxml/corregir-datos.fxml");
     }
 
     @FXML

@@ -29,6 +29,8 @@ import com.itextpdf.layout.properties.VerticalAlignment;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Locale;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Estilo único de los informes PDF: márgenes, encabezado y pie de página,
@@ -36,7 +38,8 @@ import java.util.Locale;
  */
 public class PdfEstilo implements AutoCloseable {
 
-    /** Tipos de fila de una tabla. */
+    private static final Logger log = LoggerFactory.getLogger(PdfEstilo.class);
+	/** Tipos de fila de una tabla. */
     public enum Fila { DATO, ZEBRA, GRUPO, TOTAL }
 
     private static final float MARGEN = 40f;
@@ -239,11 +242,13 @@ public class PdfEstilo implements AutoCloseable {
     public PdfFont fuenteBloques() {
         try (InputStream in = PdfEstilo.class.getResourceAsStream("/fonts/DejaVuSans.ttf")) {
             if (in == null) {
+            	log.warn("No se encontró la fuente de bloques /fonts/DejaVuSans.ttf; el informe saldrá sin barras");
                 return null;
             }
             return PdfFontFactory.createFont(in.readAllBytes(), PdfEncodings.IDENTITY_H);
         } catch (Exception e) {
-            return null;
+        	log.warn("No se pudo cargar la fuente de bloques; el informe saldrá sin barras", e);
+        	return null;
         }
     }
 

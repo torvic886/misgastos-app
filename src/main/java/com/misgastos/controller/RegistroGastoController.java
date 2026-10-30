@@ -9,6 +9,10 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
+import javafx.scene.control.Labeled;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
 
 import com.misgastos.model.Categoria;
 import com.misgastos.model.Gasto;
@@ -100,6 +104,7 @@ public class RegistroGastoController {
     private final Map<TableColumn<Gasto, ?>, Set<String>> seleccionados = new HashMap<>();
     private final Map<TableColumn<Gasto, ?>, Button> botonesFiltro = new HashMap<>();
     private final NumberFormat fmtMoneda = NumberFormat.getCurrencyInstance(new Locale("es", "CO"));
+    private Font fuenteCeldaBeneficiario;
 
 
     @FXML
@@ -526,6 +531,18 @@ public class RegistroGastoController {
         colUsuario.setCellValueFactory(data -> new SimpleStringProperty(
                     data.getValue().getUsuario() == null ? "" : data.getValue().getUsuario().getUsername()));
         colBeneficiario.setCellValueFactory(d -> new SimpleStringProperty(textoBeneficiario(d.getValue())));
+        colBeneficiario.setCellFactory(col -> {
+            TableCell<Gasto, String> celda = new TableCell<>() {
+                @Override
+                protected void updateItem(String item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? "" : item);
+                }
+            };
+            celda.fontProperty().addListener((obs, anterior, nueva) -> recordarFuenteBeneficiario(nueva));
+            recordarFuenteBeneficiario(celda.getFont());
+            return celda;
+        });
         colCategoria.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getCategoria().getNombre()));
         colProducto.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getProducto()));
         colCantidad.setCellValueFactory(new PropertyValueFactory<>("cantidad"));
@@ -551,6 +568,7 @@ public class RegistroGastoController {
         colCantidad.setStyle("-fx-alignment: CENTER-RIGHT;");
         colValorUnitario.setStyle("-fx-alignment: CENTER-RIGHT;");
         colTotal.setStyle("-fx-alignment: CENTER-RIGHT;");
+       
     }
 
     private void cargarUltimosGastos() {
@@ -1075,7 +1093,55 @@ public class RegistroGastoController {
             tblUltimosGastos.scrollToColumnIndex(0);
             tblUltimosGastos.scrollToColumnIndex(0);
             tblUltimosGastos.scrollTo(0);
+            ajustarAnchoBeneficiario();
         });
+    }
+    
+    /** Ajusta el ancho de Beneficiario al nombre más largo que se está mostrando. */
+    /** Ajusta el ancho de Beneficiario al nombre más largo que se está mostrando. */
+    private void ajustarAnchoBeneficiario() {
+        if (gastosFiltrados == null) {
+            return;
+        }
+        Font fuente = fuenteCeldaBeneficiario != null ? fuenteCeldaBeneficiario : Font.getDefault();
+        Font fuenteTitulo = Font.font(fuente.getFamily(), FontWeight.BOLD, fuente.getSize());
+
+        // Mínimo: lo que ocupa el encabezado (título + botón de filtro + márgenes)
+        double minimo = anchoTexto("Beneficiario", fuenteTitulo) + 54;
+
+        // Se miden solo los nombres distintos, para no frenar la tabla
+        Set<String> nombres = new HashSet<>();
+        for (Gasto g : gastosFiltrados) {
+            String t = textoBeneficiario(g);
+            if (t != null && !t.isEmpty()) {
+                nombres.add(t);
+            }
+        }
+        double masAncho = 0;
+        for (String nombre : nombres) {
+            masAncho = Math.max(masAncho, anchoTexto(nombre, fuente));
+        }
+
+        // Nombre más largo + margen de la celda, sin pasar de 700 px
+        double deseado = Math.min(700, Math.max(minimo, masAncho + 40));
+        colBeneficiario.setMinWidth(minimo);
+        colBeneficiario.setPrefWidth(deseado);
+        log.debug("Ancho de Beneficiario ajustado a {} px ({} nombres distintos)",
+            Math.round(deseado), nombres.size());
+    }
+
+    /** La celda avisa su letra real; solo recalcula cuando esa letra cambia. */
+    private void recordarFuenteBeneficiario(Font fuente) {
+        if (fuente != null && !fuente.equals(fuenteCeldaBeneficiario)) {
+            fuenteCeldaBeneficiario = fuente;
+            Platform.runLater(this::ajustarAnchoBeneficiario);
+        }
+    }
+
+    private double anchoTexto(String texto, Font fuente) {
+        Text medidor = new Text(texto);
+        medidor.setFont(fuente);
+        return medidor.getLayoutBounds().getWidth();
     }
 
     private String textoBeneficiario(Gasto g) {
