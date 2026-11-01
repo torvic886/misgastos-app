@@ -33,6 +33,8 @@ import java.util.Locale;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import com.misgastos.util.FiltroExcel;
+import javafx.scene.control.SelectionMode;
+import java.util.ArrayList;
 
 @Slf4j
 @Component
@@ -185,6 +187,8 @@ public class ListaGastosController {
         		    c.getValue().getCedula() == null ? "" : c.getValue().getCedula()));
         		colNombre.setCellValueFactory(c -> new SimpleStringProperty(
         		    c.getValue().getNombrePersona() == null ? "" : c.getValue().getNombrePersona()));
+               
+        		tableGastos.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
     
     }
 
@@ -194,6 +198,24 @@ public class ListaGastosController {
         filtro.setDatos(gastos);
 
         log.debug("Gastos cargados: {}", gastos.size());
+    }
+    
+    /**
+     * Recarga los gastos desde la base de datos conservando el texto de búsqueda
+     * y los filtros de columna que estén activos.
+     */
+    private void recargarConservandoFiltros() {
+        List<Gasto> gastos = gastoService.listarTodos();
+        listaGastos = FXCollections.observableArrayList(gastos);
+
+        String busqueda = txtBuscar.getText() == null ? "" : txtBuscar.getText().toLowerCase();
+        List<Gasto> base = busqueda.isEmpty()
+                ? gastos
+                : gastos.stream().filter(g -> coincideBusqueda(g, busqueda)).toList();
+
+        filtro.actualizarDatos(base);
+        log.debug("Gastos recargados conservando filtros: {} cargados, {} tras la búsqueda",
+                gastos.size(), base.size());
     }
 
     /**
@@ -224,23 +246,52 @@ public class ListaGastosController {
 
     @FXML
     public void handleEliminar() {
-        Gasto seleccionado = tableGastos.getSelectionModel().getSelectedItem();
+        List<Gasto> seleccionados = new ArrayList<>(tableGastos.getSelectionModel().getSelectedItems());
 
-        if (seleccionado == null) {
-            mostrarAlerta("Advertencia", "Seleccione un gasto para eliminar", Alert.AlertType.WARNING);
+        if (seleccionados.isEmpty()) {
+            mostrarAlerta("Advertencia", "Seleccione uno o más gastos para eliminar", Alert.AlertType.WARNING);
             return;
         }
 
         Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
         confirmacion.setTitle("Confirmar eliminación");
         confirmacion.setHeaderText(null);
-        confirmacion.setContentText("¿Está seguro de eliminar este gasto?");
+        confirmacion.setContentText(seleccionados.size() == 1
+                ? "¿Está seguro de eliminar este gasto?"
+                : "¿Está seguro de eliminar los " + seleccionados.size() + " gastos seleccionados?");
 
-        if (confirmacion.showAndWait().get() == ButtonType.OK) {
-            gastoService.eliminarGasto(seleccionado.getId());
-            mostrarAlerta("Éxito", "Gasto enviado a la papelera", Alert.AlertType.INFORMATION);
-            cargarGastos();
+        if (confirmacion.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) {
+            log.debug("Eliminación de {} gasto(s) cancelada por el usuario", seleccionados.size());
+            return;
         }
+
+        int eliminados = 0;
+        int fallidos = 0;
+        for (Gasto g : seleccionados) {
+            try {
+                gastoService.eliminarGasto(g.getId());
+                eliminados++;
+            } catch (Exception e) {
+                fallidos++;
+                log.error("No se pudo eliminar el gasto id={}", g.getId(), e);
+            }
+        }
+
+        log.info("Eliminación múltiple terminada: {} enviados a la papelera, {} con error",
+                eliminados, fallidos);
+
+        if (fallidos == 0) {
+            mostrarAlerta("Éxito",
+                    eliminados == 1 ? "Gasto enviado a la papelera"
+                                    : eliminados + " gastos enviados a la papelera",
+                    Alert.AlertType.INFORMATION);
+        } else {
+            mostrarAlerta("Advertencia",
+                    eliminados + " gastos enviados a la papelera, " + fallidos + " no se pudieron eliminar",
+                    Alert.AlertType.WARNING);
+        }
+
+        recargarConservandoFiltros();
     }
 
     @FXML

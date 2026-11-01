@@ -1,0 +1,4 @@
+-- Permisos del menu Sistema por usuario
+ALTER TABLE usuarios ADD COLUMN permisos VARCHAR(500);
+
+UPDATE usuarios SET permisos = 'PRESUPUESTO,REGISTRO_CAMBIOS,CORREGIR_DATOS,RESPALDO,DIAGNOSTICO' WHERE rol IN ('ADMINISTRADOR', 'ADMIN');

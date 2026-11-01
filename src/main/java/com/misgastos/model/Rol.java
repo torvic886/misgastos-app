@@ -2,7 +2,8 @@ package com.misgastos.model;
 
 public enum Rol {
     ADMINISTRADOR("Administrador"),
-    USUARIO("Usuario");
+    USUARIO("Usuario"),
+    ADMIN_GENERAL("Administrador general");
     
     private final String displayName;
     

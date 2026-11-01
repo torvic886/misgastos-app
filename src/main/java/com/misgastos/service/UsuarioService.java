@@ -28,6 +28,18 @@ public class UsuarioService {
     
     private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     
+    // ==================== REGLA: SOLO EL ADMINISTRADOR GENERAL ====================
+    private void exigirAdministradorGeneral(String username) {
+        boolean permitido = username != null && usuarioRepository.findByUsername(username)
+            .map(u -> Rol.ADMIN_GENERAL.name().equals(u.getRol()))
+            .orElse(false);
+        if (!permitido) {
+            log.warn("Gestión de usuarios rechazada: quien la pidió no es Administrador general");
+            log.debug("Gestión de usuarios rechazada para '{}'", username);
+            throw new RuntimeException("Solo el Administrador general puede gestionar usuarios");
+        }
+    }
+    
     // ==================== CREAR USUARIO ====================
     public Usuario crearUsuario(String username, String password, String rol, String usuarioCreador) {
         return crearUsuario(username, password, rol, usuarioCreador, null);
@@ -35,7 +47,13 @@ public class UsuarioService {
 
     // Misma creación, con avatar opcional ("HOMBRE" o "MUJER")
     public Usuario crearUsuario(String username, String password, String rol, String usuarioCreador, String avatar) {
-        if (usuarioRepository.existsByUsername(username)) {
+        exigirAdministradorGeneral(usuarioCreador);
+        if (Rol.ADMIN_GENERAL.name().equals(rol)) {
+            log.warn("No se creó el usuario: no se puede asignar el rol Administrador general");
+            throw new RuntimeException("El rol Administrador general no se puede asignar");
+        }
+    	
+    	if (usuarioRepository.existsByUsername(username)) {
             log.warn("No se creó el usuario: el nombre ya existe");
             log.debug("Nombre de usuario duplicado al crear: '{}'", username);
             throw new RuntimeException("El usuario ya existe");
@@ -75,6 +93,18 @@ public class UsuarioService {
     public Usuario actualizarUsuario(Long id, String username, String rol, Boolean activo, String usuarioModificador, String avatar) {
         Usuario usuario = usuarioRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        
+        exigirAdministradorGeneral(usuarioModificador);
+        boolean destinoEsGeneral = Rol.ADMIN_GENERAL.name().equals(usuario.getRol());
+        if (Rol.ADMIN_GENERAL.name().equals(rol) && !destinoEsGeneral) {
+            throw new RuntimeException("El rol Administrador general no se puede asignar");
+        }
+        if (destinoEsGeneral && !Rol.ADMIN_GENERAL.name().equals(rol)) {
+            throw new RuntimeException("No se puede quitar el rol Administrador general desde la pantalla");
+        }
+        if (destinoEsGeneral && !Boolean.TRUE.equals(activo)) {
+            throw new RuntimeException("No se puede desactivar al Administrador general");
+        }
         
         String cambios = "";
         
@@ -120,7 +150,8 @@ public class UsuarioService {
     
     // ==================== CAMBIAR CONTRASEÑA ====================
     public void cambiarPassword(Long id, String nuevaPassword, String usuarioModificador) {
-        Usuario usuario = usuarioRepository.findById(id)
+        exigirAdministradorGeneral(usuarioModificador);
+    	Usuario usuario = usuarioRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         
         usuario.setPassword(passwordEncoder.encode(nuevaPassword));
@@ -142,6 +173,11 @@ public class UsuarioService {
     public void eliminarUsuario(Long id, String usuarioEliminador) {
         Usuario usuario = usuarioRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        
+        exigirAdministradorGeneral(usuarioEliminador);
+        if (Rol.ADMIN_GENERAL.name().equals(usuario.getRol())) {
+            throw new RuntimeException("No se puede eliminar al Administrador general");
+        }
         
         String username = usuario.getUsername();
         usuarioRepository.delete(usuario);
@@ -211,7 +247,8 @@ public class UsuarioService {
     
     public boolean esAdministrador(String username) {
         return buscarPorUsername(username)
-            .map(u -> Rol.ADMINISTRADOR.name().equals(u.getRol()))
+                .map(u -> Rol.ADMINISTRADOR.name().equals(u.getRol())
+                        || Rol.ADMIN_GENERAL.name().equals(u.getRol()))
             .orElse(false);
     }
     

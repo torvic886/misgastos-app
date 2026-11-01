@@ -211,6 +211,7 @@ public class DashboardController {
     private String normalizarRol(String rol) {
         if ("ADMIN".equals(rol)) return "ADMINISTRADOR";
         if ("USER".equals(rol)) return "USUARIO";
+        if ("ADMIN_GENERAL".equals(rol)) return "ADMINISTRADOR GENERAL";
         return rol;
     }
 
@@ -232,7 +233,11 @@ public class DashboardController {
     }
 
     private boolean esAdministrador() {
-        return "ADMINISTRADOR".equals(rol) || "ADMIN".equals(rol);
+        return "ADMINISTRADOR".equals(rol) || "ADMIN".equals(rol) || esAdministradorGeneral();
+    }
+
+    private boolean esAdministradorGeneral() {
+        return "ADMIN_GENERAL".equals(rol);
     }
 
     private boolean esUsuarioNormal() {
@@ -262,7 +267,15 @@ public class DashboardController {
                 return false;
             });
         }
+
+        if (!esAdministradorGeneral() && btnUsuarios != null) {
+            btnUsuarios.setVisible(false);
+            btnUsuarios.setManaged(false);
+            log.debug("Opción Usuarios oculta: el rol {} no es Administrador general", rol);
+        }
     }
+        
+        
     
     private List<Button> botonesSistema() {
         return List.of(btnPresupuestos, btnRegistroCambios, btnCorregirDatos, btnRespaldo, btnDiagnostico);
@@ -468,8 +481,9 @@ public class DashboardController {
 
     @FXML
     public void handleUsuarios() {
-        if (esUsuarioNormal()) {
-            mostrarAlerta("Acceso Denegado", "No tiene permisos para gestionar usuarios");
+        if (!esAdministradorGeneral()) {
+            log.warn("Intento de abrir Gestión de usuarios sin ser Administrador general: usuario '{}'", username);
+            mostrarAlerta("Acceso Denegado", "Solo el Administrador general puede gestionar usuarios");
             return;
         }
         log.debug("Navegando a Gestión de Usuarios");

@@ -90,6 +90,12 @@ public class FiltroExcel<T> {
         maestro.setAll(datos);
         aplicar();
     }
+    
+    /** Recarga los datos conservando los filtros activos de las columnas. */
+    public void actualizarDatos(List<T> datos) {
+        maestro.setAll(datos);
+        aplicar();
+    }
 
     /** Quita todos los filtros activos. */
     public void limpiarFiltros() {
