@@ -2,50 +2,82 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.geometry.Insets?>
+<?import javafx.scene.shape.SVGPath?>
 
-<VBox spacing="12"
-      styleClass="content"
-      xmlns="http://javafx.com/javafx/17"
-      xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.misgastos.controller.ClientesController">
+<VBox spacing="12" styleClass="content, gasto-screen"
+	xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="com.misgastos.controller.ClientesController">
 
-    <padding>
-        <Insets top="20" right="20" bottom="20" left="20"/>
-    </padding>
+	<VBox spacing="10" VBox.vgrow="ALWAYS" styleClass="table-card">
 
-    <VBox spacing="10" VBox.vgrow="ALWAYS" styleClass="table-card" style="-fx-padding: 16;">
+		<!-- Encabezado: titulo a la izquierda, contador a la derecha -->
+		<HBox spacing="10" alignment="CENTER_LEFT" styleClass="panel-header">
+			<Label styleClass="icon-circle">
+				<graphic>
+					<SVGPath styleClass="icon-white"
+						content="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+				</graphic>
+			</Label>
+			<VBox spacing="2">
+				<Label text="Clientes" styleClass="panel-title" />
+				<Label
+					text="Clientes para bonos y parqueaderos. La cédula no se repite: puedes agregarlos a mano o importar un Excel."
+					styleClass="panel-subtitle" />
+			</VBox>
+			<Region HBox.hgrow="ALWAYS" />
+			<Label fx:id="lblResumen" text="" minWidth="-Infinity"
+				styleClass="total-label" />
+		</HBox>
 
-        <Label text="Clientes"
-               style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-        <Label text="Clientes para bonos y parqueaderos. La cédula no se repite: puedes agregarlos a mano o importar un Excel."
-               style="-fx-text-fill: #64748b;"/>
+		<!-- Barra de acciones -->
+		<HBox spacing="10" alignment="CENTER_LEFT">
+			<Button text="Agregar cliente" onAction="#handleAgregar"
+				styleClass="toolbar-button, toolbar-blue" minWidth="-Infinity">
+				<graphic>
+					<SVGPath styleClass="toolbar-icon"
+						content="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+				</graphic>
+			</Button>
+			<Button text="Editar cliente" onAction="#handleEditar"
+				styleClass="toolbar-button, toolbar-neutral" minWidth="-Infinity">
+				<graphic>
+					<SVGPath styleClass="toolbar-icon"
+						content="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+				</graphic>
+			</Button>
+			<Button text="Importar desde Excel" onAction="#handleImportar"
+				styleClass="toolbar-button, toolbar-neutral" minWidth="-Infinity">
+				<graphic>
+					<SVGPath styleClass="toolbar-icon"
+						content="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z" />
+				</graphic>
+			</Button>
 
-        <HBox spacing="10" alignment="CENTER_LEFT">
-            <Button text="Agregar cliente" styleClass="primary-button" onAction="#handleAgregar"
-                    minWidth="-Infinity"/>
-            <Button text="Editar cliente" styleClass="secondary-button" onAction="#handleEditar"
-                    minWidth="-Infinity"/>
-            <Button text="Importar clientes desde Excel" styleClass="primary-button" onAction="#handleImportar"
-                    minWidth="-Infinity"/>
-            <Button text="Eliminar seleccionados" styleClass="secondary-button" onAction="#handleEliminar"
-                    minWidth="-Infinity"/>
-            <TextField fx:id="txtBuscar" promptText="Buscar por cédula o nombre"
-                       prefWidth="260" minWidth="140"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Label fx:id="lblResumen" text="" minWidth="-Infinity"
-                   style="-fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-        </HBox>
+			<Separator orientation="VERTICAL" />
 
-        <TableView fx:id="tablaClientes" VBox.vgrow="ALWAYS" style="-fx-fixed-cell-size: 34px;">
-            <columnResizePolicy>
-                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
-            </columnResizePolicy>
-            <columns>
-                <TableColumn fx:id="colCedula" text="Cédula" prefWidth="160" minWidth="120"/>
-                <TableColumn fx:id="colNombre" text="Nombre" prefWidth="420" minWidth="200"/>
-            </columns>
-        </TableView>
+			<TextField fx:id="txtBuscar" promptText="Buscar por cédula o nombre"
+				HBox.hgrow="ALWAYS" maxWidth="Infinity" minWidth="140"
+				styleClass="search-field" />
 
-    </VBox>
+			<Button text="Eliminar seleccionados" onAction="#handleEliminar"
+				styleClass="toolbar-button, toolbar-red" minWidth="-Infinity">
+				<graphic>
+					<SVGPath styleClass="toolbar-icon"
+						content="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+				</graphic>
+			</Button>
+		</HBox>
+
+		<TableView fx:id="tablaClientes" VBox.vgrow="ALWAYS"
+			style="-fx-fixed-cell-size: 34px;">
+			<columnResizePolicy>
+				<TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+			</columnResizePolicy>
+			<columns>
+				<TableColumn fx:id="colCedula" text="Cédula" prefWidth="160" minWidth="120" />
+				<TableColumn fx:id="colNombre" text="Nombre" prefWidth="420" minWidth="200" />
+			</columns>
+		</TableView>
+
+	</VBox>
 </VBox>

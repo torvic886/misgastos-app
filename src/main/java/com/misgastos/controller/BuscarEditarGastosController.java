@@ -55,6 +55,8 @@ public class BuscarEditarGastosController {
     @FXML private TableColumn<Gasto, String> colUsuario;
     @FXML private TableColumn<Gasto, String> colCedula;
     @FXML private TableColumn<Gasto, String> colNombre;
+    @FXML private Button btnEditar;
+    @FXML private Button btnEliminar;
     private FiltroExcel<Gasto> filtro;
 
     @Autowired private GastoService gastoService;
@@ -77,6 +79,7 @@ public class BuscarEditarGastosController {
         configurarTabla();
         configurarFechas();
         habilitarCopiaDeCeldas();
+        configurarAcciones();
         cargarGastosRecientes();
     }
 
@@ -112,6 +115,78 @@ public class BuscarEditarGastosController {
             if (event.getClickCount() == 2) {
                 copiarCeldaSeleccionada();
             }
+        });
+    }
+    
+    /** Fila seleccionada (la tabla selecciona por celda). */
+    private Gasto gastoSeleccionado() {
+        var celdas = tableGastos.getSelectionModel().getSelectedCells();
+        if (celdas.isEmpty()) {
+            return null;
+        }
+        int fila = celdas.get(0).getRow();
+        if (fila < 0 || fila >= tableGastos.getItems().size()) {
+            return null;
+        }
+        return tableGastos.getItems().get(fila);
+    }
+
+    private void configurarAcciones() {
+        // Botones activos solo si hay una fila seleccionada
+        javafx.beans.binding.BooleanBinding sinSeleccion = javafx.beans.binding.Bindings.createBooleanBinding(
+                () -> gastoSeleccionado() == null,
+                tableGastos.getSelectionModel().getSelectedCells());
+        btnEditar.disableProperty().bind(sinSeleccion);
+        btnEliminar.disableProperty().bind(sinSeleccion);
+
+        btnEditar.setOnAction(e -> {
+            Gasto g = gastoSeleccionado();
+            if (g != null) {
+                log.debug("Editar gasto desde boton, id={}", g.getId());
+                abrirDialogoEditar(g);
+            }
+        });
+        btnEliminar.setOnAction(e -> {
+            Gasto g = gastoSeleccionado();
+            if (g != null) {
+                log.debug("Eliminar gasto desde boton, id={}", g.getId());
+                confirmarEliminar(g);
+            }
+        });
+
+        // Doble clic = editar; clic derecho = menu contextual
+        tableGastos.setRowFactory(tv -> {
+            TableRow<Gasto> fila = new TableRow<>();
+
+            MenuItem miEditar = new MenuItem("Editar");
+            miEditar.setOnAction(e -> {
+                if (!fila.isEmpty()) {
+                    abrirDialogoEditar(fila.getItem());
+                }
+            });
+            MenuItem miEliminar = new MenuItem("Eliminar");
+            miEliminar.setOnAction(e -> {
+                if (!fila.isEmpty()) {
+                    confirmarEliminar(fila.getItem());
+                }
+            });
+            MenuItem miCopiar = new MenuItem("Copiar celda");
+            miCopiar.setOnAction(e -> copiarCeldaSeleccionada());
+
+            ContextMenu menu = new ContextMenu(miEditar, miEliminar, new SeparatorMenuItem(), miCopiar);
+            fila.contextMenuProperty().bind(
+                    javafx.beans.binding.Bindings.when(fila.emptyProperty())
+                            .then((ContextMenu) null)
+                            .otherwise(menu));
+
+            fila.setOnMouseClicked(e -> {
+                if (e.getButton() == javafx.scene.input.MouseButton.PRIMARY
+                        && e.getClickCount() == 2 && !fila.isEmpty()) {
+                    log.debug("Editar gasto con doble clic, id={}", fila.getItem().getId());
+                    abrirDialogoEditar(fila.getItem());
+                }
+            });
+            return fila;
         });
     }
 
@@ -202,7 +277,7 @@ public class BuscarEditarGastosController {
             }
         });
 
-        agregarColumnaAcciones();
+       
         
         colUsuario.setCellValueFactory(c -> new SimpleStringProperty(
         	    c.getValue().getUsuario() == null ? "" : c.getValue().getUsuario().getUsername()));

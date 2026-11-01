@@ -3,121 +3,132 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Font?>
+<?import javafx.scene.shape.SVGPath?>
 
-<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.misgastos.controller.BuscarEditarGastosController"
-      spacing="12" style="-fx-background-color: #f7fafc;">
+<VBox spacing="12" styleClass="content, gasto-screen"
+	xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="com.misgastos.controller.BuscarEditarGastosController">
 
-    <padding>
-        <Insets top="15" right="15" bottom="15" left="15"/>
-    </padding>
+	<!-- ============ TARJETA DE FILTROS (compacta, una sola fila) ============ -->
+	<VBox spacing="10" styleClass="table-card">
 
-    <!-- TÍTULO -->
-    <HBox alignment="CENTER_LEFT" spacing="8">
-        <Label text="🔍 Buscar y Editar Gastos" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
-    </HBox>
+		<HBox spacing="10" alignment="CENTER_LEFT" styleClass="panel-header">
+			<Label styleClass="icon-circle">
+				<graphic>
+					<SVGPath styleClass="icon-white" content="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+				</graphic>
+			</Label>
+			<VBox spacing="2">
+				<Label text="Buscar y Editar Gastos" styleClass="panel-title" />
+				<Label text="Filtra por fecha o busca un producto" styleClass="panel-subtitle" />
+			</VBox>
+		</HBox>
 
-    <!-- PANEL DE BÚSQUEDA -->
-    <VBox spacing="10" style="-fx-background-color: white; -fx-background-radius: 10; -fx-padding: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);">
+		<HBox spacing="12" alignment="BOTTOM_LEFT">
+			<VBox spacing="3">
+				<Label text="Fecha inicio" styleClass="field-caption" />
+				<DatePicker fx:id="dpFechaInicio" prefWidth="140" promptText="Desde" />
+			</VBox>
+			<VBox spacing="3">
+				<Label text="Fecha fin" styleClass="field-caption" />
+				<DatePicker fx:id="dpFechaFin" prefWidth="140" promptText="Hasta" />
+			</VBox>
+			<Button fx:id="btnBuscar" text="Buscar" onAction="#handleBuscar"
+				styleClass="toolbar-button, toolbar-blue">
+				<graphic>
+					<SVGPath styleClass="toolbar-icon" content="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+				</graphic>
+			</Button>
+			<Button fx:id="btnLimpiar" text="Limpiar" onAction="#handleLimpiar"
+				styleClass="toolbar-button, toolbar-neutral">
+				<graphic>
+					<SVGPath styleClass="toolbar-icon" content="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
+				</graphic>
+			</Button>
 
-        <Label text="📅 Filtrar por Fecha" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
+			<Separator orientation="VERTICAL" />
 
-        <HBox spacing="12" alignment="CENTER_LEFT">
-            <VBox spacing="3">
-                <Label text="Fecha Inicio:" style="-fx-font-size: 11px; -fx-text-fill: #6b7280;"/>
-                <DatePicker fx:id="dpFechaInicio" prefWidth="140" promptText="Desde"/>
-            </VBox>
+			<VBox spacing="3" HBox.hgrow="ALWAYS">
+				<Label text="Producto" styleClass="field-caption" />
+				<TextField fx:id="txtBuscarProducto"
+					promptText="Escribe el nombre del producto..." maxWidth="Infinity"
+					onAction="#handleBuscarProducto" styleClass="search-field" />
+			</VBox>
+			<Button text="Buscar producto" onAction="#handleBuscarProducto"
+				styleClass="toolbar-button, toolbar-blue">
+				<graphic>
+					<SVGPath styleClass="toolbar-icon" content="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+				</graphic>
+			</Button>
+			<Button text="Limpiar" onAction="#handleLimpiarBusqueda"
+				styleClass="toolbar-button, toolbar-neutral">
+				<graphic>
+					<SVGPath styleClass="toolbar-icon" content="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+				</graphic>
+			</Button>
+		</HBox>
+	</VBox>
 
-            <VBox spacing="3">
-                <Label text="Fecha Fin:" style="-fx-font-size: 11px; -fx-text-fill: #6b7280;"/>
-                <DatePicker fx:id="dpFechaFin" prefWidth="140" promptText="Hasta"/>
-            </VBox>
+	<!-- ============ TARJETA DE RESULTADOS ============ -->
+	<VBox spacing="10" VBox.vgrow="ALWAYS" styleClass="table-card">
 
-            <VBox spacing="3">
-                <Label text=" " style="-fx-font-size: 11px;"/>
-                <HBox spacing="8">
-                    <Button fx:id="btnBuscar" text="🔍 Buscar" onAction="#handleBuscar"
-                            styleClass="primary-button"
-                            style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-padding: 6 16; -fx-font-size: 12px; -fx-cursor: hand;"/>
+		<HBox spacing="10" alignment="CENTER_LEFT" styleClass="panel-header">
+			<Label styleClass="icon-circle">
+				<graphic>
+					<SVGPath styleClass="icon-white"
+						content="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+				</graphic>
+			</Label>
+			<Label text="Resultados de búsqueda" styleClass="panel-title" />
+			<Region HBox.hgrow="ALWAYS" />
+			<Label fx:id="lblResultados" text="0 gasto(s) encontrado(s)"
+				styleClass="result-count" />
+			<Button fx:id="btnEditar" text="Editar" styleClass="toolbar-button, toolbar-blue">
+				<graphic>
+					<SVGPath styleClass="toolbar-icon"
+						content="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+				</graphic>
+			</Button>
+			<Button fx:id="btnEliminar" text="Eliminar" styleClass="toolbar-button, toolbar-red">
+				<graphic>
+					<SVGPath styleClass="toolbar-icon"
+						content="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+				</graphic>
+			</Button>
+		</HBox>
 
-                    <Button fx:id="btnLimpiar" text="🔄 Limpiar" onAction="#handleLimpiar"
-                            styleClass="secondary-button"
-                            style="-fx-background-color: #e5e7eb; -fx-text-fill: #374151; -fx-padding: 6 16; -fx-font-size: 12px; -fx-cursor: hand;"/>
-                </HBox>
-            </VBox>
-        </HBox>
+		<TableView fx:id="tableGastos" VBox.vgrow="ALWAYS"
+			style="-fx-fixed-cell-size: 34px;">
+			<columns>
+				<TableColumn fx:id="colId" text="ID" prefWidth="65" style="-fx-alignment: CENTER;" />
+				<TableColumn fx:id="colFecha" text="Fecha" prefWidth="115" style="-fx-alignment: CENTER;" />
+				<TableColumn fx:id="colHora" text="Hora" prefWidth="90" style="-fx-alignment: CENTER;" />
+				<TableColumn fx:id="colUsuario" text="Registrado por" prefWidth="120" />
+				<TableColumn fx:id="colCategoria" text="Categoría" prefWidth="135" />
+				<TableColumn fx:id="colSubcategoria" text="Subcategoría" prefWidth="145" />
+				<TableColumn fx:id="colProducto" text="Producto" prefWidth="180" />
+				<TableColumn fx:id="colCedula" text="Cédula" prefWidth="120" />
+				<TableColumn fx:id="colNombre" text="Nombre" prefWidth="160" />
+				<TableColumn fx:id="colCantidad" text="Cant." prefWidth="85" style="-fx-alignment: CENTER;" />
+				<TableColumn fx:id="colValorUnitario" text="Valor Unit." prefWidth="120" style="-fx-alignment: CENTER_RIGHT;" />
+				<TableColumn fx:id="colTotal" text="Total" prefWidth="110" style="-fx-alignment: CENTER_RIGHT;" />
+			</columns>
 
-        <Separator style="-fx-padding: 3 0;"/>
+			<placeholder>
+				<VBox alignment="CENTER" spacing="6">
+					<Label text="No se encontraron gastos" styleClass="panel-title" />
+					<Label text="Intenta buscar con otras fechas" styleClass="panel-subtitle" />
+				</VBox>
+			</placeholder>
+		</TableView>
 
-        <!-- BÚSQUEDA POR TEXTO -->
-        <Label text="🔎 Buscar Producto Específico" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
-
-        <HBox spacing="8" alignment="CENTER_LEFT">
-            <VBox spacing="3" HBox.hgrow="ALWAYS">
-                <Label text="Nombre del Producto:" style="-fx-font-size: 11px; -fx-text-fill: #6b7280;"/>
-                <TextField fx:id="txtBuscarProducto" promptText="Escribe para buscar..."
-                          prefWidth="280"
-                          onAction="#handleBuscarProducto"
-                          style="-fx-padding: 6; -fx-font-size: 12px;"/>
-            </VBox>
-
-            <VBox spacing="3">
-                <Label text=" " style="-fx-font-size: 11px;"/>
-                <HBox spacing="8">
-                    <Button text="🔍 Buscar Producto" onAction="#handleBuscarProducto"
-                            styleClass="primary-button"
-                            style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-padding: 6 16; -fx-font-size: 12px; -fx-cursor: hand;"/>
-
-                    <Button text="✖ Limpiar Búsqueda" onAction="#handleLimpiarBusqueda"
-                            styleClass="secondary-button"
-                            style="-fx-background-color: #f59e0b; -fx-text-fill: white; -fx-padding: 6 16; -fx-font-size: 12px; -fx-cursor: hand;"/>
-                </HBox>
-            </VBox>
-        </HBox>
-
-        <Label fx:id="lblResultados" text="0 gasto(s) encontrado(s)"
-               style="-fx-font-size: 11px; -fx-text-fill: #6b7280; -fx-font-style: italic;"/>
-    </VBox>
-
-    <!-- TABLA DE RESULTADOS -->
-    <VBox VBox.vgrow="ALWAYS" spacing="8"
-          style="-fx-background-color: white; -fx-background-radius: 10; -fx-padding: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);">
-
-        <Label text="📋 Resultados de Búsqueda" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
-
-        <TableView fx:id="tableGastos" VBox.vgrow="ALWAYS"
-                   prefHeight="500"
-                   style="-fx-background-color: white;">
-            <columns>
-                <TableColumn fx:id="colId" text="ID" prefWidth="65" style="-fx-alignment: CENTER;"/>
-				<TableColumn fx:id="colFecha" text="Fecha" prefWidth="115" style="-fx-alignment: CENTER;"/>
-				<TableColumn fx:id="colHora" text="Hora" prefWidth="90" style="-fx-alignment: CENTER;"/>
-				<TableColumn fx:id="colUsuario" text="Registrado por" prefWidth="120"/>
-				<TableColumn fx:id="colCategoria" text="Categoría" prefWidth="135"/>
-				<TableColumn fx:id="colSubcategoria" text="Subcategoría" prefWidth="145"/>
-				<TableColumn fx:id="colProducto" text="Producto" prefWidth="180"/>
-				<TableColumn fx:id="colCedula" text="Cédula" prefWidth="120"/>
-				<TableColumn fx:id="colNombre" text="Nombre" prefWidth="160"/>
-				<TableColumn fx:id="colCantidad" text="Cant." prefWidth="85" style="-fx-alignment: CENTER;"/>
-				<TableColumn fx:id="colValorUnitario" text="Valor Unit." prefWidth="120" style="-fx-alignment: CENTER_RIGHT;"/>
-				<TableColumn fx:id="colTotal" text="Total" prefWidth="110" style="-fx-alignment: CENTER_RIGHT;"/>
-				<TableColumn fx:id="colAcciones" text="Acciones" prefWidth="150" style="-fx-alignment: CENTER;"/>
-            </columns>
-
-            <placeholder>
-                <VBox alignment="CENTER" spacing="10" style="-fx-padding: 40;">
-                    <Label text="🔭" style="-fx-font-size: 48px;"/>
-                    <Label text="No se encontraron gastos" style="-fx-font-size: 14px; -fx-text-fill: #9ca3af;"/>
-                    <Label text="Intenta buscar con otras fechas" style="-fx-font-size: 12px; -fx-text-fill: #d1d5db;"/>
-                </VBox>
-            </placeholder>
-        </TableView>
-
-        <!-- TOTAL de los gastos que se muestran en la tabla -->
-        <HBox alignment="CENTER_RIGHT">
-            <Label fx:id="lblTotalGastos" text="TOTAL: $0" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
-        </HBox>
-    </VBox>
+		<HBox alignment="CENTER_LEFT" spacing="10" styleClass="total-bar">
+			<SVGPath styleClass="icon-green"
+				content="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
+			<Label text="Total de gastos mostrados" styleClass="total-label" />
+			<Region HBox.hgrow="ALWAYS" />
+			<Label fx:id="lblTotalGastos" text="TOTAL: $0" styleClass="total-value" />
+		</HBox>
+	</VBox>
 
 </VBox>

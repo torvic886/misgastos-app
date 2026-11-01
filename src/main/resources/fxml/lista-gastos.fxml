@@ -1,62 +1,118 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.DatePicker?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TableColumn?>
-<?import javafx.scene.control.TableView?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.SVGPath?>
 
-<VBox spacing="20" styleClass="content" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.misgastos.controller.ListaGastosController">
-    <padding>
-        <Insets top="30" right="30" bottom="30" left="30"/>
-    </padding>
+<VBox spacing="12" styleClass="content, gasto-screen"
+	xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="com.misgastos.controller.ListaGastosController">
 
-    <children>
-        <Label text="📋 Historial de Gastos" styleClass="content-title"/>
-        <Label text="Visualiza y gestiona todos tus gastos registrados" styleClass="content-subtitle"/>
+	<!-- ============ TARJETA DE FILTROS (compacta, una sola fila) ============ -->
+	<VBox spacing="10" styleClass="table-card">
 
-        <!-- Filtros de fecha para exportación -->
-        <HBox spacing="15" alignment="CENTER_LEFT">
-            <Label text="Fecha Inicio:"/>
-            <DatePicker fx:id="dpFechaInicio" promptText="Desde..."/>
-            <Label text="Fecha Fin:"/>
-            <DatePicker fx:id="dpFechaFin" promptText="Hasta..."/>
-            <Button text="📊 Exportar Excel" onAction="#handleExportarExcel" styleClass="primary-button"/>
-        </HBox>
+		<HBox spacing="10" alignment="CENTER_LEFT" styleClass="panel-header">
+			<Label styleClass="icon-circle">
+				<graphic>
+					<SVGPath styleClass="icon-white"
+						content="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z" />
+				</graphic>
+			</Label>
+			<VBox spacing="2">
+				<Label text="Historial de Gastos" styleClass="panel-title" />
+				<Label text="Visualiza y gestiona todos tus gastos registrados"
+					styleClass="panel-subtitle" />
+			</VBox>
+		</HBox>
 
-        <!-- Barra de búsqueda y acciones -->
-        <HBox spacing="15" alignment="CENTER_LEFT">
-            <TextField fx:id="txtBuscar" promptText="🔍 Producto, categoría, cédula o nombre..." prefWidth="380" onAction="#handleBuscar"/>
-            <Button text="Buscar" onAction="#handleBuscar" styleClass="primary-button"/>
-            <Button text="🔄 Refrescar" onAction="#handleRefrescar" styleClass="secondary-button"/>
-            <HBox HBox.hgrow="ALWAYS"/>
-            <Button text="✖ Eliminar" onAction="#handleEliminar" styleClass="danger-button"/>
-        </HBox>
+		<HBox spacing="12" alignment="BOTTOM_LEFT">
+			<VBox spacing="3">
+				<Label text="Fecha inicio" styleClass="field-caption" />
+				<DatePicker fx:id="dpFechaInicio" prefWidth="140" promptText="Desde" />
+			</VBox>
+			<VBox spacing="3">
+				<Label text="Fecha fin" styleClass="field-caption" />
+				<DatePicker fx:id="dpFechaFin" prefWidth="140" promptText="Hasta" />
+			</VBox>
+			<Button text="Exportar Excel" onAction="#handleExportarExcel"
+				styleClass="toolbar-button, toolbar-neutral">
+				<graphic>
+					<SVGPath styleClass="toolbar-icon"
+						content="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+				</graphic>
+			</Button>
 
-        <!-- Tabla de gastos -->
-        <TableView fx:id="tableGastos" VBox.vgrow="ALWAYS">
-            <columns>
-                <TableColumn fx:id="colId" text="ID" prefWidth="65"/>
-				<TableColumn fx:id="colFecha" text="Fecha" prefWidth="115"/>
-				<TableColumn fx:id="colHora" text="Hora" prefWidth="90"/>
-				<TableColumn fx:id="colUsuario" text="Registrado por" prefWidth="120"/>
-				<TableColumn fx:id="colCategoria" text="Categoría" prefWidth="135"/>
-				<TableColumn fx:id="colProducto" text="Producto" prefWidth="200"/>
-				<TableColumn fx:id="colCedula" text="Cédula" prefWidth="120"/>
-				<TableColumn fx:id="colNombre" text="Nombre" prefWidth="160"/>
-				<TableColumn fx:id="colCantidad" text="Cantidad" prefWidth="105"/>
-				<TableColumn fx:id="colValorUnitario" text="Valor Unit." prefWidth="120"/>
-				<TableColumn fx:id="colValorTotal" text="Total" prefWidth="110"/>
-            </columns>
-        </TableView>
+			<Separator orientation="VERTICAL" />
 
-        <!-- Total de los gastos que se muestran en la tabla -->
-        <HBox alignment="CENTER_RIGHT">
-            <Label fx:id="lblTotalGastos" text="TOTAL: $0" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
-        </HBox>
-    </children>
+			<VBox spacing="3" HBox.hgrow="ALWAYS">
+				<Label text="Buscar" styleClass="field-caption" />
+				<TextField fx:id="txtBuscar"
+					promptText="Producto, categoría, cédula o nombre..."
+					maxWidth="Infinity" onAction="#handleBuscar"
+					styleClass="search-field" />
+			</VBox>
+			<Button text="Buscar" onAction="#handleBuscar"
+				styleClass="toolbar-button, toolbar-blue">
+				<graphic>
+					<SVGPath styleClass="toolbar-icon"
+						content="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+				</graphic>
+			</Button>
+			<Button text="Refrescar" onAction="#handleRefrescar"
+				styleClass="toolbar-button, toolbar-neutral">
+				<graphic>
+					<SVGPath styleClass="toolbar-icon"
+						content="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
+				</graphic>
+			</Button>
+		</HBox>
+	</VBox>
+
+	<!-- ============ TARJETA DE LA TABLA ============ -->
+	<VBox spacing="10" VBox.vgrow="ALWAYS" styleClass="table-card">
+
+		<HBox spacing="10" alignment="CENTER_LEFT" styleClass="panel-header">
+			<Label styleClass="icon-circle">
+				<graphic>
+					<SVGPath styleClass="icon-white"
+						content="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+				</graphic>
+			</Label>
+			<Label text="Gastos registrados" styleClass="panel-title" />
+			<Region HBox.hgrow="ALWAYS" />
+			<Button text="Eliminar" onAction="#handleEliminar"
+				styleClass="toolbar-button, toolbar-red">
+				<graphic>
+					<SVGPath styleClass="toolbar-icon"
+						content="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+				</graphic>
+			</Button>
+		</HBox>
+
+		<TableView fx:id="tableGastos" VBox.vgrow="ALWAYS"
+			style="-fx-fixed-cell-size: 34px;">
+			<columns>
+				<TableColumn fx:id="colId" text="ID" prefWidth="65" />
+				<TableColumn fx:id="colFecha" text="Fecha" prefWidth="115" />
+				<TableColumn fx:id="colHora" text="Hora" prefWidth="90" />
+				<TableColumn fx:id="colUsuario" text="Registrado por" prefWidth="120" />
+				<TableColumn fx:id="colCategoria" text="Categoría" prefWidth="135" />
+				<TableColumn fx:id="colProducto" text="Producto" prefWidth="200" />
+				<TableColumn fx:id="colCedula" text="Cédula" prefWidth="120" />
+				<TableColumn fx:id="colNombre" text="Nombre" prefWidth="160" />
+				<TableColumn fx:id="colCantidad" text="Cantidad" prefWidth="105" />
+				<TableColumn fx:id="colValorUnitario" text="Valor Unit." prefWidth="120" />
+				<TableColumn fx:id="colValorTotal" text="Total" prefWidth="110" />
+			</columns>
+		</TableView>
+
+		<HBox alignment="CENTER_LEFT" spacing="10" styleClass="total-bar">
+			<SVGPath styleClass="icon-green"
+				content="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
+			<Label text="Total de gastos mostrados" styleClass="total-label" />
+			<Region HBox.hgrow="ALWAYS" />
+			<Label fx:id="lblTotalGastos" text="TOTAL: $0" styleClass="total-value" />
+		</HBox>
+	</VBox>
+
 </VBox>

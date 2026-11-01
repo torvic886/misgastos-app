@@ -3,202 +3,198 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.SVGPath?>
 
 <BorderPane xmlns="http://javafx.com/javafx/17"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.misgastos.controller.InformesController"
-            styleClass="content">
+	xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="com.misgastos.controller.InformesController"
+	styleClass="content, gasto-screen">
 
-    <padding>
-        <Insets top="5" right="15" bottom="5" left="15"/>
-    </padding>
+	<!-- ============ IZQUIERDA: CONFIGURACION ============ -->
+	<left>
+		<VBox spacing="8" styleClass="form-card" prefWidth="340"
+			minWidth="340" maxWidth="340">
 
-    <!-- ========== IZQUIERDA: CONTROLES ========== -->
-    <left>
-        <VBox spacing="10" styleClass="info-panel" 
-              prefWidth="380" maxWidth="380"
-              style="-fx-padding: 12;">
-            
-            <BorderPane.margin>
-                <Insets right="15"/>
-            </BorderPane.margin>
+			<BorderPane.margin>
+				<Insets right="12" />
+			</BorderPane.margin>
 
-            <!-- Configuración (sin título grande) -->
-            <Label text="⚙ Configuración del Informe" 
-                   style="-fx-font-weight: bold; -fx-font-size: 13px;"/>
+			<HBox spacing="10" alignment="CENTER_LEFT" styleClass="panel-header">
+				<Label styleClass="icon-circle">
+					<graphic>
+						<SVGPath styleClass="icon-white"
+							content="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
+					</graphic>
+				</Label>
+				<VBox spacing="2">
+					<Label text="Configuración del Informe" styleClass="panel-title" />
+					<Label text="Elige el tipo, las fechas y los filtros"
+						styleClass="panel-subtitle" />
+				</VBox>
+			</HBox>
 
-            <!-- Tipo de Informe -->
-            <VBox spacing="5">
-                <Label text="Tipo de Informe:" style="-fx-font-size: 11px;"/>
-                <ComboBox fx:id="cmbTipoInforme" 
-                          maxWidth="Infinity"
-                          promptText="Selecciona tipo"/>
-            </VBox>
+			<ScrollPane fitToWidth="true" hbarPolicy="NEVER"
+				vbarPolicy="AS_NEEDED" styleClass="form-scroll"
+				VBox.vgrow="ALWAYS">
+				<VBox spacing="4" styleClass="form-fields">
 
-            <!-- Rango de Fechas -->
-            <HBox spacing="8">
-                <VBox spacing="5" HBox.hgrow="ALWAYS">
-                    <Label text="Fecha Inicio:" style="-fx-font-size: 11px;"/>
-                    <DatePicker fx:id="dpFechaInicio" maxWidth="Infinity"/>
-                </VBox>
+					<Label text="Tipo de informe:" styleClass="form-label">
+						<graphic>
+							<SVGPath styleClass="icon-field"
+								content="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+						</graphic>
+					</Label>
+					<ComboBox fx:id="cmbTipoInforme" maxWidth="Infinity"
+						promptText="Selecciona tipo" />
 
-                <VBox spacing="5" HBox.hgrow="ALWAYS">
-                    <Label text="Fecha Fin:" style="-fx-font-size: 11px;"/>
-                    <DatePicker fx:id="dpFechaFin" maxWidth="Infinity"/>
-                </VBox>
-            </HBox>
+					<HBox spacing="8">
+						<VBox spacing="4" HBox.hgrow="ALWAYS" prefWidth="0"
+							maxWidth="Infinity">
+							<Label text="Fecha inicio:" styleClass="form-label, campo-sep">
+								<graphic>
+									<SVGPath styleClass="icon-field"
+										content="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z" />
+								</graphic>
+							</Label>
+							<DatePicker fx:id="dpFechaInicio" maxWidth="Infinity" />
+						</VBox>
+						<VBox spacing="4" HBox.hgrow="ALWAYS" prefWidth="0"
+							maxWidth="Infinity">
+							<Label text="Fecha fin:" styleClass="form-label, campo-sep">
+								<graphic>
+									<SVGPath styleClass="icon-field"
+										content="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z" />
+								</graphic>
+							</Label>
+							<DatePicker fx:id="dpFechaFin" maxWidth="Infinity" />
+						</VBox>
+					</HBox>
 
-            <!-- Filtros Opcionales -->
-            <VBox spacing="5">
-                <Label text="Categoría (opcional):" style="-fx-font-size: 11px;"/>
-                <ComboBox fx:id="cmbCategoria" 
-                          maxWidth="Infinity"
-                          promptText="Todas las categorías"/>
-            </VBox>
+					<Label text="Categoría (opcional):" styleClass="form-label, campo-sep">
+						<graphic>
+							<SVGPath styleClass="icon-field"
+								content="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z" />
+						</graphic>
+					</Label>
+					<ComboBox fx:id="cmbCategoria" maxWidth="Infinity"
+						promptText="Todas las categorías" />
 
-            <VBox spacing="5">
-                <Label text="Producto (opcional):" style="-fx-font-size: 11px;"/>
-                <TextField fx:id="txtProducto" 
-                           promptText="Buscar producto..." styleClass="search-field"/>
-            </VBox>
-            
-                        <!-- Filtros del informe de parqueaderos y bonos -->
-            <VBox fx:id="boxFiltrosClientes" spacing="8" visible="false" managed="false">
-                <VBox spacing="5">
-                    <Label text="Tipo:" style="-fx-font-size: 11px;"/>
-                    <ComboBox fx:id="cmbTipoCliente" maxWidth="Infinity"/>
-                </VBox>
-                <VBox spacing="5">
-                    <Label text="Ordenar por:" style="-fx-font-size: 11px;"/>
-                    <ComboBox fx:id="cmbOrdenCliente" maxWidth="Infinity"/>
-                </VBox>
-                <VBox spacing="5">
-                    <Label text="Buscar (opcional):" style="-fx-font-size: 11px;"/>
-                    <TextField fx:id="txtBuscarCliente" promptText="Cédula o nombre..." styleClass="search-field"/>
-                </VBox>
-            </VBox>
+					<Label text="Producto (opcional):" styleClass="form-label, campo-sep">
+						<graphic>
+							<SVGPath styleClass="icon-field"
+								content="M20 2H4c-1 0-2 .9-2 2v3.01c0 .72.43 1.34 1 1.69V20c0 1.1 1.1 2 2 2h14c.9 0 2-.9 2-2V8.7c.57-.35 1-.97 1-1.69V4c0-1.1-1-2-2-2zm-5 12H9v-2h6v2zm5-7H4V4l16-.02V7z" />
+						</graphic>
+					</Label>
+					<TextField fx:id="txtProducto" promptText="Buscar producto..."
+						styleClass="search-field" />
 
-            <!-- Botones de Acción -->
-            <VBox spacing="8" style="-fx-padding: 5 0 0 0;">
-                <Button text="🔍 Generar Vista Previa" 
-                        onAction="#handleGenerarVista"
-                        styleClass="primary-button"
-                        maxWidth="Infinity"
-                        prefHeight="36"/>
+					<!-- Filtros del informe de parqueaderos y bonos -->
+					<VBox fx:id="boxFiltrosClientes" spacing="4" visible="false"
+						managed="false">
+						<Label text="Tipo:" styleClass="form-label, campo-sep" />
+						<ComboBox fx:id="cmbTipoCliente" maxWidth="Infinity" />
+						<Label text="Ordenar por:" styleClass="form-label, campo-sep" />
+						<ComboBox fx:id="cmbOrdenCliente" maxWidth="Infinity" />
+						<Label text="Buscar (opcional):" styleClass="form-label, campo-sep" />
+						<TextField fx:id="txtBuscarCliente"
+							promptText="Cédula o nombre..." styleClass="search-field" />
+					</VBox>
 
-                <HBox spacing="8">
-                    <Button text="📄 Exportar PDF" 
-                            onAction="#handleExportarPDF"
-                            styleClass="secondary-button"
-                            prefHeight="30"
-                            HBox.hgrow="ALWAYS"/>
+					<!-- Informacion -->
+					<VBox spacing="4" styleClass="info-box">
+						<Label text="Información sobre los informes" styleClass="info-title" />
+						<Label text="• General Mensual: vista panorámica por mes y categoría"
+							wrapText="true" styleClass="info-item" />
+						<Label text="• Por Categoría: análisis detallado de una categoría"
+							wrapText="true" styleClass="info-item" />
+						<Label text="• Por Producto: seguimiento de productos individuales"
+							wrapText="true" styleClass="info-item" />
+						<Label text="• Comparativo: compara períodos o categorías"
+							wrapText="true" styleClass="info-item" />
+					</VBox>
 
-                    <Button text="📊 Exportar Excel" 
-                            onAction="#handleExportarExcel"
-                            styleClass="secondary-button"
-                            prefHeight="30"
-                            HBox.hgrow="ALWAYS"/>
-                </HBox>
+				</VBox>
+			</ScrollPane>
 
-                <Button text="🔄 Limpiar" 
-                        onAction="#handleLimpiar"
-                        style="-fx-background-color: #e2e8f0; -fx-text-fill: #4a5568;"
-                        maxWidth="Infinity"
-                        prefHeight="26"/>
-            </VBox>
+			<!-- Botones de accion -->
+			<VBox spacing="8">
+				<Button text="Generar Vista Previa" onAction="#handleGenerarVista"
+					styleClass="toolbar-button, toolbar-blue" maxWidth="Infinity">
+					<graphic>
+						<SVGPath styleClass="toolbar-icon"
+							content="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+					</graphic>
+				</Button>
+				<HBox spacing="8">
+					<Button text="Exportar PDF" onAction="#handleExportarPDF"
+						styleClass="btn-guardar" HBox.hgrow="ALWAYS" maxWidth="Infinity">
+						<graphic>
+							<SVGPath styleClass="icon-white"
+								content="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+						</graphic>
+					</Button>
+					<Button text="Exportar Excel" onAction="#handleExportarExcel"
+						styleClass="btn-guardar" HBox.hgrow="ALWAYS" maxWidth="Infinity">
+						<graphic>
+							<SVGPath styleClass="icon-white"
+								content="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+						</graphic>
+					</Button>
+				</HBox>
+				<Button text="Limpiar" onAction="#handleLimpiar"
+					styleClass="btn-limpiar" maxWidth="Infinity">
+					<graphic>
+						<SVGPath styleClass="icon-slate"
+							content="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
+					</graphic>
+				</Button>
+			</VBox>
+		</VBox>
+	</left>
 
-            <Separator style="-fx-padding: 3 0 3 0;"/>
+	<!-- ============ CENTRO: VISTA PREVIA ============ -->
+	<center>
+		<VBox spacing="10" styleClass="table-card">
 
-            <!-- Información Compacta -->
-            <VBox spacing="5" 
-                  style="-fx-background-color: #ebf8ff; -fx-background-radius: 6; -fx-padding: 10;">
-                
-                <Label text="💡 Información sobre los informes:" 
-                       style="-fx-font-weight: bold; -fx-text-fill: #2c5282; -fx-font-size: 11px;"/>
-                
-                <Label text="• General Mensual: Vista panorámica por mes y categoría" 
-                       wrapText="true"
-                       maxWidth="336"
-                       style="-fx-text-fill: #2d3748; -fx-font-size: 10px;"/>
-                
-                <Label text="• Por Categoría: Análisis detallado de una categoría específica" 
-                       wrapText="true"
-                       maxWidth="336"
-                       style="-fx-text-fill: #2d3748; -fx-font-size: 10px;"/>
-                
-                <Label text="• Por Producto: Seguimiento de productos individuales" 
-                       wrapText="true"
-                       maxWidth="336"
-                       style="-fx-text-fill: #2d3748; -fx-font-size: 10px;"/>
-                
-                <Label text="• Comparativo: Compara períodos o categorías" 
-                       wrapText="true"
-                       maxWidth="336"
-                       style="-fx-text-fill: #2d3748; -fx-font-size: 10px;"/>
-            </VBox>
+			<HBox spacing="10" alignment="CENTER_LEFT" styleClass="panel-header">
+				<Label styleClass="icon-circle">
+					<graphic>
+						<SVGPath styleClass="icon-white"
+							content="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
+					</graphic>
+				</Label>
+				<Label text="Vista Previa del Informe" styleClass="panel-title" />
+				<Region HBox.hgrow="ALWAYS" />
+				<Button text="Actualizar" onAction="#handleGenerarVista"
+					styleClass="toolbar-button, toolbar-neutral">
+					<graphic>
+						<SVGPath styleClass="toolbar-icon"
+							content="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
+					</graphic>
+				</Button>
+			</HBox>
 
-        </VBox>
-    </left>
+			<TextArea fx:id="txtPreview" editable="false" wrapText="false"
+				VBox.vgrow="ALWAYS" styleClass="preview-area" />
 
-    <!-- ========== CENTRO: VISTA PREVIA ========== -->
-    <center>
-        <VBox spacing="10" styleClass="info-panel" style="-fx-padding: 12;">
-
-            <!-- Header Compacto -->
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="📋 Vista Previa del Informe" 
-                       style="-fx-font-size: 14px; -fx-font-weight: bold;"
-                       HBox.hgrow="ALWAYS"/>
-                
-                <Button text="🔄 Actualizar" 
-                        onAction="#handleGenerarVista"
-                        style="-fx-background-color: transparent; -fx-text-fill: #667eea; -fx-cursor: HAND; -fx-font-size: 11px;"/>
-            </HBox>
-
-            <!-- Vista Previa -->
-            <TextArea fx:id="txtPreview" 
-                      editable="false"
-                      wrapText="false"
-                      VBox.vgrow="ALWAYS"
-                      style="-fx-font-family: 'Courier New'; -fx-font-size: 11.5px; -fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 6;"/>
-
-            <!-- Footer Compacto -->
-            <HBox spacing="15" alignment="CENTER" 
-                  style="-fx-background-color: #f7fafc; -fx-padding: 6; -fx-background-radius: 4;">
-                
-                <VBox alignment="CENTER" spacing="1">
-                    <Label text="Total Gastos:" 
-                           style="-fx-font-size: 9px; -fx-text-fill: #718096;"/>
-                    <Label fx:id="lblTotalGastos" 
-                           text="0" 
-                           style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #2d3748;"/>
-                </VBox>
-
-                <Region prefWidth="1" maxWidth="1" 
-                        style="-fx-background-color: #cbd5e0;"/>
-
-                <VBox alignment="CENTER" spacing="1">
-                    <Label text="Monto Total:" 
-                           style="-fx-font-size: 9px; -fx-text-fill: #718096;"/>
-                    <Label fx:id="lblMontoTotal" 
-                           text="0.00" 
-                           style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #667eea;"/>
-                </VBox>
-
-                <Region prefWidth="1" maxWidth="1" 
-                        style="-fx-background-color: #cbd5e0;"/>
-
-                <VBox alignment="CENTER" spacing="1">
-                    <Label text="Categorías:" 
-                           style="-fx-font-size: 9px; -fx-text-fill: #718096;"/>
-                    <Label fx:id="lblCategorias" 
-                           text="0" 
-                           style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #2d3748;"/>
-                </VBox>
-
-            </HBox>
-
-        </VBox>
-    </center>
+			<HBox spacing="24" alignment="CENTER" styleClass="stats-bar">
+				<VBox alignment="CENTER" spacing="1">
+					<Label text="Total gastos" styleClass="stat-caption" />
+					<Label fx:id="lblTotalGastos" text="0" styleClass="stat-value" />
+				</VBox>
+				<Separator orientation="VERTICAL" />
+				<VBox alignment="CENTER" spacing="1">
+					<Label text="Monto total" styleClass="stat-caption" />
+					<Label fx:id="lblMontoTotal" text="0.00"
+						styleClass="stat-value, stat-value-blue" />
+				</VBox>
+				<Separator orientation="VERTICAL" />
+				<VBox alignment="CENTER" spacing="1">
+					<Label text="Categorías" styleClass="stat-caption" />
+					<Label fx:id="lblCategorias" text="0" styleClass="stat-value" />
+				</VBox>
+			</HBox>
+		</VBox>
+	</center>
 
 </BorderPane>

@@ -1,47 +1,69 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.SVGPath?>
 
 <VBox xmlns="http://javafx.com/javafx/17"
-      xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.misgastos.controller.PresupuestosController"
-      spacing="16" styleClass="content">
-    <padding>
-        <Insets top="20" right="24" bottom="20" left="24"/>
-    </padding>
+	xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="com.misgastos.controller.PresupuestosController"
+	spacing="12" styleClass="content, gasto-screen">
 
-    <VBox spacing="2">
-        <Label text="💰 Presupuestos"
-               style="-fx-font-weight: bold; -fx-font-size: 18px; -fx-text-fill: #1e293b;"/>
-        <Label text="Fija un tope mensual por categoría. El programa avisa al llegar al 80 % y al pasarse."
-               wrapText="true"
-               style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
-    </VBox>
+	<VBox spacing="10" VBox.vgrow="ALWAYS" styleClass="table-card">
 
-    <VBox spacing="10" styleClass="form-card">
-        <Label fx:id="lblMes" style="-fx-font-size: 12px; -fx-text-fill: #475569;"/>
-        <HBox spacing="10">
-            <Button text="📌 Fijar tope" onAction="#handleFijarTope" styleClass="primary-button"/>
-            <Button text="📍 Quitar tope" onAction="#handleQuitarTope" styleClass="secondary-button"/>
-        </HBox>
-        <Label text="Selecciona una categoría de la tabla y pulsa el botón."
-               style="-fx-font-size: 11px; -fx-text-fill: #94a3b8;"/>
-    </VBox>
+		<!-- Encabezado: titulo a la izquierda, mes en curso a la derecha -->
+		<HBox spacing="10" alignment="CENTER_LEFT" styleClass="panel-header">
+			<Label styleClass="icon-circle">
+				<graphic>
+					<SVGPath styleClass="icon-white"
+						content="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z" />
+				</graphic>
+			</Label>
+			<VBox spacing="2">
+				<Label text="Presupuestos" styleClass="panel-title" />
+				<Label
+					text="Fija un tope mensual por categoría. El programa avisa al llegar al 80 % y al pasarse."
+					styleClass="panel-subtitle" />
+			</VBox>
+			<Region HBox.hgrow="ALWAYS" />
+			<Label fx:id="lblMes" minWidth="-Infinity" styleClass="total-label" />
+		</HBox>
 
-    <TableView fx:id="tablaPresupuestos" VBox.vgrow="ALWAYS">
-        <columnResizePolicy>
-            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
-        </columnResizePolicy>
-        <placeholder>
-            <Label text="No hay categorías todavía"/>
-        </placeholder>
-        <columns>
-            <TableColumn fx:id="colCategoria" text="Categoría" prefWidth="220"/>
-            <TableColumn fx:id="colTope" text="Tope mensual" prefWidth="150"/>
-            <TableColumn fx:id="colGastado" text="Gastado este mes" prefWidth="150"/>
-            <TableColumn fx:id="colPorcentaje" text="Uso" prefWidth="80"/>
-        </columns>
-    </TableView>
+		<!-- Acciones -->
+		<HBox spacing="10" alignment="CENTER_LEFT">
+			<Button text="Fijar tope" onAction="#handleFijarTope"
+				styleClass="toolbar-button, toolbar-blue" minWidth="-Infinity">
+				<graphic>
+					<SVGPath styleClass="toolbar-icon"
+						content="M16 9V4h1c.55 0 1-.45 1-1s-.45-1-1-1H7c-.55 0-1 .45-1 1s.45 1 1 1h1v5c0 1.66-1.34 3-3 3v2h5.97v7l1 1 1-1v-7H19v-2c-1.66 0-3-1.34-3-3z" />
+				</graphic>
+			</Button>
+			<Button text="Quitar tope" onAction="#handleQuitarTope"
+				styleClass="toolbar-button, toolbar-neutral" minWidth="-Infinity">
+				<graphic>
+					<SVGPath styleClass="toolbar-icon"
+						content="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+				</graphic>
+			</Button>
+			<Label text="Selecciona una categoría de la tabla y pulsa el botón."
+				styleClass="panel-subtitle" />
+		</HBox>
+
+		<TableView fx:id="tablaPresupuestos" VBox.vgrow="ALWAYS"
+			style="-fx-fixed-cell-size: 34px;">
+			<columnResizePolicy>
+				<TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+			</columnResizePolicy>
+			<placeholder>
+				<Label text="No hay categorías todavía" styleClass="panel-subtitle" />
+			</placeholder>
+			<columns>
+				<TableColumn fx:id="colCategoria" text="Categoría" prefWidth="220" />
+				<TableColumn fx:id="colTope" text="Tope mensual" prefWidth="150" />
+				<TableColumn fx:id="colGastado" text="Gastado este mes" prefWidth="150" />
+				<TableColumn fx:id="colPorcentaje" text="Uso" prefWidth="80" />
+			</columns>
+		</TableView>
+
+	</VBox>
 </VBox>

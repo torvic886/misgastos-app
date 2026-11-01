@@ -304,10 +304,6 @@
     -fx-background-radius: 4;
 }
 
-.combo-box.combo-compact {
-    -fx-pref-height: 32px;
-}
-
 .combo-box.combo-compact > .text-field {
     -fx-padding: 4 8;
     -fx-font-size: 12px;
@@ -519,49 +515,93 @@
 }
 
 /* ===========================
-   SIDEBAR
+   MENU LATERAL (sidebar)
+   Un solo bloque: ancho 202 (176 en modo compacto, 64 contraido),
+   opciones de 38 de alto.
    =========================== */
 .sidebar {
     -fx-background-color: linear-gradient(to bottom, #1e293b, #0f172a);
-    -fx-padding: 20 15;
-    -fx-pref-width: 220px;
+    -fx-padding: 8 10 8 10;
+    -fx-pref-width: 202;
+    -fx-min-width: 202;
+    -fx-max-width: 202;
 }
 
-.sidebar-title {
-    -fx-text-fill: -text-subtle;
-    -fx-font-size: 11px;
-    -fx-font-weight: 600;
-    -fx-padding: 8 16 16 16;
+.compact .sidebar {
+    -fx-padding: 8 10 8 10;
+    -fx-pref-width: 176;
+    -fx-min-width: 176;
+    -fx-max-width: 176;
 }
 
-.menu-button {
+/* El menu contraido (solo iconos) conserva su ancho */
+.sidebar.collapsed,
+.compact .sidebar.collapsed {
+    -fx-pref-width: 64;
+    -fx-min-width: 64;
+    -fx-max-width: 64;
+}
+
+.sidebar-group {
+    -fx-text-fill: #94a3b8;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-padding: 8 0 2 14;
+}
+
+.sidebar .menu-button,
+.compact .sidebar .menu-button {
     -fx-background-color: transparent;
-    -fx-text-fill: #e2e8f0;
-    -fx-font-size: 14px;
+    -fx-background-radius: 6;
+    -fx-background-insets: 0;
+    -fx-effect: null;
+    -fx-border-color: transparent;
+    -fx-border-width: 0 0 0 3;
+    -fx-text-fill: #cbd5e1;
+    -fx-font-size: 12px;
     -fx-font-weight: 500;
     -fx-alignment: CENTER_LEFT;
-    -fx-padding: 12 20;
-    -fx-background-radius: 8;
+    -fx-graphic-text-gap: 8;
+    -fx-padding: 0 8 0 10;
+    -fx-pref-height: 38;
+    -fx-min-height: 38;
+    -fx-max-height: 38;
+    -fx-translate-x: 0;
     -fx-cursor: hand;
 }
 
-.menu-button:hover {
-    -fx-background-color: rgba(59, 130, 246, 0.15);
-    -fx-text-fill: #60a5fa;
-    -fx-translate-x: 3px;
+.sidebar.collapsed .menu-button {
+    -fx-alignment: CENTER;
+    -fx-padding: 0;
 }
 
-.menu-button:pressed {
-    -fx-background-color: rgba(59, 130, 246, 0.28);
-    -fx-translate-x: 1px;
+.sidebar .menu-icon { -fx-fill: #94a3b8; }
+
+.sidebar .menu-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.07);
+    -fx-text-fill: #ffffff;
+    -fx-translate-x: 0;
+}
+.sidebar .menu-button:hover .menu-icon { -fx-fill: #e2e8f0; }
+
+.sidebar .menu-button:focused,
+.sidebar .menu-button:pressed {
+    -fx-background-color: rgba(255, 255, 255, 0.10);
+    -fx-background-insets: 0;
+    -fx-effect: null;
 }
 
 /* Opcion activa (se define despues para que gane sobre hover/pressed) */
-.menu-button.active {
-    -fx-background-color: linear-gradient(to right, #3b82f6, #2563eb);
-    -fx-text-fill: white;
-    -fx-effect: dropshadow(gaussian, rgba(59, 130, 246, 0.4), 8, 0, 0, 2);
+.sidebar .menu-button.active,
+.sidebar .menu-button.active:hover,
+.sidebar .menu-button.active:focused,
+.sidebar .menu-button.active:pressed {
+    -fx-background-color: rgba(129, 140, 248, 0.20);
+    -fx-border-color: transparent transparent transparent #818cf8;
+    -fx-text-fill: #ffffff;
+    -fx-effect: null;
 }
+.sidebar .menu-button.active .menu-icon { -fx-fill: #a5b4fc; }
 
 /* ===========================
    TOP BAR
@@ -644,23 +684,10 @@
 /* ===========================
    MODO COMPACTO (responsive)
    Se activa cuando la ventana es angosta: DashboardController agrega la
-   clase "compact" al BorderPane principal. Reduce menu, barra y margenes
-   para dar mas espacio al contenido.
+   clase "compact" al BorderPane principal. Reduce barra y margenes
+   para dar mas espacio al contenido. (El menu lateral compacto esta
+   en la seccion MENU LATERAL.)
    =========================== */
-.compact .sidebar {
-    -fx-pref-width: 176px;
-    -fx-padding: 16 10;
-}
-
-.compact .sidebar-title {
-    -fx-padding: 6 12 12 12;
-}
-
-.compact .menu-button {
-    -fx-font-size: 13px;
-    -fx-padding: 10 14;
-}
-
 .compact .top-bar {
     -fx-padding: 12 16;
 }
@@ -858,99 +885,6 @@
     -fx-padding: 6 10;
 }
 
-/* ===== MENÚ LATERAL (rediseño) ===== */
-.sidebar {
-    -fx-padding: 12 10 12 10;
-    -fx-pref-width: 240;
-    -fx-min-width: 240;
-    -fx-max-width: 240;
-}
-.compact .sidebar {
-    -fx-pref-width: 210;
-    -fx-min-width: 210;
-    -fx-max-width: 210;
-}
-.sidebar.collapsed,
-.compact .sidebar.collapsed {
-    -fx-pref-width: 64;
-    -fx-min-width: 64;
-    -fx-max-width: 64;
-}
-
-.sidebar-group {
-    -fx-text-fill: #94a3b8;
-    -fx-font-size: 11px;
-    -fx-font-weight: bold;
-    -fx-padding: 14 0 4 14;
-}
-
-.sidebar .menu-button,
-.compact .sidebar .menu-button {
-    -fx-background-color: transparent;
-    -fx-background-radius: 6;
-    -fx-background-insets: 0;
-    -fx-effect: null;
-    -fx-border-color: transparent;
-    -fx-border-width: 0 0 0 3;
-    -fx-text-fill: #cbd5e1;
-    -fx-font-size: 14px;
-    -fx-alignment: CENTER_LEFT;
-    -fx-graphic-text-gap: 12;
-    -fx-padding: 0 12 0 12;
-    -fx-pref-height: 44;
-    -fx-min-height: 44;
-    -fx-max-height: 44;
-    -fx-translate-x: 0;
-    -fx-cursor: hand;
-}
-.sidebar.collapsed .menu-button {
-    -fx-alignment: CENTER;
-    -fx-padding: 0;
-}
-
-.sidebar .menu-icon { -fx-fill: #94a3b8; }
-
-.sidebar .menu-button:hover {
-    -fx-background-color: rgba(255, 255, 255, 0.07);
-    -fx-text-fill: #ffffff;
-    -fx-translate-x: 0;
-}
-.sidebar .menu-button:hover .menu-icon { -fx-fill: #e2e8f0; }
-
-.sidebar .menu-button:focused,
-.sidebar .menu-button:pressed {
-    -fx-background-color: rgba(255, 255, 255, 0.10);
-    -fx-background-insets: 0;
-    -fx-effect: null;
-}
-
-.sidebar .menu-button.active,
-.sidebar .menu-button.active:hover,
-.sidebar .menu-button.active:focused,
-.sidebar .menu-button.active:pressed {
-    -fx-background-color: rgba(129, 140, 248, 0.20);
-    -fx-border-color: transparent transparent transparent #818cf8;
-    -fx-text-fill: #ffffff;
-    -fx-effect: null;
-}
-.sidebar .menu-button.active .menu-icon { -fx-fill: #a5b4fc; }
-
-/* ===== MENÚ LATERAL: versión más baja ===== */
-.sidebar {
-    -fx-padding: 8 10 8 10;
-}
-.sidebar-group {
-    -fx-font-size: 10px;
-    -fx-padding: 8 0 2 14;
-}
-.sidebar .menu-button,
-.compact .sidebar .menu-button {
-    -fx-pref-height: 38;
-    -fx-min-height: 38;
-    -fx-max-height: 38;
-    -fx-font-size: 13px;
-}
-
 /* ===========================
    DIAGNOSTICO Y REGISTROS
    =========================== */
@@ -1058,14 +992,17 @@
    REDISENO - PANTALLA MIS GASTOS (registro-gasto.fxml)
    Todo va dentro de .gasto-screen: no afecta a otras pantallas.
    ===================================================================== */
-.gasto-screen .form-card,
+.gasto-screen .form-card {
+    -fx-padding: 12 14 12 14;
+}
+
 .gasto-screen .table-card {
     -fx-padding: 16;
 }
 
 /* Cabecera de cada panel */
 .gasto-screen .panel-header {
-    -fx-padding: 0 0 8 0;
+    -fx-padding: 0 0 4 0;
 }
 
 .gasto-screen .panel-title {
@@ -1075,7 +1012,7 @@
 }
 
 .gasto-screen .panel-subtitle {
-    -fx-font-size: 12px;
+    -fx-font-size: 11px;
     -fx-text-fill: #64748b;
 }
 
@@ -1107,11 +1044,22 @@
 }
 
 .gasto-screen .form-fields {
-    -fx-padding: 2 6 2 2;
+    -fx-spacing: 2;
+    -fx-padding: 0 6 0 2;
 }
 
 .gasto-screen .campo-sep {
-    -fx-padding: 6 0 0 0;
+    -fx-padding: 4 0 0 0;
+}
+
+.gasto-screen .form-label {
+    -fx-font-size: 11px;
+    -fx-graphic-text-gap: 6;
+}
+
+/* Iconos junto a las etiquetas del formulario */
+.gasto-screen .icon-field {
+    -fx-fill: #1e40af;
 }
 
 .gasto-screen .total-field {
@@ -1120,9 +1068,37 @@
     -fx-text-fill: #1e40af;
 }
 
+/* Campos mas bajos */
+.gasto-screen .text-field,
+.gasto-screen .search-field,
+.gasto-screen .combo-box,
+.gasto-screen .combo-box.combo-compact {
+    -fx-pref-height: 28px;
+    -fx-min-height: 28px;
+    -fx-max-height: 28px;
+    -fx-font-size: 12px;
+}
+
+.gasto-screen .combo-box > .text-field,
+.gasto-screen .combo-box.combo-compact > .text-field {
+    -fx-padding: 2 8;
+}
+
+.gasto-screen .combo-box > .arrow-button,
+.gasto-screen .combo-box.combo-compact > .arrow-button {
+    -fx-padding: 0 6;
+}
+
+/* Notas: el TextArea trae un nodo interno con clase "content" que recibe el relleno
+   de 15 px de .content y recortaria el texto */
 .gasto-screen .notas {
-    -fx-pref-height: 64px;
-    -fx-max-height: 64px;
+    -fx-pref-height: 56px;
+    -fx-min-height: 56px;
+    -fx-max-height: 56px;
+}
+
+.gasto-screen .notas .content {
+    -fx-padding: 3 6 3 6;
 }
 
 /* Botones Guardar / Limpiar */
@@ -1130,10 +1106,11 @@
     -fx-background-color: #16a34a;
     -fx-text-fill: white;
     -fx-font-weight: bold;
-    -fx-font-size: 13px;
+    -fx-font-size: 11px;
     -fx-background-radius: 8;
-    -fx-padding: 9 14;
-    -fx-graphic-text-gap: 6;
+    -fx-padding: 7 4 7 4;
+    -fx-graphic-text-gap: 4;
+    -fx-text-overrun: clip;
     -fx-cursor: hand;
     -fx-effect: dropshadow(gaussian, rgba(22,163,74,0.25), 6, 0, 0, 2);
 }
@@ -1152,13 +1129,14 @@
     -fx-background-color: white;
     -fx-text-fill: #334155;
     -fx-font-weight: bold;
-    -fx-font-size: 13px;
+    -fx-font-size: 11px;
     -fx-background-radius: 8;
     -fx-border-color: #cbd5e1;
     -fx-border-radius: 8;
     -fx-border-width: 1;
-    -fx-padding: 9 14;
-    -fx-graphic-text-gap: 6;
+    -fx-padding: 7 4 7 4;
+    -fx-graphic-text-gap: 4;
+    -fx-text-overrun: clip;
     -fx-cursor: hand;
 }
 
@@ -1215,88 +1193,6 @@
     -fx-text-fill: #15803d;
 }
 
-/* Iconos junto a las etiquetas del formulario de Mis Gastos */
-.gasto-screen .form-label {
-    -fx-graphic-text-gap: 8;
-}
-
-.gasto-screen .icon-field {
-    -fx-fill: #1e40af;
-}
-
-/* ===== MIS GASTOS: formulario más compacto ===== */
-.gasto-screen .form-card {
-    -fx-padding: 12 14 12 14;
-}
-
-.gasto-screen .panel-header {
-    -fx-padding: 0 0 4 0;
-}
-
-.gasto-screen .form-fields {
-    -fx-spacing: 2;
-    -fx-padding: 0 6 0 2;
-}
-
-.gasto-screen .campo-sep {
-    -fx-padding: 4 0 0 0;
-}
-
-.gasto-screen .form-label {
-    -fx-font-size: 11px;
-    -fx-graphic-text-gap: 6;
-}
-
-/* Campos más bajos */
-.gasto-screen .text-field,
-.gasto-screen .search-field,
-.gasto-screen .combo-box,
-.gasto-screen .combo-box.combo-compact {
-    -fx-pref-height: 28px;
-    -fx-min-height: 28px;
-    -fx-max-height: 28px;
-    -fx-font-size: 12px;
-}
-
-.gasto-screen .combo-box > .text-field,
-.gasto-screen .combo-box.combo-compact > .text-field {
-    -fx-padding: 2 8;
-}
-
-.gasto-screen .combo-box > .arrow-button,
-.gasto-screen .combo-box.combo-compact > .arrow-button {
-    -fx-padding: 0 6;
-}
-
-.gasto-screen .notas {
-    -fx-pref-height: 46px;
-    -fx-min-height: 46px;
-    -fx-max-height: 46px;
-}
-
-/* Botones un poco más bajos */
-.gasto-screen .btn-guardar,
-.gasto-screen .btn-limpiar {
-    -fx-padding: 7 12;
-}
-
-/* ===== MIS GASTOS: subtítulo y notas completos ===== */
-.gasto-screen .panel-subtitle {
-    -fx-font-size: 11px;
-}
-
-/* El TextArea trae un nodo interno con clase "content" que recibe el relleno de 15 px
-   de .content y recorta el texto de las notas */
-.gasto-screen .notas .content {
-    -fx-padding: 3 6 3 6;
-}
-
-.gasto-screen .notas {
-    -fx-pref-height: 56px;
-    -fx-min-height: 56px;
-    -fx-max-height: 56px;
-}
-
 /* ===== BARRA DE BOTONES DE MIS GASTOS (compacta) ===== */
 .toolbar-button {
     -fx-background-radius: 8;
@@ -1344,47 +1240,359 @@
     -fx-scale-y: 0.98;
 }
 
-/* ===== MENÚ LATERAL: más angosto (unos 1 cm menos) ===== */
-.sidebar {
-    -fx-pref-width: 202;
-    -fx-min-width: 202;
-    -fx-max-width: 202;
+/* ===== BUSCAR Y EDITAR GASTOS (complementa .gasto-screen) ===== */
+.gasto-screen .section-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1e293b;
+    -fx-graphic-text-gap: 6;
 }
 
-.compact .sidebar {
-    -fx-pref-width: 176;
-    -fx-min-width: 176;
-    -fx-max-width: 176;
-}
-
-/* Textos e iconos un poco más ajustados para que quepan en el ancho nuevo */
-.sidebar .menu-button,
-.compact .sidebar .menu-button {
-    -fx-font-size: 12px;
-    -fx-graphic-text-gap: 8;
-    -fx-padding: 0 8 0 10;
-}
-
-/* El menú contraído (solo iconos) conserva su ancho */
-.sidebar.collapsed,
-.compact .sidebar.collapsed {
-    -fx-pref-width: 64;
-    -fx-min-width: 64;
-    -fx-max-width: 64;
-}
-
-.sidebar.collapsed .menu-button {
-    -fx-padding: 0;
-}
-
-/* ===== MIS GASTOS: botones Limpiar / Guardar sin texto cortado ===== */
-.gasto-screen .btn-guardar,
-.gasto-screen .btn-limpiar {
+.gasto-screen .field-caption {
     -fx-font-size: 11px;
-    -fx-padding: 7 4 7 4;
-    -fx-graphic-text-gap: 4;
-    -fx-text-overrun: clip;
+    -fx-text-fill: #64748b;
 }
+
+.gasto-screen .result-count {
+    -fx-font-size: 11px;
+    -fx-font-style: italic;
+    -fx-text-fill: #64748b;
+}
+
+.gasto-screen .soft-separator .line {
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1 0 0 0;
+}
+
+.gasto-screen .date-picker {
+    -fx-pref-height: 28px;
+    -fx-min-height: 28px;
+    -fx-max-height: 28px;
+}
+
+.gasto-screen .date-picker > .text-field {
+    -fx-padding: 2 8;
+}
+
+/* Separador vertical entre filtro de fechas y de producto */
+.gasto-screen .separator:vertical .line {
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 0 0 0 1;
+}
+
+/* ===== BUSCAR Y EDITAR GASTOS (complementa .gasto-screen) ===== */
+.gasto-screen .section-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1e293b;
+    -fx-graphic-text-gap: 6;
+}
+
+.gasto-screen .field-caption {
+    -fx-font-size: 11px;
+    -fx-text-fill: #64748b;
+}
+
+.gasto-screen .result-count {
+    -fx-font-size: 11px;
+    -fx-font-style: italic;
+    -fx-text-fill: #64748b;
+}
+
+.gasto-screen .soft-separator .line {
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1 0 0 0;
+}
+
+.gasto-screen .date-picker {
+    -fx-pref-height: 28px;
+    -fx-min-height: 28px;
+    -fx-max-height: 28px;
+}
+
+.gasto-screen .date-picker > .text-field {
+    -fx-padding: 2 8;
+}
+
+/* Separador vertical entre filtro de fechas y de producto */
+.gasto-screen .separator:vertical .line {
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 0 0 0 1;
+}
+
+/* Boton Eliminar y estado deshabilitado de la barra de acciones */
+.toolbar-red {
+    -fx-background-color: #dc2626;
+    -fx-border-color: #dc2626;
+    -fx-text-fill: white;
+}
+
+.toolbar-red:hover {
+    -fx-background-color: #b91c1c;
+    -fx-border-color: #b91c1c;
+}
+
+.toolbar-red .toolbar-icon {
+    -fx-fill: white;
+}
+
+.toolbar-button:disabled {
+    -fx-opacity: 0.45;
+}
+
+/* ===== INFORMES (complementa .gasto-screen) ===== */
+.gasto-screen .info-box {
+    -fx-background-color: #eff6ff;
+    -fx-background-radius: 10;
+    -fx-border-color: #bfdbfe;
+    -fx-border-radius: 10;
+    -fx-border-width: 1;
+    -fx-padding: 10;
+}
+
+.gasto-screen .info-title {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1e40af;
+}
+
+.gasto-screen .info-item {
+    -fx-font-size: 10px;
+    -fx-text-fill: #334155;
+}
+
+.gasto-screen .preview-area {
+    -fx-font-family: 'Courier New';
+    -fx-font-size: 11.5px;
+    -fx-background-color: white;
+    -fx-background-radius: 8;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+}
+
+.gasto-screen .preview-area .content {
+    -fx-padding: 8 10 8 10;
+}
+
+.gasto-screen .stats-bar {
+    -fx-background-color: #f8fafc;
+    -fx-background-radius: 10;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 10;
+    -fx-border-width: 1;
+    -fx-padding: 8 16;
+}
+
+.gasto-screen .stat-caption {
+    -fx-font-size: 11px;
+    -fx-text-fill: #64748b;
+}
+
+.gasto-screen .stat-value {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1e293b;
+}
+
+.gasto-screen .stat-value-blue {
+    -fx-text-fill: #2563eb;
+}
+
+/* ===== CONSULTA DE TOTALES (complementa .gasto-screen) ===== */
+.gasto-screen .mini-caption {
+    -fx-font-size: 10px;
+    -fx-text-fill: #64748b;
+}
+
+.gasto-screen .form-hint {
+    -fx-font-size: 10px;
+    -fx-text-fill: #94a3b8;
+}
+
+.gasto-screen .filtro-resumen {
+    -fx-font-size: 12px;
+    -fx-text-fill: #475569;
+    -fx-background-color: #eef2ff;
+    -fx-background-radius: 10;
+    -fx-padding: 8 12;
+}
+
+.gasto-screen .kpi-caption {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #64748b;
+}
+
+.gasto-screen .kpi-value {
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1e293b;
+}
+
+.gasto-screen .card-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1e293b;
+}
+
+.gasto-screen .card-hint {
+    -fx-font-size: 10px;
+    -fx-text-fill: #94a3b8;
+}
+
+.gasto-screen .date-picker {
+    -fx-pref-height: 28px;
+    -fx-min-height: 28px;
+    -fx-max-height: 28px;
+}
+
+.gasto-screen .date-picker > .text-field {
+    -fx-padding: 2 8;
+}
+
+/* ===== CONSULTA DE TOTALES: tarjetas KPI mas bajas (va DESPUES del bloque anterior) ===== */
+.gasto-screen .stat-card-compact {
+    -fx-padding: 6 14 8 14;
+}
+
+.gasto-screen .kpi-caption {
+    -fx-font-size: 9px;
+}
+
+.gasto-screen .kpi-value {
+    -fx-font-size: 20px;
+}
+
+/* ===== GESTION DE BILLETEROS (complementa .gasto-screen) ===== */
+.gasto-screen .filter-bar {
+    -fx-padding: 10 14 10 14;
+}
+
+.gasto-screen .icon-empty {
+    -fx-fill: #94a3b8;
+}
+
+.gasto-screen .pager-bar {
+    -fx-background-color: #f8fafc;
+    -fx-background-radius: 8;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 6 12;
+}
+
+.gasto-screen .pager-label {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #475569;
+}
+
+.gasto-screen .pager-button {
+    -fx-background-color: white;
+    -fx-border-color: #cbd5e1;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 3 10 3 10;
+    -fx-font-size: 11px;
+    -fx-text-fill: #475569;
+    -fx-cursor: hand;
+}
+
+.gasto-screen .pager-button:hover {
+    -fx-background-color: #f1f5f9;
+    -fx-border-color: #94a3b8;
+}
+
+.gasto-screen .pager-button:disabled {
+    -fx-opacity: 0.45;
+    -fx-cursor: default;
+}
+
+.gasto-screen .resumen-card {
+    -fx-padding: 12 16 12 16;
+}
+
+.gasto-screen .res-tile {
+    -fx-background-radius: 10;
+    -fx-padding: 6 16 6 14;
+    -fx-min-width: 130;
+}
+
+.gasto-screen .res-blue {
+    -fx-background-color: #eff6ff;
+    -fx-border-color: #3b82f6;
+    -fx-border-width: 0 0 0 3;
+    -fx-border-radius: 10;
+}
+
+.gasto-screen .res-purple {
+    -fx-background-color: #f5f3ff;
+    -fx-border-color: #8b5cf6;
+    -fx-border-width: 0 0 0 3;
+    -fx-border-radius: 10;
+}
+
+.gasto-screen .res-caption {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #64748b;
+}
+
+.gasto-screen .res-value {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+}
+
+.gasto-screen .res-value-blue {
+    -fx-text-fill: #1e40af;
+}
+
+.gasto-screen .res-value-purple {
+    -fx-text-fill: #6d28d9;
+}
+
+/* ===== MODAL BILLETERO (complementa .gasto-screen) ===== */
+.gasto-screen .error-message {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #b91c1c;
+    -fx-background-color: #fef2f2;
+    -fx-background-radius: 8;
+    -fx-border-color: #fecaca;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 6 10 6 10;
+}
+
+/* ===== REPORTES DE BILLETEROS (complementa .gasto-screen) ===== */
+.gasto-screen .compact-card {
+    -fx-padding: 10 16 10 16;
+}
+
+.gasto-screen .rep-empty-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #64748b;
+}
+
+/* Boton verde de la barra de acciones (Excel) */
+.toolbar-green {
+    -fx-background-color: #16a34a;
+    -fx-border-color: #16a34a;
+    -fx-text-fill: white;
+}
+
+.toolbar-green:hover {
+    -fx-background-color: #15803d;
+    -fx-border-color: #15803d;
+}
+
+.toolbar-green .toolbar-icon {
+    -fx-fill: white;
+}
+
 /* ===========================
    NOTA SOBRE TRANSICIONES
    =========================== */

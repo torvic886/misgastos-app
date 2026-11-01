@@ -1,73 +1,104 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.SVGPath?>
 
 <VBox xmlns="http://javafx.com/javafx/17"
-      xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.misgastos.controller.ModalBilleteroController"
-      spacing="20"
-      styleClass="modal-container"
-      prefWidth="500"
-      prefHeight="400">
+	xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="com.misgastos.controller.ModalBilleteroController"
+	styleClass="content, gasto-screen" prefWidth="430" prefHeight="400">
 
-    <!-- Título del modal -->
-    <HBox styleClass="modal-header">
-        <padding>
-            <Insets top="15" right="15" bottom="15" left="15"/>
-        </padding>
-        <Label fx:id="lblTitulo" text="Nuevo Billetero" styleClass="modal-title"/>
-    </HBox>
+	<VBox spacing="10" styleClass="form-card" VBox.vgrow="ALWAYS">
 
-    <!-- Formulario -->
-    <GridPane hgap="15" vgap="15" styleClass="form-container">
-        <padding>
-            <Insets top="20" right="20" bottom="20" left="20"/>
-        </padding>
-        
-        <!-- Fecha -->
-        <Label text="Fecha:" GridPane.columnIndex="0" GridPane.rowIndex="0"
-               styleClass="form-label"/>
-        <DatePicker fx:id="dpFecha" promptText="Seleccione fecha"
-                   GridPane.columnIndex="1" GridPane.rowIndex="0"
-                   prefWidth="300"/>
-        
-        <!-- Billetero -->
-        <Label text="Billetero:" GridPane.columnIndex="0" GridPane.rowIndex="1"
-               styleClass="form-label"/>
-        <TextField fx:id="txtBilletero" promptText="0.00"
-                  GridPane.columnIndex="1" GridPane.rowIndex="1"
-                  prefWidth="300"/>
-        
-        <!-- Premios -->
-        <Label text="Premios:" GridPane.columnIndex="0" GridPane.rowIndex="2"
-               styleClass="form-label"/>
-        <TextField fx:id="txtPremios" promptText="0.00"
-                  GridPane.columnIndex="1" GridPane.rowIndex="2"
-                  prefWidth="300"/>
-        
-        <!-- Diferencia (solo lectura) -->
-        <Label text="Diferencia:" GridPane.columnIndex="0" GridPane.rowIndex="3"
-               styleClass="form-label"/>
-        <TextField fx:id="txtDiferencia" promptText="0.00" disable="true"
-                  GridPane.columnIndex="1" GridPane.rowIndex="3"
-                  prefWidth="300" styleClass="readonly-field"/>
-    </GridPane>
+		<!-- ============ ENCABEZADO ============ -->
+		<HBox spacing="10" alignment="CENTER_LEFT" styleClass="panel-header">
+			<Label styleClass="icon-circle">
+				<graphic>
+					<SVGPath styleClass="icon-white"
+						content="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z" />
+				</graphic>
+			</Label>
+			<VBox spacing="2">
+				<Label fx:id="lblTitulo" text="Nuevo Billetero"
+					styleClass="panel-title" />
+				<Label text="Completa los datos del registro"
+					styleClass="panel-subtitle" />
+			</VBox>
+		</HBox>
 
-    <!-- Mensaje de error -->
-    <Label fx:id="lblError" text="" styleClass="error-message" 
-           managed="false" visible="false"/>
+		<!-- ============ FORMULARIO ============ -->
+		<VBox spacing="4" styleClass="form-fields">
 
-    <!-- Botones de acción -->
-    <HBox spacing="15" alignment="CENTER">
-        <padding>
-            <Insets bottom="15"/>
-        </padding>
-        <Button text="✖ Cancelar" styleClass="secondary-button" 
-                onAction="#handleCancelar" prefWidth="150"/>
-        <Button text="💾 Guardar" styleClass="primary-button" 
-                onAction="#handleGuardar" prefWidth="150"/>
-    </HBox>
+			<Label text="Fecha:" styleClass="form-label">
+				<graphic>
+					<SVGPath styleClass="icon-field"
+						content="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z" />
+				</graphic>
+			</Label>
+			<DatePicker fx:id="dpFecha" promptText="Seleccione fecha"
+				maxWidth="Infinity" />
 
+			<HBox spacing="10">
+				<VBox spacing="4" HBox.hgrow="ALWAYS" prefWidth="0"
+					maxWidth="Infinity">
+					<Label text="Billetero:" styleClass="form-label, campo-sep">
+						<graphic>
+							<SVGPath styleClass="icon-field"
+								content="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z" />
+						</graphic>
+					</Label>
+					<TextField fx:id="txtBilletero" promptText="0.00"
+						styleClass="search-field" />
+				</VBox>
+				<VBox spacing="4" HBox.hgrow="ALWAYS" prefWidth="0"
+					maxWidth="Infinity">
+					<Label text="Premios:" styleClass="form-label, campo-sep">
+						<graphic>
+							<SVGPath styleClass="icon-field"
+								content="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z" />
+						</graphic>
+					</Label>
+					<TextField fx:id="txtPremios" promptText="0.00"
+						styleClass="search-field" />
+				</VBox>
+			</HBox>
+
+			<Label text="Diferencia:" styleClass="form-label, campo-sep">
+				<graphic>
+					<SVGPath styleClass="icon-field"
+						content="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5.97 4.06L14.09 6l1.41 1.41L16.91 6l1.06 1.06-1.41 1.41 1.41 1.41-1.06 1.06-1.41-1.41-1.41 1.41-1.06-1.06 1.41-1.41-1.41-1.42zm-6.78.66h5v1.5h-5v-1.5zM11.5 16h-2v2H8v-2H6v-1.5h2v-2h1.5v2h2V16zm6.5 1.25h-5v-1.5h5v1.5zm0-2.5h-5v-1.5h5v1.5z" />
+				</graphic>
+			</Label>
+			<TextField fx:id="txtDiferencia" promptText="0.00"
+				disable="true" styleClass="search-field, total-field" />
+		</VBox>
+
+		<!-- Mensaje de error -->
+		<Label fx:id="lblError" text="" styleClass="error-message"
+			managed="false" visible="false" wrapText="true" />
+
+		<Region VBox.vgrow="ALWAYS" />
+
+		<!-- ============ BOTONES ============ -->
+		<HBox spacing="10" alignment="CENTER">
+			<Button text="Cancelar" styleClass="btn-limpiar"
+				onAction="#handleCancelar" HBox.hgrow="ALWAYS"
+				maxWidth="Infinity">
+				<graphic>
+					<SVGPath styleClass="icon-slate"
+						content="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+				</graphic>
+			</Button>
+			<Button text="Guardar" styleClass="btn-guardar"
+				onAction="#handleGuardar" HBox.hgrow="ALWAYS"
+				maxWidth="Infinity">
+				<graphic>
+					<SVGPath styleClass="icon-white"
+						content="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z" />
+				</graphic>
+			</Button>
+		</HBox>
+
+	</VBox>
 </VBox>

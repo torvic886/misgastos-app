@@ -1,164 +1,229 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
+<?import javafx.scene.Group?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.SVGPath?>
 
-<ScrollPane xmlns="http://javafx.com/javafx/17"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.misgastos.controller.ReportesBilleterosController"
-            fitToWidth="true" fitToHeight="true" hbarPolicy="NEVER"
-            style="-fx-background-color: transparent; -fx-background: transparent;">
+<VBox spacing="10" style="-fx-padding: 0;" styleClass="content, gasto-screen"
+	xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="com.misgastos.controller.ReportesBilleterosController">
 
-    <VBox spacing="12" styleClass="content">
-        <padding>
-            <Insets top="16" right="20" bottom="16" left="20"/>
-        </padding>
+	<!-- ============ ENCABEZADO CON TOTALES ============ -->
+	<HBox spacing="10" alignment="CENTER_LEFT" styleClass="table-card, compact-card">
+		<HBox spacing="10" alignment="CENTER_LEFT" styleClass="panel-header">
+			<Label styleClass="icon-circle">
+				<graphic>
+					<SVGPath styleClass="icon-white"
+						content="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z" />
+				</graphic>
+			</Label>
+			<VBox spacing="2">
+				<Label text="Reportes de Billeteros" styleClass="panel-title" />
+				<Label
+					text="Genera reportes completos con análisis financiero detallado"
+					styleClass="panel-subtitle" />
+			</VBox>
+		</HBox>
 
-        <!-- Encabezado con los totales a la derecha -->
-        <HBox styleClass="header-box" alignment="CENTER_LEFT" spacing="10"
-              style="-fx-padding: 10 16;">
-            <Label text="📊" style="-fx-font-size: 20px;"/>
-            <VBox spacing="0">
-                <Label text="Reportes de Billeteros" styleClass="section-title"/>
-                <Label text="Genera reportes completos con análisis financiero detallado"
-                       styleClass="caption"/>
-            </VBox>
+		<Region HBox.hgrow="ALWAYS" />
 
-            <Region HBox.hgrow="ALWAYS"/>
+		<VBox spacing="0" minWidth="200" styleClass="stat-card-compact, stat-card-today">
+			<Label text="TOTAL BILLETERO" styleClass="kpi-caption" />
+			<Label fx:id="lblTotalBilletero" text="0.00" styleClass="kpi-value" />
+		</VBox>
+		<VBox spacing="0" minWidth="200" styleClass="stat-card-compact, stat-card-week">
+			<Label text="TOTAL PREMIOS" styleClass="kpi-caption" />
+			<Label fx:id="lblTotalPremios" text="0.00" styleClass="kpi-value" />
+		</VBox>
+		<VBox spacing="0" minWidth="200" styleClass="stat-card-compact, stat-card-month">
+			<Label text="UTILIDAD TOTAL" styleClass="kpi-caption" />
+			<Label fx:id="lblUtilidadTotal" text="0.00" styleClass="kpi-value" />
+		</VBox>
+	</HBox>
 
-            <HBox spacing="20" alignment="CENTER_RIGHT">
-                <VBox spacing="0" alignment="CENTER_RIGHT">
-                    <Label text="Total Billetero" styleClass="caption"/>
-                    <Label fx:id="lblTotalBilletero" text="0.00"
-                           style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #2563eb;"/>
-                </VBox>
-                <Separator orientation="VERTICAL"/>
-                <VBox spacing="0" alignment="CENTER_RIGHT">
-                    <Label text="Total Premios" styleClass="caption"/>
-                    <Label fx:id="lblTotalPremios" text="0.00"
-                           style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #dc2626;"/>
-                </VBox>
-                <Separator orientation="VERTICAL"/>
-                <VBox spacing="0" alignment="CENTER_RIGHT">
-                    <Label text="Utilidad Total" styleClass="caption"/>
-                    <Label fx:id="lblUtilidadTotal" text="0.00"
-                           style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #10b981;"/>
-                </VBox>
-            </HBox>
-        </HBox>
+	<!-- ============ GENERADORES (una fila por reporte) ============ -->
+	<VBox spacing="8" styleClass="table-card, compact-card">
 
-        <!-- Generadores de reportes -->
-        <HBox spacing="12">
+		<!-- Reporte mensual -->
+		<HBox spacing="10" alignment="CENTER_LEFT">
+			<HBox spacing="10" alignment="CENTER_LEFT" minWidth="330"
+				prefWidth="330" maxWidth="330">
+				<Label styleClass="icon-circle">
+					<graphic>
+						<SVGPath styleClass="icon-white"
+							content="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z" />
+					</graphic>
+				</Label>
+				<VBox spacing="1">
+					<Label text="Reporte Mensual" styleClass="card-title" />
+					<Label text="Agrupa datos por mes con totales acumulados"
+						styleClass="panel-subtitle" />
+				</VBox>
+			</HBox>
 
-            <!-- Reporte mensual -->
-            <VBox styleClass="form-card" spacing="10" HBox.hgrow="ALWAYS" prefWidth="400"
-                  style="-fx-padding: 12 16;">
-                <HBox spacing="8" alignment="CENTER_LEFT">
-                    <Label text="📅" style="-fx-font-size: 16px;"/>
-                    <VBox spacing="0">
-                        <Label text="Reporte Mensual"
-                               style="-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #1e293b;"/>
-                        <Label text="Agrupa datos por mes con totales acumulados" styleClass="caption"/>
-                    </VBox>
-                </HBox>
+			<Label text="Desde:" styleClass="field-caption" minWidth="-Infinity" />
+			<DatePicker fx:id="dpMensualInicio" prefWidth="150"
+				maxWidth="260" HBox.hgrow="ALWAYS" />
+			<Label text="Hasta:" styleClass="field-caption" minWidth="-Infinity" />
+			<DatePicker fx:id="dpMensualFin" prefWidth="150" maxWidth="260"
+				HBox.hgrow="ALWAYS" />
 
-                <HBox spacing="10">
-                    <VBox spacing="4" HBox.hgrow="ALWAYS">
-                        <Label text="Fecha inicio" styleClass="form-label"/>
-                        <DatePicker fx:id="dpMensualInicio" maxWidth="Infinity"/>
-                    </VBox>
-                    <VBox spacing="4" HBox.hgrow="ALWAYS">
-                        <Label text="Fecha fin" styleClass="form-label"/>
-                        <DatePicker fx:id="dpMensualFin" maxWidth="Infinity"/>
-                    </VBox>
-                </HBox>
+			<Button text="Vista previa" onAction="#handleVistaPreviaMensual"
+				styleClass="toolbar-button, toolbar-blue" minWidth="125"
+				prefWidth="125">
+				<graphic>
+					<Group>
+						<SVGPath styleClass="toolbar-icon" scaleX="0.75" scaleY="0.75"
+							content="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+					</Group>
+				</graphic>
+			</Button>
+			<Button text="Excel" onAction="#handleMensualExcel"
+				styleClass="toolbar-button, toolbar-green" minWidth="100"
+				prefWidth="100">
+				<graphic>
+					<Group>
+						<SVGPath styleClass="toolbar-icon" scaleX="0.75" scaleY="0.75"
+							content="M3 3v18h18V3H3zm8 16H5v-6h6v6zm0-8H5V5h6v6zm8 8h-6v-6h6v6zm0-8h-6V5h6v6z" />
+					</Group>
+				</graphic>
+			</Button>
+			<Button text="PDF" onAction="#handleMensualPDF"
+				styleClass="toolbar-button, toolbar-red" minWidth="100"
+				prefWidth="100">
+				<graphic>
+					<Group>
+						<SVGPath styleClass="toolbar-icon" scaleX="0.75" scaleY="0.75"
+							content="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+					</Group>
+				</graphic>
+			</Button>
+		</HBox>
 
-                <HBox spacing="8">
-                    <Button text="👁 Vista previa" onAction="#handleVistaPreviaMensual"
-                            styleClass="search-button" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-                    <Button text="📊 Excel" onAction="#handleMensualExcel"
-                            styleClass="secondary-button" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-                    <Button text="📄 PDF" onAction="#handleMensualPDF"
-                            styleClass="danger-button" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-                </HBox>
-            </VBox>
+		<Separator styleClass="soft-separator" />
 
-            <!-- Reporte diario -->
-            <VBox styleClass="form-card" spacing="10" HBox.hgrow="ALWAYS" prefWidth="400"
-                  style="-fx-padding: 12 16;">
-                <HBox spacing="8" alignment="CENTER_LEFT">
-                    <Label text="📆" style="-fx-font-size: 16px;"/>
-                    <VBox spacing="0">
-                        <Label text="Reporte Diario"
-                               style="-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #1e293b;"/>
-                        <Label text="Detalle día por día con utilidades" styleClass="caption"/>
-                    </VBox>
-                </HBox>
+		<!-- Reporte diario -->
+		<HBox spacing="10" alignment="CENTER_LEFT">
+			<HBox spacing="10" alignment="CENTER_LEFT" minWidth="330"
+				prefWidth="330" maxWidth="330">
+				<Label styleClass="icon-circle">
+					<graphic>
+						<SVGPath styleClass="icon-white"
+							content="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z" />
+					</graphic>
+				</Label>
+				<VBox spacing="1">
+					<Label text="Reporte Diario" styleClass="card-title" />
+					<Label text="Detalle día por día con utilidades"
+						styleClass="panel-subtitle" />
+				</VBox>
+			</HBox>
 
-                <HBox spacing="10">
-                    <VBox spacing="4" HBox.hgrow="ALWAYS">
-                        <Label text="Fecha inicio" styleClass="form-label"/>
-                        <DatePicker fx:id="dpDiarioInicio" maxWidth="Infinity"/>
-                    </VBox>
-                    <VBox spacing="4" HBox.hgrow="ALWAYS">
-                        <Label text="Fecha fin" styleClass="form-label"/>
-                        <DatePicker fx:id="dpDiarioFin" maxWidth="Infinity"/>
-                    </VBox>
-                </HBox>
+			<Label text="Desde:" styleClass="field-caption" minWidth="-Infinity" />
+			<DatePicker fx:id="dpDiarioInicio" prefWidth="150" maxWidth="260"
+				HBox.hgrow="ALWAYS" />
+			<Label text="Hasta:" styleClass="field-caption" minWidth="-Infinity" />
+			<DatePicker fx:id="dpDiarioFin" prefWidth="150" maxWidth="260"
+				HBox.hgrow="ALWAYS" />
 
-                <HBox spacing="8">
-                    <Button text="👁 Vista previa" onAction="#handleVistaPreviaDiario"
-                            styleClass="search-button" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-                    <Button text="📊 Excel" onAction="#handleDiarioExcel"
-                            styleClass="secondary-button" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-                    <Button text="📄 PDF" onAction="#handleDiarioPDF"
-                            styleClass="danger-button" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-                </HBox>
-            </VBox>
-        </HBox>
+			<Button text="Vista previa" onAction="#handleVistaPreviaDiario"
+				styleClass="toolbar-button, toolbar-blue" minWidth="125"
+				prefWidth="125">
+				<graphic>
+					<Group>
+						<SVGPath styleClass="toolbar-icon" scaleX="0.75" scaleY="0.75"
+							content="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+					</Group>
+				</graphic>
+			</Button>
+			<Button text="Excel" onAction="#handleDiarioExcel"
+				styleClass="toolbar-button, toolbar-green" minWidth="100"
+				prefWidth="100">
+				<graphic>
+					<Group>
+						<SVGPath styleClass="toolbar-icon" scaleX="0.75" scaleY="0.75"
+							content="M3 3v18h18V3H3zm8 16H5v-6h6v6zm0-8H5V5h6v6zm8 8h-6v-6h6v6zm0-8h-6V5h6v6z" />
+					</Group>
+				</graphic>
+			</Button>
+			<Button text="PDF" onAction="#handleDiarioPDF"
+				styleClass="toolbar-button, toolbar-red" minWidth="100"
+				prefWidth="100">
+				<graphic>
+					<Group>
+						<SVGPath styleClass="toolbar-icon" scaleX="0.75" scaleY="0.75"
+							content="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+					</Group>
+				</graphic>
+			</Button>
+		</HBox>
+	</VBox>
 
-        <!-- Vista previa: ocupa todo el espacio que sobra -->
-        <VBox styleClass="table-card" spacing="8" VBox.vgrow="ALWAYS"
-              style="-fx-padding: 12 16;">
+	<!-- ============ VISTA PREVIA (ocupa todo el espacio restante) ============ -->
+	<VBox styleClass="table-card, compact-card" spacing="8"
+		VBox.vgrow="ALWAYS">
 
-            <HBox alignment="CENTER_LEFT" spacing="8">
-                <Label text="📊" style="-fx-font-size: 16px;"/>
-                <VBox spacing="0" HBox.hgrow="ALWAYS">
-                    <Label text="Vista previa del reporte"
-                           style="-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #1e293b;"/>
-                    <Label fx:id="lblRangoFechas"
-                           text="Seleccione fechas y presione 'Vista Previa' para generar el reporte"
-                           styleClass="caption"/>
-                </VBox>
-                <Button text="🔄 Limpiar" onAction="#handleLimpiarVista" styleClass="neutral-button"/>
-            </HBox>
+		<HBox spacing="10" alignment="CENTER_LEFT" styleClass="panel-header">
+			<Label styleClass="icon-circle">
+				<graphic>
+					<SVGPath styleClass="icon-white"
+						content="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+				</graphic>
+			</Label>
+			<VBox spacing="2" HBox.hgrow="ALWAYS">
+				<Label text="Vista previa del reporte" styleClass="panel-title" />
+				<Label fx:id="lblRangoFechas"
+					text="Seleccione fechas y presione 'Vista Previa' para generar el reporte"
+					styleClass="panel-subtitle" />
+			</VBox>
+			<Button text="Limpiar" onAction="#handleLimpiarVista"
+				styleClass="toolbar-button, toolbar-neutral">
+				<graphic>
+					<Group>
+						<SVGPath styleClass="toolbar-icon" scaleX="0.75" scaleY="0.75"
+							content="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
+					</Group>
+				</graphic>
+			</Button>
+		</HBox>
 
-            <!-- Sin ScrollPane propio: así el encabezado de la tabla queda fijo -->
-            <TableView fx:id="tblVistaPrevia" styleClass="tabla-reporte"
-                       minHeight="260" VBox.vgrow="ALWAYS">
-                <columnResizePolicy>
-                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
-                </columnResizePolicy>
-                <columns>
-                    <TableColumn fx:id="colPeriodo" text="Periodo" prefWidth="90" minWidth="80"/>
-                    <TableColumn fx:id="colBilletero" text="Acum. Billetero" prefWidth="115" minWidth="90"/>
-                    <TableColumn fx:id="colPremios" text="Acum. Premios" prefWidth="115" minWidth="90"/>
-                    <TableColumn fx:id="colDiferencia" text="Diferencia" prefWidth="105" minWidth="85"/>
-                    <TableColumn fx:id="colGastosLocal" text="Gastos Local" prefWidth="105" minWidth="85"/>
-                    <TableColumn fx:id="colPagosManuel" text="Pagos Manuel" prefWidth="105" minWidth="85"/>
-                    <TableColumn fx:id="colInversion" text="Inversión" prefWidth="100" minWidth="80"/>
-                    <TableColumn fx:id="colGastoTotal" text="Gasto Total" prefWidth="105" minWidth="85"/>
-                    <TableColumn fx:id="colUtilidadNeta" text="Utilidad Neta" prefWidth="110" minWidth="90"/>
-                </columns>
-                <placeholder>
-                    <VBox alignment="CENTER" spacing="6">
-                        <Label text="No hay datos para mostrar"/>
-                        <Label text="Seleccione un rango de fechas y presione 'Vista previa'"
-                               styleClass="caption"/>
-                    </VBox>
-                </placeholder>
-            </TableView>
-        </VBox>
-    </VBox>
-</ScrollPane>
+		<!-- La tabla tiene su propio scroll y el encabezado queda fijo -->
+		<TableView fx:id="tblVistaPrevia" styleClass="tabla-reporte"
+			prefHeight="200" minHeight="150" VBox.vgrow="ALWAYS"
+			style="-fx-fixed-cell-size: 34px;">
+			<columnResizePolicy>
+				<TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+			</columnResizePolicy>
+			<columns>
+				<TableColumn fx:id="colPeriodo" text="Periodo" prefWidth="90"
+					minWidth="80" />
+				<TableColumn fx:id="colBilletero" text="Acum. Billetero"
+					prefWidth="115" minWidth="90" />
+				<TableColumn fx:id="colPremios" text="Acum. Premios"
+					prefWidth="115" minWidth="90" />
+				<TableColumn fx:id="colDiferencia" text="Diferencia"
+					prefWidth="105" minWidth="85" />
+				<TableColumn fx:id="colGastosLocal" text="Gastos Local"
+					prefWidth="105" minWidth="85" />
+				<TableColumn fx:id="colPagosManuel" text="Pagos Manuel"
+					prefWidth="105" minWidth="85" />
+				<TableColumn fx:id="colInversion" text="Inversión"
+					prefWidth="100" minWidth="80" />
+				<TableColumn fx:id="colGastoTotal" text="Gasto Total"
+					prefWidth="105" minWidth="85" />
+				<TableColumn fx:id="colUtilidadNeta" text="Utilidad Neta"
+					prefWidth="110" minWidth="90" />
+			</columns>
+			<placeholder>
+				<VBox alignment="CENTER" spacing="8">
+					<SVGPath styleClass="icon-empty"
+						content="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
+					<Label text="No hay datos para mostrar" styleClass="rep-empty-title" />
+					<Label text="Seleccione un rango de fechas y presione 'Vista previa'"
+						styleClass="panel-subtitle" />
+				</VBox>
+			</placeholder>
+		</TableView>
+	</VBox>
+</VBox>

@@ -3,200 +3,200 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.SVGPath?>
 
 <BorderPane xmlns="http://javafx.com/javafx/17"
 	xmlns:fx="http://javafx.com/fxml/1"
 	fx:controller="com.misgastos.controller.ConsultaTotalesController"
-	styleClass="content">
-
-	<padding>
-		<Insets top="5" right="15" bottom="5" left="15" />
-	</padding>
+	styleClass="content, gasto-screen">
 
 	<!-- ========== IZQUIERDA: FILTROS ========== -->
 	<left>
-		<ScrollPane fitToWidth="true" hbarPolicy="NEVER"
-			style="-fx-background-color: transparent; -fx-background: transparent;">
+		<VBox spacing="8" styleClass="form-card" prefWidth="330"
+			minWidth="330" maxWidth="330">
 
 			<BorderPane.margin>
-				<Insets right="15" />
+				<Insets right="12" />
 			</BorderPane.margin>
 
-			<VBox spacing="12" styleClass="form-card" prefWidth="330"
-				minWidth="330" maxWidth="330">
-
+			<HBox spacing="10" alignment="CENTER_LEFT" styleClass="panel-header">
+				<Label styleClass="icon-circle">
+					<graphic>
+						<SVGPath styleClass="icon-white" content="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+					</graphic>
+				</Label>
 				<VBox spacing="2">
-					<Label text="🔎 Consulta de totales"
-						style="-fx-font-weight: bold; -fx-font-size: 15px; -fx-text-fill: #1e293b;" />
-					<Label
-						text="Combina los filtros que necesites. El total se recalcula solo."
-						wrapText="true"
-						style="-fx-font-size: 11px; -fx-text-fill: #64748b;" />
+					<Label text="Consulta de totales" styleClass="panel-title" />
+					<Label text="Combina los filtros. El total se recalcula solo."
+						wrapText="true" styleClass="panel-subtitle" />
 				</VBox>
+			</HBox>
 
-				<Separator />
+			<ScrollPane fitToWidth="true" hbarPolicy="NEVER"
+				vbarPolicy="AS_NEEDED" styleClass="form-scroll"
+				VBox.vgrow="ALWAYS" prefHeight="0" minHeight="0">
+				<VBox spacing="4" styleClass="form-fields">
 
-				<!-- Periodo -->
-				<VBox spacing="4">
-					<Label text="Periodo" styleClass="form-label" />
+					<Label text="Periodo" styleClass="form-label">
+						<graphic>
+							<SVGPath styleClass="icon-field" content="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z" />
+						</graphic>
+					</Label>
 					<ComboBox fx:id="cmbPeriodo" maxWidth="Infinity" />
 					<HBox spacing="8">
-						<VBox spacing="4" HBox.hgrow="ALWAYS">
-							<Label text="Desde"
-								style="-fx-font-size: 10px; -fx-text-fill: #64748b;" />
+						<VBox spacing="3" HBox.hgrow="ALWAYS" prefWidth="0"
+							maxWidth="Infinity">
+							<Label text="Desde" styleClass="mini-caption" />
 							<DatePicker fx:id="dpDesde" maxWidth="Infinity" />
 						</VBox>
-						<VBox spacing="4" HBox.hgrow="ALWAYS">
-							<Label text="Hasta"
-								style="-fx-font-size: 10px; -fx-text-fill: #64748b;" />
+						<VBox spacing="3" HBox.hgrow="ALWAYS" prefWidth="0"
+							maxWidth="Infinity">
+							<Label text="Hasta" styleClass="mini-caption" />
 							<DatePicker fx:id="dpHasta" maxWidth="Infinity" />
 						</VBox>
 					</HBox>
-				</VBox>
 
-				<!-- Categoría -->
-				<VBox spacing="4">
-					<Label text="Categoría" styleClass="form-label" />
+					<Label text="Categoría" styleClass="form-label, campo-sep">
+						<graphic>
+							<SVGPath styleClass="icon-field" content="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z" />
+						</graphic>
+					</Label>
 					<ComboBox fx:id="cmbCategoria" maxWidth="Infinity" />
-				</VBox>
 
-				<!-- Subcategoría (se habilita al elegir una categoría) -->
-				<VBox spacing="4">
-					<Label text="Subcategoría" styleClass="form-label" />
+					<Label text="Subcategoría" styleClass="form-label, campo-sep">
+						<graphic>
+							<SVGPath styleClass="icon-field" content="M22 11V3h-7v3H9V3H2v8h7V8h2v10h4v3h7v-8h-7v3h-2V8h2v3z" />
+						</graphic>
+					</Label>
 					<ComboBox fx:id="cmbSubcategoria" maxWidth="Infinity" />
-				</VBox>
 
-				<!-- Producto -->
-				<VBox spacing="4">
-					<Label text="Producto" styleClass="form-label" />
+					<Label text="Producto" styleClass="form-label, campo-sep">
+						<graphic>
+							<SVGPath styleClass="icon-field" content="M20 2H4c-1 0-2 .9-2 2v3.01c0 .72.43 1.34 1 1.69V20c0 1.1 1.1 2 2 2h14c.9 0 2-.9 2-2V8.7c.57-.35 1-.97 1-1.69V4c0-1.1-1-2-2-2zm-5 12H9v-2h6v2zm5-7H4V4l16-.02V7z" />
+						</graphic>
+					</Label>
 					<TextField fx:id="txtProducto"
-						promptText="Escribe parte del nombre..." />
+						promptText="Escribe parte del nombre..." styleClass="search-field" />
 					<CheckBox fx:id="chkExacto" text="Solo este nombre exacto"
-						style="-fx-font-size: 11px;" />
+						styleClass="form-hint" />
 					<Label
 						text="Para ver todos los productos con su total, agrupa por «Producto»."
-						wrapText="true"
-						style="-fx-font-size: 10px; -fx-text-fill: #94a3b8;" />
-				</VBox>
+						wrapText="true" styleClass="form-hint" />
 
-				<!-- Persona -->
-				<VBox spacing="4">
-					<Label text="Persona (nombre o cédula)"
-						styleClass="form-label" />
-					<TextField fx:id="txtPersona" promptText="Opcional" />
-				</VBox>
+					<Label text="Persona (nombre o cédula)" styleClass="form-label, campo-sep">
+						<graphic>
+							<SVGPath styleClass="icon-field" content="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+						</graphic>
+					</Label>
+					<TextField fx:id="txtPersona" promptText="Opcional"
+						styleClass="search-field" />
 
-				<!-- Registrado por -->
-				<VBox spacing="4">
-					<Label text="Registrado por" styleClass="form-label" />
+					<Label text="Registrado por" styleClass="form-label, campo-sep">
+						<graphic>
+							<SVGPath styleClass="icon-field" content="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+						</graphic>
+					</Label>
 					<ComboBox fx:id="cmbUsuario" maxWidth="Infinity" />
-				</VBox>
 
-				<Separator />
-
-				<!-- Desglose -->
-				<VBox spacing="4">
-					<Label text="Agrupar el desglose por" styleClass="form-label" />
+					<Label text="Agrupar el desglose por" styleClass="form-label, campo-sep">
+						<graphic>
+							<SVGPath styleClass="icon-field" content="M22 11V3h-7v3H9V3H2v8h7V8h2v10h4v3h7v-8h-7v3h-2V8h2v3z" />
+						</graphic>
+					</Label>
 					<ComboBox fx:id="cmbAgrupar" maxWidth="Infinity" />
+
 				</VBox>
+			</ScrollPane>
 
-				<Button text="🔄 Limpiar filtros" onAction="#handleLimpiar"
-					maxWidth="Infinity" prefHeight="32"
-					style="-fx-background-color: #e2e8f0; -fx-text-fill: #334155; -fx-font-weight: bold; -fx-background-radius: 8; -fx-cursor: hand;" />
+			<Button text="Limpiar filtros" onAction="#handleLimpiar"
+				styleClass="btn-limpiar" maxWidth="Infinity"
+				minHeight="-Infinity" minWidth="-Infinity" prefHeight="30">
+				<VBox.margin>
+					<Insets bottom="6" />
+				</VBox.margin>
+				<graphic>
+					<SVGPath styleClass="icon-slate" content="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
+				</graphic>
+			</Button>
 
-				<Button text="📊 Exportar a Excel"
-					onAction="#handleExportarExcel" maxWidth="Infinity" prefHeight="32"
-					styleClass="secondary-button" />
-
-			</VBox>
-		</ScrollPane>
+		</VBox>
 	</left>
 
 	<!-- ========== CENTRO: RESULTADO ========== -->
 	<center>
-		<VBox spacing="12">
+		<VBox spacing="10">
 
-			<!-- Qué se está sumando exactamente -->
-			<Label fx:id="lblFiltros" wrapText="true"
-				style="-fx-font-size: 12px; -fx-text-fill: #475569; -fx-background-color: #eef2ff; -fx-background-radius: 8; -fx-padding: 8 12;" />
+			<!-- Que se esta sumando exactamente -->
+			<HBox spacing="10" alignment="CENTER_LEFT">
+				<Label fx:id="lblFiltros" wrapText="true" styleClass="filtro-resumen"
+					HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+				<Button text="Exportar Excel" onAction="#handleExportarExcel"
+					styleClass="toolbar-button, toolbar-blue" minWidth="-Infinity">
+					<graphic>
+						<SVGPath styleClass="toolbar-icon" content="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+					</graphic>
+				</Button>
+			</HBox>
 
 			<!-- Tarjetas de resultado -->
 			<HBox spacing="12">
-				<VBox spacing="2"
-					styleClass="stat-card-compact, stat-card-today" HBox.hgrow="ALWAYS"
-					maxWidth="Infinity">
-					<Label text="TOTAL"
-						style="-fx-font-size: 10px; -fx-font-weight: bold; -fx-text-fill: #64748b;" />
-					<Label fx:id="lblTotal" text="0"
-						style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
+				<VBox spacing="0" styleClass="stat-card-compact, stat-card-today"
+					HBox.hgrow="ALWAYS" maxWidth="Infinity">
+					<Label text="TOTAL" styleClass="kpi-caption" />
+					<Label fx:id="lblTotal" text="0" styleClass="kpi-value" />
 				</VBox>
-				<VBox spacing="2"
-					styleClass="stat-card-compact, stat-card-week" HBox.hgrow="ALWAYS"
-					maxWidth="Infinity">
-					<Label text="N° DE GASTOS"
-						style="-fx-font-size: 10px; -fx-font-weight: bold; -fx-text-fill: #64748b;" />
-					<Label fx:id="lblCantidad" text="0"
-						style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
+				<VBox spacing="0" styleClass="stat-card-compact, stat-card-week"
+					HBox.hgrow="ALWAYS" maxWidth="Infinity">
+					<Label text="N° DE GASTOS" styleClass="kpi-caption" />
+					<Label fx:id="lblCantidad" text="0" styleClass="kpi-value" />
 				</VBox>
-				<VBox spacing="2"
-					styleClass="stat-card-compact, stat-card-month" HBox.hgrow="ALWAYS"
-					maxWidth="Infinity">
-					<Label text="PROMEDIO POR GASTO"
-						style="-fx-font-size: 10px; -fx-font-weight: bold; -fx-text-fill: #64748b;" />
-					<Label fx:id="lblPromedio" text="-"
-						style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
+				<VBox spacing="0" styleClass="stat-card-compact, stat-card-month"
+					HBox.hgrow="ALWAYS" maxWidth="Infinity">
+					<Label text="PROMEDIO POR GASTO" styleClass="kpi-caption" />
+					<Label fx:id="lblPromedio" text="-" styleClass="kpi-value" />
 				</VBox>
 			</HBox>
 
 			<!-- Desglose -->
-			<VBox spacing="8" styleClass="table-card" VBox.vgrow="ALWAYS">
+			<VBox spacing="8" styleClass="table-card">
 				<HBox alignment="CENTER_LEFT" spacing="10">
-					<Label fx:id="lblTituloDesglose" text="Desglose"
-						style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
+					<Label fx:id="lblTituloDesglose" text="Desglose" styleClass="card-title" />
 					<Label text="Doble clic en una fila para filtrar por ella"
-						style="-fx-font-size: 10px; -fx-text-fill: #94a3b8;" />
+						styleClass="card-hint" />
 				</HBox>
 				<TableView fx:id="tblDesglose" VBox.vgrow="ALWAYS"
-					minHeight="120" prefHeight="190">
+					minHeight="90" prefHeight="150" maxHeight="150" style="-fx-fixed-cell-size: 34px;">
 					<columns>
-						<TableColumn fx:id="colGrupoNombre" text="Nombre"
-							prefWidth="300" />
-						<TableColumn fx:id="colGrupoCantidad" text="Gastos"
-							prefWidth="80" style="-fx-alignment: CENTER;" />
-						<TableColumn fx:id="colGrupoTotal" text="Total"
-							prefWidth="150" />
-						<TableColumn fx:id="colGrupoPorcentaje"
-							text="Del total (%)" prefWidth="100" />
+						<TableColumn fx:id="colGrupoNombre" text="Nombre" prefWidth="320" minWidth="120" />
+						<TableColumn fx:id="colGrupoCantidad" text="Gastos" prefWidth="80" minWidth="70" style="-fx-alignment: CENTER;" />
+						<TableColumn fx:id="colGrupoTotal" text="Total" prefWidth="150" minWidth="110" />
+						<TableColumn fx:id="colGrupoPorcentaje" text="Del total (%)" prefWidth="110" minWidth="95" />
 					</columns>
+					<columnResizePolicy>
+						<TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+					</columnResizePolicy>
 				</TableView>
 			</VBox>
 
 			<!-- Detalle -->
 			<VBox spacing="8" styleClass="table-card" VBox.vgrow="ALWAYS">
-				<Label fx:id="lblTituloDetalle" text="Detalle de los gastos"
-					style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
+				<Label fx:id="lblTituloDetalle" text="Detalle de los gastos" styleClass="card-title" />
 				<TableView fx:id="tblDetalle" VBox.vgrow="ALWAYS"
-					minHeight="120" prefHeight="230">
+					minHeight="100" prefHeight="300" style="-fx-fixed-cell-size: 34px;">
 					<columns>
-						<TableColumn fx:id="colFecha" text="Fecha"
-							prefWidth="95" />
-						<TableColumn fx:id="colCategoria" text="Categoría"
-							prefWidth="140" />
-						<TableColumn fx:id="colSubcategoria"
-							text="Subcategoría" prefWidth="140" />
-						<TableColumn fx:id="colProducto" text="Producto"
-							prefWidth="200" />
-						<TableColumn fx:id="colCantidad" text="Cant."
-							prefWidth="60" style="-fx-alignment: CENTER;" />
-						<TableColumn fx:id="colValorUnitario"
-							text="Valor unit." prefWidth="110" />
-						<TableColumn fx:id="colValorTotal" text="Total"
-							prefWidth="120" />
-						<TableColumn fx:id="colUsuario" text="Registrado por"
-							prefWidth="120" />
-						<TableColumn fx:id="colPersona" text="Persona"
-							prefWidth="170" />
+						<TableColumn fx:id="colFecha" text="Fecha" prefWidth="90" minWidth="88" />
+						<TableColumn fx:id="colCategoria" text="Categoría" prefWidth="140" minWidth="100" />
+						<TableColumn fx:id="colSubcategoria" text="Subcategoría" prefWidth="140" minWidth="100" />
+						<TableColumn fx:id="colProducto" text="Producto" prefWidth="180" minWidth="110" />
+						<TableColumn fx:id="colCantidad" text="Cant." prefWidth="55" minWidth="50" style="-fx-alignment: CENTER;" />
+						<TableColumn fx:id="colValorUnitario" text="Valor unit." prefWidth="110" minWidth="95" />
+						<TableColumn fx:id="colValorTotal" text="Total" prefWidth="120" minWidth="100" />
+						<TableColumn fx:id="colUsuario" text="Registrado por" prefWidth="110" minWidth="90" />
+						<TableColumn fx:id="colPersona" text="Persona" prefWidth="150" minWidth="100" />
 					</columns>
+					<columnResizePolicy>
+						<TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+					</columnResizePolicy>
 				</TableView>
 			</VBox>
 
