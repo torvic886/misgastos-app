@@ -2,9 +2,10 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.SVGPath?>
 <?import javafx.geometry.Insets?>
 
-<HBox spacing="8" style="-fx-padding: 0;" styleClass="content"
+<HBox spacing="12" style="-fx-padding: 0;" styleClass="content, gasto-screen"
 	xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
 	fx:controller="com.misgastos.controller.RegistroGastoController">
 
@@ -12,96 +13,160 @@
 		<Insets top="0" right="0" bottom="0" left="0" />
 	</padding>
 
-	<!-- ============================================ IZQUIERDA: FORMULARIO 
-		VERTICAL (ANCHO FIJO) ============================================ -->
-	<VBox spacing="10" HBox.hgrow="NEVER" prefWidth="235"
-		minWidth="235" maxWidth="235" styleClass="form-card"
-		style="-fx-padding: 12;">
+	<!-- ============================================ IZQUIERDA: FORMULARIO
+		(ANCHO FIJO) ============================================ -->
+	<VBox spacing="8" HBox.hgrow="NEVER" prefWidth="222"
+		minWidth="222" maxWidth="222" styleClass="form-card">
 
-		<Label text="➕ Registrar Gasto"
-			style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
+		<HBox spacing="10" alignment="CENTER_LEFT" styleClass="panel-header">
+			<Label styleClass="icon-circle">
+				<graphic>
+					<SVGPath styleClass="icon-white"
+						content="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+				</graphic>
+			</Label>
+			<VBox spacing="2">
+				<Label text="Registrar Gasto" styleClass="panel-title" />
+				<Label text="Completa la información del gasto"
+					styleClass="panel-subtitle" />
+			</VBox>
+		</HBox>
 
-		<GridPane hgap="10" vgap="9">
-			<columnConstraints>
-				<ColumnConstraints prefWidth="72" minWidth="72" />
-				<ColumnConstraints hgrow="ALWAYS" />
-			</columnConstraints>
+		<ScrollPane fitToWidth="true" hbarPolicy="NEVER"
+			vbarPolicy="AS_NEEDED" styleClass="form-scroll"
+			VBox.vgrow="ALWAYS">
+			<VBox spacing="4" styleClass="form-fields">
 
-			<Label text="Categoría:" GridPane.rowIndex="0"
-				style="-fx-font-size: 12px;" />
-			<ComboBox fx:id="cmbCategoria" promptText="Seleccione"
-				GridPane.rowIndex="0" GridPane.columnIndex="1" maxWidth="Infinity" />
+				<Label text="Categoría:" styleClass="form-label">
+					<graphic>
+						<SVGPath styleClass="icon-field"
+							content="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z" />
+					</graphic>
+				</Label>
+				<ComboBox fx:id="cmbCategoria" promptText="Seleccione"
+					maxWidth="Infinity" />
 
-			<Label text="Subcategoría:" GridPane.rowIndex="1"
-				style="-fx-font-size: 12px;" />
-			<ComboBox fx:id="cmbSubcategoria" promptText="Seleccione"
-				GridPane.rowIndex="1" GridPane.columnIndex="1" maxWidth="Infinity" />
+				<Label text="Subcategoría:" styleClass="form-label, campo-sep">
+					<graphic>
+						<SVGPath styleClass="icon-field"
+							content="M22 11V3h-7v3H9V3H2v8h7V8h2v10h4v3h7v-8h-7v3h-2V8h2v3z" />
+					</graphic>
+				</Label>
+				<ComboBox fx:id="cmbSubcategoria" promptText="Seleccione"
+					maxWidth="Infinity" />
 
-			<Label text="Producto:" GridPane.rowIndex="2"
-				style="-fx-font-size: 12px;" />
-			<ComboBox fx:id="cmbProducto" editable="true"
-				promptText="Ej: Arroz" GridPane.rowIndex="2"
-				GridPane.columnIndex="1" maxWidth="Infinity"
-				styleClass="combo-compact" />
+				<Label text="Producto:" styleClass="form-label, campo-sep">
+					<graphic>
+						<SVGPath styleClass="icon-field"
+							content="M20 2H4c-1 0-2 .9-2 2v3.01c0 .72.43 1.34 1 1.69V20c0 1.1 1.1 2 2 2h14c.9 0 2-.9 2-2V8.7c.57-.35 1-.97 1-1.69V4c0-1.1-1-2-2-2zm-5 12H9v-2h6v2zm5-7H4V4l16-.02V7z" />
+					</graphic>
+				</Label>
+				<ComboBox fx:id="cmbProducto" editable="true"
+					promptText="Ej: Arroz" maxWidth="Infinity"
+					styleClass="combo-compact" />
 
-			<Label fx:id="lblCedula" text="Cédula:" GridPane.rowIndex="3"
-				visible="false" managed="false" style="-fx-font-size: 12px;" />
-			<TextField fx:id="txtCedula" promptText="Solo números"
-				GridPane.rowIndex="3" GridPane.columnIndex="1" visible="false"
-				managed="false" />
+				<Label fx:id="lblCedula" text="Cédula:" visible="false"
+					managed="false" styleClass="form-label, campo-sep">
+					<graphic>
+						<SVGPath styleClass="icon-field"
+							content="M20 7h-5V4c0-1.1-.9-2-2-2h-2c-1.1 0-2 .9-2 2v3H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zM9 12c.83 0 1.5.67 1.5 1.5S9.83 15 9 15s-1.5-.67-1.5-1.5S8.17 12 9 12zm3 6H6v-.75c0-1 2-1.5 3-1.5s3 .5 3 1.5V18zm1-9h-2V4h2v5zm5 7.5h-4V15h4v1.5zm0-3h-4V12h4v1.5z" />
+					</graphic>
+				</Label>
+				<TextField fx:id="txtCedula" promptText="Solo números"
+					visible="false" managed="false" styleClass="search-field" />
 
-			<Label fx:id="lblNombre" text="Nombre:" GridPane.rowIndex="4"
-				visible="false" managed="false" style="-fx-font-size: 12px;" />
-			<TextField fx:id="txtNombre"
-				promptText="Nombre de la persona" GridPane.rowIndex="4"
-				GridPane.columnIndex="1" visible="false" managed="false" />
+				<Label fx:id="lblNombre" text="Nombre:" visible="false"
+					managed="false" styleClass="form-label, campo-sep">
+					<graphic>
+						<SVGPath styleClass="icon-field"
+							content="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+					</graphic>
+				</Label>
+				<TextField fx:id="txtNombre"
+					promptText="Nombre de la persona" visible="false"
+					managed="false" styleClass="search-field" />
 
-			<Label text="Cantidad:" GridPane.rowIndex="5"
-				style="-fx-font-size: 12px;" />
-			<TextField fx:id="txtCantidad" text="1"
-				GridPane.rowIndex="5" GridPane.columnIndex="1"
-				styleClass="search-field" />
+				<HBox spacing="10">
+					<VBox spacing="4" HBox.hgrow="ALWAYS" prefWidth="0"
+						maxWidth="Infinity">
+						<Label text="Cantidad:" styleClass="form-label, campo-sep">
+							<graphic>
+								<SVGPath styleClass="icon-field"
+									content="M20 10V8h-4V4h-2v4h-4V4H8v4H4v2h4v4H4v2h4v4h2v-4h4v4h2v-4h4v-2h-4v-4h4zm-6 4h-4v-4h4v4z" />
+							</graphic>
+						</Label>
+						<TextField fx:id="txtCantidad" text="1"
+							styleClass="search-field" />
+					</VBox>
+					<VBox spacing="4" HBox.hgrow="ALWAYS" prefWidth="0"
+						maxWidth="Infinity">
+						<Label text="Valor Unit.:" styleClass="form-label, campo-sep">
+							<graphic>
+								<SVGPath styleClass="icon-field"
+									content="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z" />
+							</graphic>
+						</Label>
+						<TextField fx:id="txtValorUnitario" promptText="0.00"
+							styleClass="search-field" />
+					</VBox>
+				</HBox>
 
-			<Label text="Valor Unit.:" GridPane.rowIndex="6"
-				style="-fx-font-size: 12px;" />
-			<TextField fx:id="txtValorUnitario" promptText="0.00"
-				GridPane.rowIndex="6" GridPane.columnIndex="1"
-				styleClass="search-field" />
+				<Label text="Total:" styleClass="form-label, campo-sep">
+					<graphic>
+						<SVGPath styleClass="icon-field"
+							content="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5.97 4.06L14.09 6l1.41 1.41L16.91 6l1.06 1.06-1.41 1.41 1.41 1.41-1.06 1.06-1.41-1.41-1.41 1.41-1.06-1.06 1.41-1.41-1.41-1.42zm-6.78.66h5v1.5h-5v-1.5zM11.5 16h-2v2H8v-2H6v-1.5h2v-2h1.5v2h2V16zm6.5 1.25h-5v-1.5h5v1.5zm0-2.5h-5v-1.5h5v1.5z" />
+					</graphic>
+				</Label>
+				<TextField fx:id="txtValorTotal" editable="false"
+					styleClass="search-field, total-field" />
 
-			<Label text="Total:" GridPane.rowIndex="7"
-				style="-fx-font-size: 12px;" />
-			<TextField fx:id="txtValorTotal" editable="false"
-				GridPane.rowIndex="7" GridPane.columnIndex="1"
-				styleClass="search-field"
-				style="-fx-background-color: #f1f5f9; -fx-font-weight: bold; -fx-text-fill: #6f6dd9;" />
+				<Label text="Notas:" styleClass="form-label, campo-sep">
+					<graphic>
+						<SVGPath styleClass="icon-field"
+							content="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18z" />
+					</graphic>
+				</Label>
+				<TextArea fx:id="txtNotas" prefRowCount="3"
+					promptText="Observaciones del gasto..." styleClass="notas" />
 
-			<Label text="Notas:" GridPane.rowIndex="8"
-				style="-fx-font-size: 12px;" />
-			<TextArea fx:id="txtNotas" prefRowCount="3"
-				GridPane.rowIndex="8" GridPane.columnIndex="1"
-				style="-fx-pref-height: 70px; -fx-max-height: 70px;" />
-		</GridPane>
+			</VBox>
+		</ScrollPane>
 
-		<HBox spacing="8" alignment="CENTER">
-			<Button text="💾 Guardar" styleClass="primary-button"
-				onAction="#handleGuardar"
-				style="-fx-font-size: 13px; -fx-padding: 8 14;" />
-			<Button text="🔄 Limpiar" styleClass="secondary-button"
-				onAction="#handleLimpiar"
-				style="-fx-font-size: 13px; -fx-padding: 8 14;" />
+		<HBox spacing="10" alignment="CENTER">
+			<Button text="Limpiar" styleClass="btn-limpiar"
+				onAction="#handleLimpiar" HBox.hgrow="ALWAYS"
+				maxWidth="Infinity">
+				<graphic>
+					<SVGPath styleClass="icon-slate"
+						content="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
+				</graphic>
+			</Button>
+			<Button text="Guardar" styleClass="btn-guardar"
+				onAction="#handleGuardar" HBox.hgrow="ALWAYS"
+				maxWidth="Infinity">
+				<graphic>
+					<SVGPath styleClass="icon-white"
+						content="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z" />
+				</graphic>
+			</Button>
 		</HBox>
 
 	</VBox>
 
-	<!-- ============================================ DERECHA: TABLA CON TODO 
+	<!-- ============================================ DERECHA: TABLA CON TODO
 		EL ESPACIO RESTANTE ============================================ -->
-	<VBox spacing="8" HBox.hgrow="ALWAYS" prefWidth="0" minWidth="0"
-		styleClass="table-card" style="-fx-padding: 16;">
+	<VBox spacing="10" HBox.hgrow="ALWAYS" prefWidth="0" minWidth="0"
+		styleClass="table-card">
 
-		<Label text="📋 Últimos gastos registrados"
-			style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
-
-
+		<HBox spacing="10" alignment="CENTER_LEFT" styleClass="panel-header">
+			<Label styleClass="icon-circle">
+				<graphic>
+					<SVGPath styleClass="icon-white"
+						content="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+				</graphic>
+			</Label>
+			<Label text="Últimos gastos registrados" styleClass="panel-title" />
+		</HBox>
 
 		<TableView fx:id="tblUltimosGastos" VBox.vgrow="ALWAYS" style="-fx-fixed-cell-size: 34px;">
 		    <columns>
@@ -117,14 +182,12 @@
 		    </columns>
 		</TableView>
 
-
-
-		<HBox alignment="CENTER_RIGHT" spacing="10"
-			style="-fx-padding: 8 4 0 4;">
-			<Label text="TOTAL:"
-				style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
-			<Label fx:id="lblTotalGastos" text="COP 0.00"
-				style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #16a34a;" />
+		<HBox alignment="CENTER_LEFT" spacing="10" styleClass="total-bar">
+			<SVGPath styleClass="icon-green"
+				content="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
+			<Label text="Total de gastos" styleClass="total-label" />
+			<Region HBox.hgrow="ALWAYS" />
+			<Label fx:id="lblTotalGastos" text="COP 0.00" styleClass="total-value" />
 		</HBox>
 
 	</VBox>

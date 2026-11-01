@@ -10,6 +10,11 @@ import javafx.scene.layout.VBox;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.shape.Circle;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.shape.SVGPath;
 import com.misgastos.MisGastosApplication;
 import com.misgastos.service.SesionRecordadaService;
 import com.misgastos.service.UsuarioService;
@@ -355,29 +360,33 @@ public class DashboardController {
 
     private void cargarVistaConSubMenu() {
         try {
-            VBox container = new VBox(10);
+            StackPane container = new StackPane();
             container.setStyle("-fx-padding: 8; -fx-background-color: #f7fafc;");
 
-            HBox submenu = new HBox(15);
-            submenu.setStyle("-fx-padding: 0 0 4 0;");
+            HBox submenu = new HBox(8);
+            submenu.setAlignment(Pos.CENTER_RIGHT);
+            submenu.setPickOnBounds(false);
+            submenu.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
 
-            Button btnListar = new Button("📋 Ver Historial");
-            btnListar.getStyleClass().add("secondary-button");
+            Button btnListar = botonBarra("Ver Historial",
+                    "M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z",
+                    "toolbar-neutral");
             btnListar.setOnAction(e -> cargarVista("/fxml/lista-gastos.fxml"));
             submenu.getChildren().add(btnListar);
 
             if (esAdministrador()) {
-                Button btnBuscarEditar = new Button("🔍 Buscar y Editar");
-                btnBuscarEditar.getStyleClass().add("search-button");
+                Button btnBuscarEditar = botonBarra("Buscar y Editar",
+                        "M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z",
+                        "toolbar-blue");
                 btnBuscarEditar.setOnAction(e -> cargarVista("/fxml/buscar-editar-gastos.fxml"));
                 submenu.getChildren().add(btnBuscarEditar);
-                Button btnPapelera = new Button("🗑 Papelera");
-                btnPapelera.getStyleClass().add("secondary-button");
+
+                Button btnPapelera = botonBarra("Papelera",
+                        "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z",
+                        "toolbar-neutral");
                 btnPapelera.setOnAction(e -> cargarVista("/fxml/papelera.fxml"));
                 submenu.getChildren().add(btnPapelera);
             }
-
-            container.getChildren().add(submenu);
 
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/registro-gasto.fxml"));
             loader.setControllerFactory(springContext::getBean);
@@ -385,13 +394,27 @@ public class DashboardController {
 
             RegistroGastoController registroCtrl = loader.getController();
             registroCtrl.setUsuarioActual(username);
-            VBox.setVgrow(vista, javafx.scene.layout.Priority.ALWAYS);
-            container.getChildren().add(vista);
+
+            // La vista ocupa todo el espacio; los botones quedan encima, en la esquina del encabezado de la tabla
+            container.getChildren().addAll(vista, submenu);
+            StackPane.setAlignment(submenu, Pos.TOP_RIGHT);
+            StackPane.setMargin(submenu, new Insets(20, 16, 0, 0));
             mainBorderPane.setCenter(container);
 
         } catch (Exception e) {
             log.error("No se pudo cargar la pantalla de Mis Gastos", e);
         }
+    }
+
+    /** Botón compacto de la barra de Mis Gastos: icono vectorial + texto. */
+    private Button botonBarra(String texto, String icono, String claseColor) {
+        Button b = new Button(texto);
+        b.getStyleClass().addAll("toolbar-button", claseColor);
+        SVGPath ic = new SVGPath();
+        ic.setContent(icono);
+        ic.getStyleClass().add("toolbar-icon");
+        b.setGraphic(ic);
+        return b;
     }
 
     @FXML

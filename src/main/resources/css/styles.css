@@ -1053,6 +1053,338 @@
 .log-console-text .scroll-pane > .viewport {
     -fx-background-color: #0f172a;
 }
+
+/* =====================================================================
+   REDISENO - PANTALLA MIS GASTOS (registro-gasto.fxml)
+   Todo va dentro de .gasto-screen: no afecta a otras pantallas.
+   ===================================================================== */
+.gasto-screen .form-card,
+.gasto-screen .table-card {
+    -fx-padding: 16;
+}
+
+/* Cabecera de cada panel */
+.gasto-screen .panel-header {
+    -fx-padding: 0 0 8 0;
+}
+
+.gasto-screen .panel-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1e293b;
+}
+
+.gasto-screen .panel-subtitle {
+    -fx-font-size: 12px;
+    -fx-text-fill: #64748b;
+}
+
+.gasto-screen .icon-circle {
+    -fx-background-color: #2563eb;
+    -fx-background-radius: 20;
+    -fx-min-width: 36;
+    -fx-min-height: 36;
+    -fx-pref-width: 36;
+    -fx-pref-height: 36;
+    -fx-max-width: 36;
+    -fx-max-height: 36;
+    -fx-alignment: center;
+}
+
+.gasto-screen .icon-white { -fx-fill: white; }
+.gasto-screen .icon-slate { -fx-fill: #475569; }
+.gasto-screen .icon-green { -fx-fill: #16a34a; }
+
+/* Formulario */
+.gasto-screen .form-scroll {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+    -fx-padding: 0;
+}
+
+.gasto-screen .form-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.gasto-screen .form-fields {
+    -fx-padding: 2 6 2 2;
+}
+
+.gasto-screen .campo-sep {
+    -fx-padding: 6 0 0 0;
+}
+
+.gasto-screen .total-field {
+    -fx-background-color: #f1f5f9;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1e40af;
+}
+
+.gasto-screen .notas {
+    -fx-pref-height: 64px;
+    -fx-max-height: 64px;
+}
+
+/* Botones Guardar / Limpiar */
+.gasto-screen .btn-guardar {
+    -fx-background-color: #16a34a;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+    -fx-background-radius: 8;
+    -fx-padding: 9 14;
+    -fx-graphic-text-gap: 6;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(22,163,74,0.25), 6, 0, 0, 2);
+}
+
+.gasto-screen .btn-guardar:hover {
+    -fx-background-color: #15803d;
+}
+
+.gasto-screen .btn-guardar:pressed {
+    -fx-background-color: #166534;
+    -fx-scale-x: 0.98;
+    -fx-scale-y: 0.98;
+}
+
+.gasto-screen .btn-limpiar {
+    -fx-background-color: white;
+    -fx-text-fill: #334155;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+    -fx-background-radius: 8;
+    -fx-border-color: #cbd5e1;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 9 14;
+    -fx-graphic-text-gap: 6;
+    -fx-cursor: hand;
+}
+
+.gasto-screen .btn-limpiar:hover {
+    -fx-background-color: #f1f5f9;
+    -fx-border-color: #94a3b8;
+}
+
+.gasto-screen .btn-limpiar:pressed {
+    -fx-background-color: #e2e8f0;
+    -fx-scale-x: 0.98;
+    -fx-scale-y: 0.98;
+}
+
+/* Tabla */
+.gasto-screen .table-view .column-header-background {
+    -fx-background-color: #eef2f9;
+    -fx-background-radius: 8 8 0 0;
+    -fx-border-color: #dbe3ef;
+    -fx-border-width: 0 0 1 0;
+}
+
+.gasto-screen .table-view .filler {
+    -fx-background-color: #eef2f9;
+}
+
+.gasto-screen .table-view .column-header .label {
+    -fx-text-fill: #334155;
+}
+
+.gasto-screen .table-view .table-row-cell {
+    -fx-border-color: transparent transparent #eef2f7 transparent;
+}
+
+/* Panel del total */
+.gasto-screen .total-bar {
+    -fx-background-color: #ecfdf3;
+    -fx-background-radius: 10;
+    -fx-border-color: #bbf7d0;
+    -fx-border-radius: 10;
+    -fx-border-width: 1;
+    -fx-padding: 10 16;
+}
+
+.gasto-screen .total-label {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1e293b;
+}
+
+.gasto-screen .total-value {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #15803d;
+}
+
+/* Iconos junto a las etiquetas del formulario de Mis Gastos */
+.gasto-screen .form-label {
+    -fx-graphic-text-gap: 8;
+}
+
+.gasto-screen .icon-field {
+    -fx-fill: #1e40af;
+}
+
+/* ===== MIS GASTOS: formulario más compacto ===== */
+.gasto-screen .form-card {
+    -fx-padding: 12 14 12 14;
+}
+
+.gasto-screen .panel-header {
+    -fx-padding: 0 0 4 0;
+}
+
+.gasto-screen .form-fields {
+    -fx-spacing: 2;
+    -fx-padding: 0 6 0 2;
+}
+
+.gasto-screen .campo-sep {
+    -fx-padding: 4 0 0 0;
+}
+
+.gasto-screen .form-label {
+    -fx-font-size: 11px;
+    -fx-graphic-text-gap: 6;
+}
+
+/* Campos más bajos */
+.gasto-screen .text-field,
+.gasto-screen .search-field,
+.gasto-screen .combo-box,
+.gasto-screen .combo-box.combo-compact {
+    -fx-pref-height: 28px;
+    -fx-min-height: 28px;
+    -fx-max-height: 28px;
+    -fx-font-size: 12px;
+}
+
+.gasto-screen .combo-box > .text-field,
+.gasto-screen .combo-box.combo-compact > .text-field {
+    -fx-padding: 2 8;
+}
+
+.gasto-screen .combo-box > .arrow-button,
+.gasto-screen .combo-box.combo-compact > .arrow-button {
+    -fx-padding: 0 6;
+}
+
+.gasto-screen .notas {
+    -fx-pref-height: 46px;
+    -fx-min-height: 46px;
+    -fx-max-height: 46px;
+}
+
+/* Botones un poco más bajos */
+.gasto-screen .btn-guardar,
+.gasto-screen .btn-limpiar {
+    -fx-padding: 7 12;
+}
+
+/* ===== MIS GASTOS: subtítulo y notas completos ===== */
+.gasto-screen .panel-subtitle {
+    -fx-font-size: 11px;
+}
+
+/* El TextArea trae un nodo interno con clase "content" que recibe el relleno de 15 px
+   de .content y recorta el texto de las notas */
+.gasto-screen .notas .content {
+    -fx-padding: 3 6 3 6;
+}
+
+.gasto-screen .notas {
+    -fx-pref-height: 56px;
+    -fx-min-height: 56px;
+    -fx-max-height: 56px;
+}
+
+/* ===== BARRA DE BOTONES DE MIS GASTOS (compacta) ===== */
+.toolbar-button {
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-padding: 5 12 5 10;
+    -fx-graphic-text-gap: 6;
+    -fx-cursor: hand;
+}
+
+.toolbar-neutral {
+    -fx-background-color: white;
+    -fx-border-color: #cbd5e1;
+    -fx-text-fill: #334155;
+}
+
+.toolbar-neutral:hover {
+    -fx-background-color: #f1f5f9;
+    -fx-border-color: #94a3b8;
+}
+
+.toolbar-neutral .toolbar-icon {
+    -fx-fill: #475569;
+}
+
+.toolbar-blue {
+    -fx-background-color: #2563eb;
+    -fx-border-color: #2563eb;
+    -fx-text-fill: white;
+}
+
+.toolbar-blue:hover {
+    -fx-background-color: #1d4ed8;
+    -fx-border-color: #1d4ed8;
+}
+
+.toolbar-blue .toolbar-icon {
+    -fx-fill: white;
+}
+
+.toolbar-button:pressed {
+    -fx-scale-x: 0.98;
+    -fx-scale-y: 0.98;
+}
+
+/* ===== MENÚ LATERAL: más angosto (unos 1 cm menos) ===== */
+.sidebar {
+    -fx-pref-width: 202;
+    -fx-min-width: 202;
+    -fx-max-width: 202;
+}
+
+.compact .sidebar {
+    -fx-pref-width: 176;
+    -fx-min-width: 176;
+    -fx-max-width: 176;
+}
+
+/* Textos e iconos un poco más ajustados para que quepan en el ancho nuevo */
+.sidebar .menu-button,
+.compact .sidebar .menu-button {
+    -fx-font-size: 12px;
+    -fx-graphic-text-gap: 8;
+    -fx-padding: 0 8 0 10;
+}
+
+/* El menú contraído (solo iconos) conserva su ancho */
+.sidebar.collapsed,
+.compact .sidebar.collapsed {
+    -fx-pref-width: 64;
+    -fx-min-width: 64;
+    -fx-max-width: 64;
+}
+
+.sidebar.collapsed .menu-button {
+    -fx-padding: 0;
+}
+
+/* ===== MIS GASTOS: botones Limpiar / Guardar sin texto cortado ===== */
+.gasto-screen .btn-guardar,
+.gasto-screen .btn-limpiar {
+    -fx-font-size: 11px;
+    -fx-padding: 7 4 7 4;
+    -fx-graphic-text-gap: 4;
+    -fx-text-overrun: clip;
+}
 /* ===========================
    NOTA SOBRE TRANSICIONES
    =========================== */
