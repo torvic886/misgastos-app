@@ -3,206 +3,190 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.chart.BarChart?>
 <?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.LineChart?>
 <?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.chart.PieChart?>
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.shape.Circle?>
+<?import javafx.scene.shape.SVGPath?>
 
-<ScrollPane fitToWidth="true"
-	xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
-	fx:controller="com.misgastos.controller.InicioController"
-	style="-fx-background-color: #f1f5f9;">
-	<VBox spacing="16" style="-fx-background-color: #f1f5f9;">
-		<padding>
-			<Insets top="20" right="20" bottom="20" left="20" />
-		</padding>
+<ScrollPane fitToWidth="true" fitToHeight="true"
+        xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+        fx:controller="com.misgastos.controller.InicioController"
+        style="-fx-background-color: #f1f5f9; -fx-background: #f1f5f9;">
+        <VBox spacing="8" minHeight="560" style="-fx-background-color: #f1f5f9;">
+                <padding>
+                        <Insets top="10" right="14" bottom="10" left="14" />
+                </padding>
 
-		<!-- Encabezado más compacto -->
-		<HBox fx:id="panelEncabezado" spacing="10"
-			alignment="CENTER_LEFT"
-			style="-fx-background-color: white; -fx-padding: 10 14; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2); -fx-border-color: #cbd5e1; -fx-border-width: 1.5; -fx-border-radius: 12;">
-			<Label text="📊" style="-fx-font-size: 20px;" />
-			<VBox spacing="0">
-				<Label text="Panel de Control"
-					style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
-				<Label text="Resumen de tus gastos y estadísticas"
-					style="-fx-font-size: 10px; -fx-text-fill: #64748b;" />
-			</VBox>
-		</HBox>
+                <!-- Encabezado: título + tarjetas de resumen + botones -->
+                <HBox fx:id="panelEncabezado" spacing="8" alignment="CENTER_LEFT">
+                        <VBox spacing="1" minWidth="150">
+                                <Label text="Panel de Control" styleClass="inicio-titulo" />
+                                <Label text="Resumen de tus gastos" styleClass="inicio-subtitulo" />
+                        </VBox>
 
-		<!-- Presupuesto del mes: ocupa el lugar del encabezado cuando hay topes -->
-		<VBox fx:id="panelPresupuestos" visible="false" managed="false"
-			spacing="10" maxWidth="Infinity"
-			style="-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 12 16; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2); -fx-border-color: #cbd5e1; -fx-border-width: 1.5; -fx-border-radius: 12;">
-			<HBox alignment="CENTER_LEFT" spacing="8">
-				<Label text="💰" style="-fx-font-size: 20px;" />
-				<Label text="Presupuesto del mes"
-					style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
-				<Region HBox.hgrow="ALWAYS" />
-				<Label fx:id="lblPresupuestoResumen"
-					style="-fx-font-size: 11px; -fx-text-fill: #64748b;" />
-			</HBox>
-			<Separator style="-fx-background-color: #e2e8f0;" />
-			<FlowPane fx:id="flowPresupuestos" hgap="24" vgap="14" />
-		</VBox>
+                        <VBox spacing="1" alignment="CENTER" HBox.hgrow="ALWAYS" maxWidth="Infinity"
+                                styleClass="inicio-card" style="-fx-padding: 4 8;">
+                                <Label text="📅 Hoy" styleClass="inicio-kpi-titulo" />
+                                <Label fx:id="lblTotalHoy" text="0" styleClass="inicio-kpi-valor" />
+                                <HBox fx:id="hboxCambioHoy" alignment="CENTER" styleClass="stat-change-neutral">
+                                        <Label fx:id="lblCambioHoy" text="Sin datos previos" />
+                                </HBox>
+                        </VBox>
 
-		<!-- Tarjetas de indicadores - MÁS BAJAS -->
-		<HBox spacing="12" alignment="CENTER" fillHeight="false">
-			<!-- Tarjeta Hoy -->
-			<VBox spacing="3" alignment="CENTER" HBox.hgrow="ALWAYS"
-				prefHeight="70" maxWidth="Infinity"
-				style="-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 8 14; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2); -fx-border-color: #3b82f6; -fx-border-width: 0 0 3 0; -fx-border-radius: 12;">
-				<HBox alignment="CENTER" spacing="4">
-					<Label text="📅" style="-fx-font-size: 13px;" />
-					<Label text="Hoy"
-						style="-fx-font-size: 10px; -fx-font-weight: 600; -fx-text-fill: #64748b;" />
-				</HBox>
-				<Label fx:id="lblTotalHoy" text="0"
-					style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
-				<HBox fx:id="hboxCambioHoy" alignment="CENTER" spacing="2"
-					style="-fx-background-color: #fee2e2; -fx-padding: 2 6; -fx-background-radius: 5;">
-					<Label fx:id="lblCambioHoy" text="↑ 528,9%"
-						style="-fx-font-size: 8px; -fx-font-weight: bold; -fx-text-fill: #dc2626;" />
-				</HBox>
-			</VBox>
+                        <VBox spacing="1" alignment="CENTER" HBox.hgrow="ALWAYS" maxWidth="Infinity"
+                                styleClass="inicio-card" style="-fx-padding: 4 8;">
+                                <Label text="📆 Esta Semana" styleClass="inicio-kpi-titulo" />
+                                <Label fx:id="lblTotalSemana" text="0" styleClass="inicio-kpi-valor" />
+                                <HBox fx:id="hboxCambioSemana" alignment="CENTER" styleClass="stat-change-neutral">
+                                        <Label fx:id="lblCambioSemana" text="Sin datos previos" />
+                                </HBox>
+                        </VBox>
 
-			<!-- Tarjeta Semana -->
-			<VBox spacing="3" alignment="CENTER" HBox.hgrow="ALWAYS"
-				prefHeight="70" maxWidth="Infinity"
-				style="-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 8 14; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2); -fx-border-color: #8b5cf6; -fx-border-width: 0 0 3 0; -fx-border-radius: 12;">
-				<HBox alignment="CENTER" spacing="4">
-					<Label text="📆" style="-fx-font-size: 13px;" />
-					<Label text="Esta Semana"
-						style="-fx-font-size: 10px; -fx-font-weight: 600; -fx-text-fill: #64748b;" />
-				</HBox>
-				<Label fx:id="lblTotalSemana" text="0"
-					style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
-				<HBox fx:id="hboxCambioSemana" alignment="CENTER" spacing="2"
-					style="-fx-background-color: #d1fae5; -fx-padding: 2 6; -fx-background-radius: 5;">
-					<Label fx:id="lblCambioSemana" text="↑ 12,3%"
-						style="-fx-font-size: 8px; -fx-font-weight: bold; -fx-text-fill: #059669;" />
-				</HBox>
-			</VBox>
+                        <VBox spacing="1" alignment="CENTER" HBox.hgrow="ALWAYS" maxWidth="Infinity"
+                                styleClass="inicio-card" style="-fx-padding: 4 8;">
+                                <Label text="📊 Este Mes" styleClass="inicio-kpi-titulo" />
+                                <Label fx:id="lblTotalMes" text="0" styleClass="inicio-kpi-valor" />
+                                <HBox fx:id="hboxCambioMes" alignment="CENTER" styleClass="stat-change-neutral">
+                                        <Label fx:id="lblCambioMes" text="Sin datos previos" />
+                                </HBox>
+                        </VBox>
 
-			<!-- Tarjeta Mes -->
-			<VBox spacing="3" alignment="CENTER" HBox.hgrow="ALWAYS"
-				prefHeight="70" maxWidth="Infinity"
-				style="-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 8 14; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2); -fx-border-color: #10b981; -fx-border-width: 0 0 3 0; -fx-border-radius: 12;">
-				<HBox alignment="CENTER" spacing="4">
-					<Label text="📊" style="-fx-font-size: 13px;" />
-					<Label text="Este Mes"
-						style="-fx-font-size: 10px; -fx-font-weight: 600; -fx-text-fill: #64748b;" />
-				</HBox>
-				<Label fx:id="lblTotalMes" text="0"
-					style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
-				<HBox fx:id="hboxCambioMes" alignment="CENTER" spacing="2"
-					style="-fx-background-color: #fee2e2; -fx-padding: 2 6; -fx-background-radius: 5;">
-					<Label fx:id="lblCambioMes" text="↑ 208,0%"
-						style="-fx-font-size: 8px; -fx-font-weight: bold; -fx-text-fill: #dc2626;" />
-				</HBox>
-			</VBox>
+                        <VBox spacing="1" alignment="CENTER" HBox.hgrow="ALWAYS" maxWidth="Infinity"
+                                styleClass="inicio-card" style="-fx-padding: 4 8;">
+                                <Label text="📈 Este Año" styleClass="inicio-kpi-titulo" />
+                                <Label fx:id="lblTotalAnio" text="0" styleClass="inicio-kpi-valor" />
+                                <HBox fx:id="hboxCambioAnio" alignment="CENTER" styleClass="stat-change-neutral">
+                                        <Label fx:id="lblCambioAnio" text="Sin datos previos" />
+                                </HBox>
+                        </VBox>
 
-			<!-- Tarjeta Año -->
-			<VBox spacing="3" alignment="CENTER" HBox.hgrow="ALWAYS"
-				prefHeight="70" maxWidth="Infinity"
-				style="-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 8 14; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2); -fx-border-color: #f59e0b; -fx-border-width: 0 0 3 0; -fx-border-radius: 12;">
-				<HBox alignment="CENTER" spacing="4">
-					<Label text="📈" style="-fx-font-size: 13px;" />
-					<Label text="Este Año"
-						style="-fx-font-size: 10px; -fx-font-weight: 600; -fx-text-fill: #64748b;" />
-				</HBox>
-				<Label fx:id="lblTotalAnio" text="0"
-					style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
-				<HBox fx:id="hboxCambioAnio" alignment="CENTER" spacing="2"
-					style="-fx-background-color: #d1fae5; -fx-padding: 2 6; -fx-background-radius: 5;">
-					<Label fx:id="lblCambioAnio" text="↑ 97,0%"
-						style="-fx-font-size: 8px; -fx-font-weight: bold; -fx-text-fill: #059669;" />
-				</HBox>
-			</VBox>
-		</HBox>
+                        <Button fx:id="btnVerHistorial" text="Ver Historial" styleClass="toolbar-button, toolbar-neutral"
+                                visible="false" managed="false" onAction="#handleVerHistorial">
+                                <graphic>
+                                        <SVGPath styleClass="toolbar-icon"
+                                                content="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z" />
+                                </graphic>
+                        </Button>
+                        <Button fx:id="btnBuscarEditar" text="Buscar y Editar" styleClass="toolbar-button, toolbar-blue"
+                                visible="false" managed="false" onAction="#handleBuscarEditar">
+                                <graphic>
+                                        <SVGPath styleClass="toolbar-icon"
+                                                content="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                                </graphic>
+                        </Button>
+                </HBox>
 
-		<!-- Gráficos mejorados con marcos - ANCHO COMPLETO -->
-		<HBox spacing="14" alignment="CENTER" fillHeight="true">
-			<!-- Gráfico de Barras -->
-			<VBox spacing="10" HBox.hgrow="ALWAYS" maxWidth="Infinity"
-				style="-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 16; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2); -fx-border-color: #cbd5e1; -fx-border-width: 1.5; -fx-border-radius: 12;">
-				<HBox alignment="CENTER_LEFT" spacing="8">
-					<Label text="📈" style="-fx-font-size: 20px;" />
-					<Label text="Gastos últimos 7 días"
-						style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
-				</HBox>
-				<Separator style="-fx-background-color: #e2e8f0;" />
-				<BarChart fx:id="chartUltimosDias" legendVisible="false"
-					animated="true" prefHeight="240" styleClass="bar-chart">
-					<padding>
-						<Insets top="10" right="15" bottom="10" left="5" />
-					</padding>
-					<xAxis>
-						<CategoryAxis side="BOTTOM" tickLabelRotation="0" />
-					</xAxis>
-					<yAxis>
-						<NumberAxis side="LEFT" label="Monto"
-							autoRanging="true" tickLabelGap="8">
-							<padding>
-								<Insets right="10" />
-							</padding>
-						</NumberAxis>
-					</yAxis>
-				</BarChart>
-			</VBox>
+                <!-- Presupuesto del mes (solo si hay topes) -->
+                <VBox fx:id="panelPresupuestos" visible="false" managed="false"
+                        spacing="6" maxWidth="Infinity" styleClass="inicio-card">
+                        <HBox alignment="CENTER_LEFT" spacing="8">
+                                <Label text="💰" style="-fx-font-size: 14px;" />
+                                <Label text="Presupuesto del mes"
+                                        style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
+                                <Region HBox.hgrow="ALWAYS" />
+                                <Label fx:id="lblPresupuestoResumen"
+                                        style="-fx-font-size: 11px; -fx-text-fill: #64748b;" />
+                        </HBox>
+                        <Separator style="-fx-background-color: #e2e8f0;" />
+                        <FlowPane fx:id="flowPresupuestos" hgap="24" vgap="8" />
+                </VBox>
 
-			<!-- Gráfico de Torta con leyenda lateral -->
-			<VBox spacing="10" HBox.hgrow="ALWAYS" maxWidth="Infinity"
-				style="-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 16; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2); -fx-border-color: #cbd5e1; -fx-border-width: 1.5; -fx-border-radius: 12;">
-				<HBox alignment="CENTER_LEFT" spacing="8">
-					<Label text="🍰" style="-fx-font-size: 20px;" />
-					<Label text="Distribución por Categoría"
-						style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
-				</HBox>
-				<Separator style="-fx-background-color: #e2e8f0;" />
-				<HBox spacing="15" alignment="CENTER">
-					<PieChart fx:id="chartCategorias" legendVisible="false"
-						animated="true" prefHeight="200" prefWidth="200"
-						labelLineLength="10" labelsVisible="false" styleClass="pie-chart" />
-					<!-- Leyenda personalizada lateral derecha -->
-					<VBox fx:id="vboxLeyendaCategorias" spacing="4"
-						alignment="CENTER_LEFT" style="-fx-padding: 10;" />
-				</HBox>
-			</VBox>
-		</HBox>
+                <!-- Gráficos: alto fijo -->
+                <HBox spacing="10" fillHeight="true" minHeight="205" prefHeight="205" maxHeight="205">
+                        <VBox spacing="4" HBox.hgrow="ALWAYS" maxWidth="Infinity" prefWidth="100"
+                                styleClass="inicio-card" style="-fx-padding: 8 12;">
+                                <Label text="📈 Gastos últimos 7 días"
+                                        style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
+                                <BarChart fx:id="chartUltimosDias" legendVisible="false" animated="false"
+                                        VBox.vgrow="ALWAYS" styleClass="bar-chart">
+                                        <xAxis>
+                                                <CategoryAxis side="BOTTOM" tickLabelRotation="0" />
+                                        </xAxis>
+                                        <yAxis>
+                                                <NumberAxis fx:id="ejeY" side="LEFT" autoRanging="true" />
+                                        </yAxis>
+                                </BarChart>
+                        </VBox>
 
-		<!-- Sección de detalles mejorada CON MARCOS - ANCHO COMPLETO -->
-		<HBox spacing="14" alignment="CENTER" fillHeight="true">
-			<!-- Top Productos CON MARCO -->
-			<VBox spacing="10" HBox.hgrow="ALWAYS" maxWidth="Infinity"
-				style="-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 16; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2); -fx-border-color: #cbd5e1; -fx-border-width: 1.5; -fx-border-radius: 12;">
-				<HBox alignment="CENTER_LEFT" spacing="8">
-					<Label text="🏆" style="-fx-font-size: 20px;" />
-					<Label text="Top 5 Productos"
-						style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
-				</HBox>
-				<Separator style="-fx-background-color: #e2e8f0;" />
-				<VBox fx:id="vboxTopProductos" spacing="8" />
-			</VBox>
+                        <VBox spacing="4" HBox.hgrow="ALWAYS" maxWidth="Infinity" prefWidth="100"
+                                styleClass="inicio-card" style="-fx-padding: 8 12;">
+                                <Label text="🍰 Distribución por Categoría"
+                                        style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
+                                <HBox spacing="10" alignment="CENTER_LEFT" VBox.vgrow="ALWAYS">
+                                        <StackPane prefWidth="130" prefHeight="130" minWidth="130" minHeight="130"
+                                                maxWidth="130" maxHeight="130">
+                                                <PieChart fx:id="chartCategorias" legendVisible="false" animated="false"
+                                                        labelsVisible="false" prefWidth="130" prefHeight="130"
+                                                        styleClass="pie-chart" />
+                                                <Circle radius="30" fill="white" mouseTransparent="true" />
+                                                <VBox alignment="CENTER" spacing="0" mouseTransparent="true" maxWidth="60">
+                                                        <Label text="Total" style="-fx-font-size: 8px; -fx-text-fill: #64748b;" />
+                                                        <Label fx:id="lblTotalCentro" text="0"
+                                                                style="-fx-font-size: 9px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
+                                                </VBox>
+                                        </StackPane>
+                                        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" HBox.hgrow="ALWAYS"
+                                                maxHeight="Infinity"
+                                                style="-fx-background-color: transparent; -fx-background: transparent;">
+                                                <VBox fx:id="vboxLeyendaCategorias" spacing="4" alignment="CENTER_LEFT" />
+                                        </ScrollPane>
+                                </HBox>
+                        </VBox>
+                </HBox>
 
-			<!-- Por Categorías CON MARCO -->
-			<VBox spacing="10" HBox.hgrow="ALWAYS" maxWidth="Infinity"
-				style="-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 16; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2); -fx-border-color: #cbd5e1; -fx-border-width: 1.5; -fx-border-radius: 12;">
-				<HBox alignment="CENTER_LEFT" spacing="8">
-					<Label text="📂" style="-fx-font-size: 20px;" />
-					<Label text="Resumen por Categoría"
-						style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
-				</HBox>
-				<Separator style="-fx-background-color: #e2e8f0;" />
-				<VBox fx:id="vboxCategorias" spacing="8" />
-			</VBox>
-		</HBox>
+                <!-- Fila de abajo: tendencia mensual + pestañas -->
+                <HBox spacing="10" fillHeight="true" VBox.vgrow="ALWAYS" minHeight="170">
+                        <VBox spacing="4" HBox.hgrow="ALWAYS" maxWidth="Infinity" maxHeight="Infinity"
+                                prefWidth="100" styleClass="inicio-card" style="-fx-padding: 8 12;">
+                                <Label text="📉 Tendencia mensual (12 meses)"
+                                        style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
+                                <LineChart fx:id="chartTendencia" legendVisible="false" animated="false"
+                                        createSymbols="true" VBox.vgrow="ALWAYS" styleClass="bar-chart">
+                                        <xAxis>
+                                                <CategoryAxis side="BOTTOM" tickLabelRotation="0" />
+                                        </xAxis>
+                                        <yAxis>
+                                                <NumberAxis fx:id="ejeTendencia" side="LEFT" autoRanging="true" />
+                                        </yAxis>
+                                </LineChart>
+                        </VBox>
 
+                        <VBox spacing="4" HBox.hgrow="ALWAYS" maxWidth="Infinity" maxHeight="Infinity"
+                                prefWidth="100" styleClass="inicio-card" style="-fx-padding: 8 12;">
+                                <TabPane styleClass="inicio-tabs" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
+                                        <tabs>
+                                                <Tab text="📂 Categorías">
+                                                        <content>
+                                                                <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
+                                                                        style="-fx-background-color: transparent; -fx-background: transparent;">
+                                                                        <VBox fx:id="vboxCategorias" spacing="4" style="-fx-padding: 6 0 0 0;" />
+                                                                </ScrollPane>
+                                                        </content>
+                                                </Tab>
+                                                <Tab text="🏆 Top Productos">
+                                                        <content>
+                                                                <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
+                                                                        style="-fx-background-color: transparent; -fx-background: transparent;">
+                                                                        <VBox fx:id="vboxTopProductos" spacing="4" style="-fx-padding: 6 0 0 0;" />
+                                                                </ScrollPane>
+                                                        </content>
+                                                </Tab>
+                                        </tabs>
+                                </TabPane>
+                        </VBox>
+                </HBox>
 
-	</VBox>
+        </VBox>
 </ScrollPane>

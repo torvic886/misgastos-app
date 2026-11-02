@@ -1593,6 +1593,146 @@
     -fx-fill: white;
 }
 
+/* ===== Diálogo Editar gasto ===== */
+.gd-dialog {
+    -fx-background-color: #f8fafc;
+}
+.gd-dialog .gd-contenido {
+    -fx-padding: 8 10 0 10;
+}
+.gd-titulo {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1e293b;
+}
+.gd-subtitulo {
+    -fx-font-size: 12px;
+    -fx-text-fill: #64748b;
+}
+.gd-encabezado {
+    -fx-padding: 0 0 10 0;
+    -fx-border-color: transparent transparent #e2e8f0 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+.gd-label {
+    -fx-font-size: 11px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #334155;
+}
+.gd-dialog .text-field,
+.gd-dialog .combo-box-base,
+.gd-dialog .text-area {
+    -fx-background-color: white;
+    -fx-border-color: #cbd5e1;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+}
+.gd-dialog .text-field {
+    -fx-padding: 7 9;
+}
+.gd-dialog .date-picker .text-field {
+    -fx-border-color: transparent;
+    -fx-background-color: transparent;
+}
+.gd-dialog .text-area .content {
+    -fx-background-color: white;
+    -fx-background-radius: 6;
+}
+.gd-dialog .text-field:focused,
+.gd-dialog .combo-box-base:focused,
+.gd-dialog .text-area:focused {
+    -fx-border-color: #2563eb;
+}
+.gd-total {
+    -fx-background-color: #eff6ff;
+    -fx-background-radius: 8;
+    -fx-border-color: #bfdbfe;
+    -fx-border-radius: 8;
+    -fx-padding: 10 14;
+}
+.gd-total-titulo {
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #1e40af;
+}
+.gd-total-valor {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1d4ed8;
+}
+
+/* ===== Aviso de error de autenticación ===== */
+.auth-dialog {
+    -fx-background-color: white;
+}
+.auth-error-circulo {
+    -fx-background-color: #fee2e2;
+    -fx-background-radius: 28;
+    -fx-border-color: #fecaca;
+    -fx-border-radius: 28;
+    -fx-border-width: 1.5;
+}
+.auth-error-icono {
+    -fx-fill: #dc2626;
+    -fx-scale-x: 1.2;
+    -fx-scale-y: 1.2;
+}
+.auth-error-titulo {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1e293b;
+}
+.auth-error-mensaje {
+    -fx-font-size: 13px;
+    -fx-text-fill: #64748b;
+}
+
+/* ===== INICIO (panel de control) ===== */
+.inicio-card {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-border-color: #cbd5e1;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 12;
+    -fx-padding: 8 12;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);
+}
+.inicio-titulo { -fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1e293b; }
+.inicio-subtitulo { -fx-font-size: 11px; -fx-text-fill: #64748b; }
+.inicio-kpi-titulo { -fx-font-size: 10px; -fx-font-weight: 600; -fx-text-fill: #64748b; }
+.inicio-kpi-valor { -fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #1e293b; }
+
+.stat-change-neutral, .stat-change-positive, .stat-change-negative {
+    -fx-background-radius: 6;
+    -fx-padding: 1 8;
+    -fx-alignment: center;
+}
+.stat-change-neutral { -fx-background-color: #e2e8f0; }
+.stat-change-neutral .label { -fx-text-fill: #64748b; -fx-font-size: 9px; -fx-font-weight: bold; }
+.stat-change-positive { -fx-background-color: #dcfce7; }
+.stat-change-positive .label { -fx-text-fill: #16a34a; -fx-font-size: 9px; -fx-font-weight: bold; }
+.stat-change-negative { -fx-background-color: #fee2e2; }
+.stat-change-negative .label { -fx-text-fill: #dc2626; -fx-font-size: 9px; -fx-font-weight: bold; }
+
+/* ===== INICIO: pestañas ===== */
+.inicio-tabs {
+    -fx-tab-min-height: 22;
+    -fx-tab-max-height: 22;
+}
+.inicio-tabs > .tab-header-area > .tab-header-background {
+    -fx-background-color: transparent;
+}
+.inicio-tabs .tab {
+    -fx-background-color: #f1f5f9;
+    -fx-background-radius: 6 6 0 0;
+    -fx-padding: 2 10;
+}
+.inicio-tabs .tab:selected { -fx-background-color: #2563eb; }
+.inicio-tabs .tab .tab-label { -fx-font-size: 11px; -fx-text-fill: #475569; }
+.inicio-tabs .tab:selected .tab-label { -fx-text-fill: white; }
+.inicio-tabs > .tab-content-area { -fx-background-color: transparent; }
+
 /* ===========================
    NOTA SOBRE TRANSICIONES
    =========================== */

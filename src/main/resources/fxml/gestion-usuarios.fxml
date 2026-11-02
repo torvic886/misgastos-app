@@ -185,6 +185,33 @@
                     <TableColumn fx:id="colFechaCreacion" text="Fecha Creación" prefWidth="150"/>
                 </columns>
             </TableView>
+            
+                        <!-- PERMISOS POR VENTANA -->
+            <VBox fx:id="panelPermisos" spacing="10" disable="true"
+                  style="-fx-background-color: #f8fafc; -fx-padding: 12; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 8;">
+
+                <HBox alignment="CENTER_LEFT" spacing="8">
+                    <Label fx:id="lblPermisosDe" text="Permisos: seleccione un usuario"
+                           maxWidth="Infinity" HBox.hgrow="ALWAYS"
+                           style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                    <Label text="Plantilla:" style="-fx-font-size: 11px; -fx-text-fill: #475569;"/>
+                    <ComboBox fx:id="cmbPlantilla" prefWidth="150"/>
+                    <Button text="Aplicar" onAction="#handleAplicarPlantilla"
+                            style="-fx-background-color: #e0e7ff; -fx-text-fill: #4f46e5; -fx-font-weight: 600; -fx-background-radius: 6; -fx-cursor: hand; -fx-font-size: 11px;"/>
+                </HBox>
+
+                <HBox fx:id="boxPermisos" spacing="40"/>
+
+                <HBox alignment="CENTER_LEFT" spacing="8">
+                    <Label fx:id="lblPermisosEstado" text=""
+                           maxWidth="Infinity" HBox.hgrow="ALWAYS"
+                           style="-fx-font-size: 11px; -fx-text-fill: #64748b;"/>
+                    <Button text="Volver a los del rol" onAction="#handleRestaurarPermisos"
+                            style="-fx-background-color: #64748b; -fx-text-fill: white; -fx-font-weight: 600; -fx-background-radius: 6; -fx-cursor: hand; -fx-font-size: 11px;"/>
+                    <Button text="Guardar permisos" onAction="#handleGuardarPermisos"
+                            style="-fx-background-color: #059669; -fx-text-fill: white; -fx-font-weight: 600; -fx-background-radius: 6; -fx-cursor: hand; -fx-font-size: 11px;"/>
+                </HBox>
+            </VBox>
 
             <!-- Footer con totales -->
             <HBox spacing="8" alignment="CENTER" 

@@ -33,6 +33,10 @@ import java.util.prefs.Preferences;
 import javafx.geometry.Bounds;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Popup;
+import javafx.geometry.Pos;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
+import javafx.scene.shape.SVGPath;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -474,9 +478,7 @@ public class LoginController implements Initializable {
             
             abrirDashboard(usuario.getUsername(), usuario.getRol());
         } else {
-            mostrarAlerta("Error de Autenticación", 
-                         "Usuario o contraseña incorrectos. Por favor intente nuevamente.", 
-                         Alert.AlertType.ERROR);
+            mostrarErrorAutenticacion();
             txtPassword.clear();
             txtPassword.requestFocus();
         }
@@ -614,6 +616,46 @@ public class LoginController implements Initializable {
             getClass().getResource("/css/styles.css").toExternalForm()
         );
         
+        alert.showAndWait();
+    }
+    
+    /** Aviso de usuario o contraseña incorrectos, con el estilo de la app. */
+    private void mostrarErrorAutenticacion() {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error de Autenticación");
+        alert.setHeaderText(null);
+        alert.setGraphic(null);
+
+        SVGPath candado = new SVGPath();
+        candado.setContent("M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z");
+        candado.getStyleClass().add("auth-error-icono");
+        StackPane circulo = new StackPane(candado);
+        circulo.getStyleClass().add("auth-error-circulo");
+        circulo.setMinSize(56, 56);
+        circulo.setMaxSize(56, 56);
+
+        Label titulo = new Label("No se pudo iniciar sesión");
+        titulo.getStyleClass().add("auth-error-titulo");
+        Label mensaje = new Label("El usuario o la contraseña no son correctos. Revisa los datos e inténtalo de nuevo.");
+        mensaje.getStyleClass().add("auth-error-mensaje");
+        mensaje.setWrapText(true);
+        mensaje.setMaxWidth(300);
+
+        VBox textos = new VBox(4, titulo, mensaje);
+        textos.setAlignment(Pos.CENTER_LEFT);
+        HBox contenido = new HBox(16, circulo, textos);
+        contenido.setAlignment(Pos.CENTER_LEFT);
+        contenido.setPadding(new Insets(8, 12, 4, 8));
+
+        DialogPane panel = alert.getDialogPane();
+        panel.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
+        panel.getStyleClass().add("auth-dialog");
+        panel.setContent(contenido);
+        panel.setPrefWidth(440);
+
+        if (txtUsername.getScene() != null && txtUsername.getScene().getWindow() != null) {
+            alert.initOwner(txtUsername.getScene().getWindow());
+        }
         alert.showAndWait();
     }
 }

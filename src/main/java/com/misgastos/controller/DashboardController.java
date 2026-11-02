@@ -1,6 +1,7 @@
 package com.misgastos.controller;
 
 import javafx.scene.Node;
+import javafx.scene.layout.Priority;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContentDisplay;
@@ -19,6 +20,7 @@ import com.misgastos.MisGastosApplication;
 import com.misgastos.service.SesionRecordadaService;
 import com.misgastos.service.UsuarioService;
 import com.misgastos.model.Usuario;
+import com.misgastos.model.Ventana;
 import javafx.application.Platform;
 
 import javafx.fxml.FXML;
@@ -28,7 +30,9 @@ import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import javafx.scene.Cursor;
 
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +47,7 @@ import java.util.Optional;
 @Component
 public class DashboardController {
 
-    // ✅ Labels del usuario en la top bar
+    // Labels del usuario en la top bar
     @FXML private Label lblUsuario;  // Mantener por compatibilidad
     @FXML private Label lblUsuarioNombre;
     @FXML private Label lblUsuarioRol;
@@ -71,7 +75,7 @@ public class DashboardController {
     @FXML private Label lblGrupoSistema;
     private boolean menuColapsado = false;
     private boolean sistemaAbierto = false;
-    
+
     @Autowired
     private ApplicationContext springContext;
 
@@ -82,20 +86,30 @@ public class DashboardController {
     private UsuarioService usuarioService;
 
     @FXML private Button btnClientes;
-    
+
     private String username;
     private String rol;
     private Button botonActivo = null;
+
+    // Ventanas que este usuario puede abrir. Mientras no se carguen (permisosListos = false) no se bloquea nada.
+    private Set<Ventana> permisos = EnumSet.noneOf(Ventana.class);
+    private boolean permisosListos = false;
+    private boolean permisosPersonalizados = false;
 
     // Tamaño (en píxeles) con el que se muestra el avatar en la barra superior
     private static final double TAM_AVATAR = 40;
 
     @FXML
     public void initialize() {
+        // El controlador es un singleton: se borran los permisos de la sesión anterior
+        permisos = EnumSet.noneOf(Ventana.class);
+        permisosListos = false;
+        permisosPersonalizados = false;
+
         log.debug("Dashboard inicializado");
         cargarVista("/fxml/inicio.fxml");
         configurarGrupoSistema();
-        
+
         // Modo compacto (responsive): con ventana angosta se reducen menú y márgenes
         mainBorderPane.sceneProperty().addListener((obs, antes, escena) -> {
             if (escena != null) {
@@ -119,14 +133,150 @@ public class DashboardController {
         this.rol = rol;
         log.debug("Rol recibido: {}", rol);
         actualizarLabelUsuario();
-        configurarMenuPorRol();
+
+        cargarPermisos();
+        if (permisosPersonalizados) {
+            aplicarPermisosPersonalizados();
+        } else {
+            // Sin permisos guardados: el menú de siempre, según el rol
+            configurarMenuPorRol();
+        }
     }
+
+    // ==================== PERMISOS POR VENTANA ====================
+
+    /** Lee los permisos del usuario. Si algo falla, se usan los de su rol (el comportamiento de siempre). */
+    private void cargarPermisos() {
+        permisosPersonalizados = false;
+        permisos = Ventana.porDefecto(rol);
+        try {
+            Optional<Usuario> usuarioOpt = usuarioService.buscarPorUsername(username);
+            if (usuarioOpt.isPresent() && usuarioOpt.get().getPermisos() != null) {
+                permisos = Ventana.efectivas(rol, usuarioOpt.get().getPermisos());
+                permisosPersonalizados = true;
+            }
+        } catch (Exception e) {
+            log.warn("No se pudieron leer los permisos de '{}'; se usan los de su rol", username, e);
+            permisosPersonalizados = false;
+            permisos = Ventana.porDefecto(rol);
+        }
+        permisosListos = true;
+        log.debug("Permisos de '{}': {} (personalizados: {})", username, permisos, permisosPersonalizados);
+    }
+
+    private boolean permitida(Ventana ventana) {
+        return !permisosListos || permisos.contains(ventana);
+    }
+
+    /** true (y avisa) si el usuario no puede abrir esa ventana. */
+    private boolean sinPermiso(Ventana ventana) {
+        if (permitida(ventana)) {
+            return false;
+        }
+        log.warn("Ventana bloqueada: el usuario '{}' no tiene permiso para {}", username, ventana);
+        mostrarAlerta("Acceso Denegado", "No tiene permisos para acceder a esta sección");
+        return true;
+    }
+
+    private Button botonDe(Ventana ventana) {
+        return switch (ventana) {
+            case INICIO -> btnInicio;
+            case GASTOS -> btnGastos;
+            case INFORMES -> btnInformes;
+            case CONSULTAS -> btnConsultas;
+            case CLIENTES -> btnClientes;
+            case BILLETEROS -> btnBilleteros;
+            case REPORTES_BILLETEROS -> btnReportesBilleteros;
+            case USUARIOS -> btnUsuarios;
+            case PRESUPUESTOS -> btnPresupuestos;
+            case REGISTRO_CAMBIOS -> btnRegistroCambios;
+            case CORREGIR_DATOS -> btnCorregirDatos;
+            case RESPALDO -> btnRespaldo;
+            case DIAGNOSTICO -> btnDiagnostico;
+        };
+    }
+
+    /** Menú según los permisos guardados: solo quedan los botones permitidos. */
+    private void aplicarPermisosPersonalizados() {
+        log.debug("Menú según los permisos personalizados de '{}'", username);
+
+        for (Ventana v : Ventana.values()) {
+            Button boton = botonDe(v);
+            if (boton != null && !permisos.contains(v)) {
+                sidebar.getChildren().remove(boton);
+            }
+        }
+        quitarGrupoSiVacio(lblGrupoGastos, "GASTOS");
+        quitarGrupoSiVacio(lblGrupoPersonas, "PERSONAS");
+        quitarGrupoSiVacio(lblGrupoSistema, "SISTEMA");
+
+        if (!permisos.contains(Ventana.INICIO)) {
+            abrirPrimeraVentanaPermitida();
+        }
+    }
+
+    private void quitarGrupoSiVacio(Label titulo, String grupo) {
+        if (titulo == null) {
+            return;
+        }
+        boolean hayAlguna = false;
+        for (Ventana v : Ventana.values()) {
+            if (grupo.equals(v.getGrupo()) && permisos.contains(v)) {
+                hayAlguna = true;
+                break;
+            }
+        }
+        if (!hayAlguna) {
+            sidebar.getChildren().remove(titulo);
+        }
+    }
+
+    /** Si el usuario no tiene Inicio, al entrar se abre la primera ventana que sí tenga. */
+    private void abrirPrimeraVentanaPermitida() {
+        // Respaldo y Diagnóstico quedan fuera: piden su clave y no deben saltar al iniciar sesión
+        Ventana[] orden = {
+            Ventana.GASTOS, Ventana.INFORMES, Ventana.CONSULTAS, Ventana.CLIENTES, Ventana.BILLETEROS,
+            Ventana.REPORTES_BILLETEROS, Ventana.PRESUPUESTOS, Ventana.REGISTRO_CAMBIOS,
+            Ventana.CORREGIR_DATOS, Ventana.USUARIOS
+        };
+        for (Ventana v : orden) {
+            if (permisos.contains(v)) {
+                abrirVentana(v);
+                return;
+            }
+        }
+
+        Label aviso = new Label("No tienes ventanas asignadas. Pide al administrador que te dé acceso.");
+        aviso.setStyle("-fx-font-size: 14px; -fx-text-fill: #64748b;");
+        VBox contenedor = new VBox(aviso);
+        contenedor.setAlignment(Pos.CENTER);
+        contenedor.setStyle("-fx-background-color: #f1f5f9;");
+        mainBorderPane.setCenter(contenedor);
+    }
+
+    private void abrirVentana(Ventana ventana) {
+        switch (ventana) {
+            case GASTOS -> handleGastos();
+            case INFORMES -> handleInformes();
+            case CONSULTAS -> handleConsultas();
+            case CLIENTES -> handleClientes();
+            case BILLETEROS -> handleBilleteros();
+            case REPORTES_BILLETEROS -> handleReportesBilleteros();
+            case PRESUPUESTOS -> handlePresupuestos();
+            case REGISTRO_CAMBIOS -> handleRegistroCambios();
+            case CORREGIR_DATOS -> handleCorregirDatos();
+            case USUARIOS -> handleUsuarios();
+            default -> handleInicio();
+        }
+    }
+
+    // ==================== USUARIO Y AVATAR ====================
 
     private void actualizarLabelUsuario() {
         if (username != null && rol != null) {
             String rolMostrar = normalizarRol(rol);
 
-            // ✅ NUEVO: Actualizar los labels individuales de la top bar
+            // Labels individuales de la top bar
             if (lblUsuarioNombre != null) {
                 lblUsuarioNombre.setText(username);
             }
@@ -142,7 +292,7 @@ public class DashboardController {
         }
     }
 
-    // ✅ NUEVO: Método para actualizar el avatar con las iniciales del usuario
+    // Actualiza el avatar con la inicial del usuario
     private void actualizarAvatar() {
         if (lblAvatar != null && username != null && !username.isEmpty()) {
             // Obtener la primera letra del username en mayúscula
@@ -228,7 +378,7 @@ public class DashboardController {
         if (nuevoBotonActivo != null && !nuevoBotonActivo.getStyleClass().contains("active")) {
             nuevoBotonActivo.getStyleClass().add("active");
         }
-        
+
         if (nuevoBotonActivo != null && botonesSistema().contains(nuevoBotonActivo) && !sistemaAbierto) {
             sistemaAbierto = true;
             actualizarGrupoSistema();
@@ -265,9 +415,7 @@ public class DashboardController {
                             btn.getText().contains("Registro de cambios") ||
                             btn.getText().contains("Presupuestos") ||
                             btn.getText().contains("Diagnóstico") ||
-                            btn.getText().contains("Registro de cambios") ||
-                            btn.getText().contains("Corregir datos") ||
-                            btn.getText().contains("Presupuestos");
+                            btn.getText().contains("Corregir datos");
                 }
                 return false;
             });
@@ -279,9 +427,9 @@ public class DashboardController {
             log.debug("Opción Usuarios oculta: el rol {} no es Administrador general", rol);
         }
     }
-        
-        
-    
+
+
+
     private List<Button> botonesSistema() {
         return List.of(btnPresupuestos, btnRegistroCambios, btnCorregirDatos, btnRespaldo, btnDiagnostico);
     }
@@ -346,6 +494,9 @@ public class DashboardController {
 
     @FXML
     public void handleInicio() {
+        if (sinPermiso(Ventana.INICIO)) {
+            return;
+        }
         log.debug("Navegando a Inicio");
         establecerBotonActivo(btnInicio);
         cargarVista("/fxml/inicio.fxml");
@@ -353,6 +504,9 @@ public class DashboardController {
 
     @FXML
     public void handleGastos() {
+        if (sinPermiso(Ventana.GASTOS)) {
+            return;
+        }
         log.debug("Navegando a Gastos");
         establecerBotonActivo(btnGastos);
         cargarVistaConSubMenu();
@@ -371,14 +525,14 @@ public class DashboardController {
             Button btnListar = botonBarra("Ver Historial",
                     "M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z",
                     "toolbar-neutral");
-            btnListar.setOnAction(e -> cargarVista("/fxml/lista-gastos.fxml"));
+            btnListar.setOnAction(e -> cargarVistaConRegreso("/fxml/lista-gastos.fxml"));
             submenu.getChildren().add(btnListar);
 
             if (esAdministrador()) {
                 Button btnBuscarEditar = botonBarra("Buscar y Editar",
                         "M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z",
                         "toolbar-blue");
-                btnBuscarEditar.setOnAction(e -> cargarVista("/fxml/buscar-editar-gastos.fxml"));
+                btnBuscarEditar.setOnAction(e -> cargarVistaConRegreso("/fxml/buscar-editar-gastos.fxml"));
                 submenu.getChildren().add(btnBuscarEditar);
 
                 Button btnPapelera = botonBarra("Papelera",
@@ -394,6 +548,7 @@ public class DashboardController {
 
             RegistroGastoController registroCtrl = loader.getController();
             registroCtrl.setUsuarioActual(username);
+            registroCtrl.setEdicionPermitida(esAdministrador());
 
             // La vista ocupa todo el espacio; los botones quedan encima, en la esquina del encabezado de la tabla
             container.getChildren().addAll(vista, submenu);
@@ -419,8 +574,7 @@ public class DashboardController {
 
     @FXML
     public void handleInformes() {
-        if (esUsuarioNormal()) {
-            mostrarAlerta("Acceso Denegado", "No tiene permisos para acceder a esta sección");
+        if (sinPermiso(Ventana.INFORMES)) {
             return;
         }
         log.debug("Navegando a Informes");
@@ -430,8 +584,7 @@ public class DashboardController {
 
     @FXML
     public void handleConsultas() {
-        if (esUsuarioNormal()) {
-            mostrarAlerta("Acceso Denegado", "No tiene permisos para acceder a esta sección");
+        if (sinPermiso(Ventana.CONSULTAS)) {
             return;
         }
         log.debug("Navegando a Consultas");
@@ -441,8 +594,7 @@ public class DashboardController {
 
     @FXML
     public void handleRespaldo() {
-        if (esUsuarioNormal()) {
-            mostrarAlerta("Acceso Denegado", "No tiene permisos para acceder a esta sección");
+        if (sinPermiso(Ventana.RESPALDO)) {
             return;
         }
         // Pide la clave propia del respaldo (la primera vez, la crea)
@@ -453,11 +605,10 @@ public class DashboardController {
         establecerBotonActivo(btnRespaldo);
         cargarVista("/fxml/respaldo.fxml");
     }
-    
+
     @FXML
     public void handleDiagnostico() {
-        if (!esAdministrador()) {
-            mostrarAlerta("Acceso Denegado", "No tiene permisos para acceder a esta sección");
+        if (sinPermiso(Ventana.DIAGNOSTICO)) {
             return;
         }
         // Misma clave que el respaldo (la primera vez, la crea)
@@ -468,11 +619,10 @@ public class DashboardController {
         establecerBotonActivo(btnDiagnostico);
         cargarVista("/fxml/diagnostico.fxml");
     }
-    
+
     @FXML
     public void handleCorregirDatos() {
-        if (esUsuarioNormal()) {
-            mostrarAlerta("Acceso Denegado", "No tiene permisos para acceder a esta sección");
+        if (sinPermiso(Ventana.CORREGIR_DATOS)) {
             return;
         }
         log.debug("Navegando a Corregir datos");
@@ -482,8 +632,7 @@ public class DashboardController {
 
     @FXML
     public void handleRegistroCambios() {
-        if (esUsuarioNormal()) {
-            mostrarAlerta("Acceso Denegado", "No tiene permisos para acceder a esta sección");
+        if (sinPermiso(Ventana.REGISTRO_CAMBIOS)) {
             return;
         }
         log.debug("Navegando a Registro de cambios");
@@ -493,8 +642,7 @@ public class DashboardController {
 
     @FXML
     public void handlePresupuestos() {
-        if (esUsuarioNormal()) {
-            mostrarAlerta("Acceso Denegado", "No tiene permisos para acceder a esta sección");
+        if (sinPermiso(Ventana.PRESUPUESTOS)) {
             return;
         }
         log.debug("Navegando a Presupuestos");
@@ -504,7 +652,7 @@ public class DashboardController {
 
     @FXML
     public void handleUsuarios() {
-        if (!esAdministradorGeneral()) {
+        if (!permitida(Ventana.USUARIOS)) {
             log.warn("Intento de abrir Gestión de usuarios sin ser Administrador general: usuario '{}'", username);
             mostrarAlerta("Acceso Denegado", "Solo el Administrador general puede gestionar usuarios");
             return;
@@ -516,6 +664,9 @@ public class DashboardController {
 
     @FXML
     public void handleBilleteros() {
+        if (sinPermiso(Ventana.BILLETEROS)) {
+            return;
+        }
         log.debug("Navegando a Gestión de Billeteros");
         establecerBotonActivo(btnBilleteros);
         cargarVista("/fxml/gestion-billeteros.fxml");
@@ -523,13 +674,19 @@ public class DashboardController {
 
     @FXML
     public void handleReportesBilleteros() {
+        if (sinPermiso(Ventana.REPORTES_BILLETEROS)) {
+            return;
+        }
         log.debug("Navegando a Reportes de Billeteros");
         establecerBotonActivo(btnReportesBilleteros);
         cargarVista("/fxml/reportes-billeteros.fxml");
     }
-    
+
     @FXML
     public void handleClientes() {
+        if (sinPermiso(Ventana.CLIENTES)) {
+            return;
+        }
         log.debug("Navegando a Clientes");
         establecerBotonActivo(btnClientes);
         cargarVista("/fxml/clientes.fxml");
@@ -567,7 +724,7 @@ public class DashboardController {
                 getClass().getResource("/css/styles.css").toExternalForm()
             );
 
-            // 🔥 SOLUCIÓN: Primero desmaximizar, LUEGO cambiar escena y tamaño
+            // Primero desmaximizar, LUEGO cambiar escena y tamaño
             stage.setMaximized(false);
 
             // Cambiar escena
@@ -598,6 +755,12 @@ public class DashboardController {
     }
 
     private void cargarVista(String fxmlPath) {
+        // Bloqueo central: aunque alguien llegue aquí sin pasar por el menú, sin permiso no se abre
+        Ventana destino = Ventana.deRuta(fxmlPath);
+        if (destino != null && sinPermiso(destino)) {
+            return;
+        }
+
         log.debug("Cargando vista {}", fxmlPath);
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
@@ -611,8 +774,57 @@ public class DashboardController {
                 controller.setUsuarioActual(username);
                 controller.setAlActualizarUsuarioActual(this::actualizarAvatar);
             }
+            
+            if (loader.getController() instanceof InicioController inicio) {
+                boolean puedeGastos = permitida(Ventana.GASTOS);
+                inicio.configurarAcciones(
+                        puedeGastos,
+                        puedeGastos && esAdministrador(),
+                        () -> cargarVistaConRegreso("/fxml/lista-gastos.fxml"),
+                        () -> cargarVistaConRegreso("/fxml/buscar-editar-gastos.fxml"));
+            }
 
             mainBorderPane.setCenter(vista);
+        } catch (Exception e) {
+            log.error("No se pudo cargar la pantalla {}", fxmlPath, e);
+        }
+    }
+
+    /** Carga una pantalla de Mis Gastos con una barra superior para volver a Mis Gastos. */
+    private void cargarVistaConRegreso(String fxmlPath) {
+        Ventana destino = Ventana.deRuta(fxmlPath);
+        if (destino != null && sinPermiso(destino)) {
+            return;
+        }
+
+        log.debug("Cargando vista {} con botón de regreso", fxmlPath);
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            loader.setControllerFactory(springContext::getBean);
+            loader.setClassLoader(getClass().getClassLoader());
+            Parent vista = loader.load();
+
+            if (loader.getController() instanceof ListaGastosController historial) {
+                historial.setEdicionPermitida(esAdministrador());
+            }
+
+            Button btnVolver = botonBarra("Volver a Mis Gastos",
+                    "M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z",
+                    "toolbar-neutral");
+            btnVolver.setOnAction(e -> {
+                log.debug("Volviendo a Mis Gastos");
+                handleGastos();
+            });
+
+            HBox barra = new HBox(btnVolver);
+            barra.setAlignment(Pos.CENTER_LEFT);
+            barra.setStyle("-fx-padding: 8 8 0 8; -fx-background-color: #f7fafc;");
+
+            VBox contenedor = new VBox(barra, vista);
+            contenedor.setStyle("-fx-background-color: #f7fafc;");
+            VBox.setVgrow(vista, Priority.ALWAYS);
+
+            mainBorderPane.setCenter(contenedor);
         } catch (Exception e) {
             log.error("No se pudo cargar la pantalla {}", fxmlPath, e);
         }

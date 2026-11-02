@@ -13,6 +13,11 @@ import javafx.scene.control.Labeled;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TableRow;
 
 import com.misgastos.model.Categoria;
 import com.misgastos.model.Gasto;
@@ -87,7 +92,9 @@ public class RegistroGastoController {
     @Autowired private CategoriaService categoriaService;
     @Autowired private GastoService gastoService;
     @Autowired private PresupuestoService presupuestoService;
-
+    @Autowired private com.misgastos.util.GastoDialogos gastoDialogos;
+    private final BooleanProperty edicionPermitida = new SimpleBooleanProperty(false);
+    
     private Long usuarioId = 1L;
 
     // ✅ Flags de control
@@ -113,6 +120,8 @@ public class RegistroGastoController {
         configurarProductoAutocomplete();
         configurarGuardarConEnter();
         configurarTabla();
+        configurarMenuContextualTabla();
+        configurarFiltros();
         configurarFiltros();
         cargarUltimosGastos();
         configurarCopiaPegadoTabla();
@@ -510,6 +519,35 @@ public class RegistroGastoController {
             }
         });
     }
+    
+    private void configurarMenuContextualTabla() {
+        tblUltimosGastos.setRowFactory(tv -> {
+            TableRow<Gasto> fila = new TableRow<>();
+
+            MenuItem miEditar = new MenuItem("Editar");
+            miEditar.setOnAction(e -> {
+                if (!fila.isEmpty()) {
+                    log.debug("Editar gasto desde últimos gastos, id={}", fila.getItem().getId());
+                    gastoDialogos.editar(fila.getItem(), this::recargarTablaConservandoFiltros);
+                }
+            });
+
+            MenuItem miEliminar = new MenuItem("Eliminar");
+            miEliminar.setOnAction(e -> {
+                if (!fila.isEmpty()) {
+                    log.debug("Eliminar gasto desde últimos gastos, id={}", fila.getItem().getId());
+                    gastoDialogos.eliminar(fila.getItem(), this::recargarTablaConservandoFiltros);
+                }
+            });
+
+            ContextMenu menu = new ContextMenu(miEditar, miEliminar);
+            fila.contextMenuProperty().bind(
+                Bindings.when(fila.emptyProperty().or(edicionPermitida.not()))
+                    .then((ContextMenu) null)
+                    .otherwise(menu));
+            return fila;
+        });
+    }
 
     private void cargarSubcategorias(Long categoriaId) {
         cmbSubcategoria.getItems().clear();
@@ -569,6 +607,38 @@ public class RegistroGastoController {
         colValorUnitario.setStyle("-fx-alignment: CENTER-RIGHT;");
         colTotal.setStyle("-fx-alignment: CENTER-RIGHT;");
        
+    }
+    
+    /** Solo los administradores pueden editar o eliminar gastos con clic derecho. */
+    public void setEdicionPermitida(boolean permitida) {
+        edicionPermitida.set(permitida);
+    }
+
+
+    /** Recarga la tabla después de editar o eliminar, sin perder los filtros de columna. */
+    private void recargarTablaConservandoFiltros() {
+        // Se difiere un instante: la recarga ocurre dentro del evento del clic derecho de una fila,
+        // y cambiar el número de filas en ese momento puede dejar la tabla sin dibujar.
+        Platform.runLater(() -> {
+            try {
+                List<Gasto> gastos = gastoService.obtenerUltimosGastosGeneral(100000);
+
+                tblUltimosGastos.getSelectionModel().clearSelection();
+                gastosMaestro.setAll(gastos);
+                aplicarFiltros();
+
+                // Se vuelve a asignar la lista para que la tabla reconstruya sus filas
+                ObservableList<Gasto> items = tblUltimosGastos.getItems();
+                tblUltimosGastos.setItems(null);
+                tblUltimosGastos.setItems(items);
+                tblUltimosGastos.refresh();
+
+                log.info("Tabla de últimos gastos recargada: {} cargados, {} visibles, alto de la tabla {}",
+                        gastos.size(), tblUltimosGastos.getItems().size(), Math.round(tblUltimosGastos.getHeight()));
+            } catch (Exception e) {
+                log.error("No se pudieron recargar los últimos gastos", e);
+            }
+        });
     }
 
     private void cargarUltimosGastos() {

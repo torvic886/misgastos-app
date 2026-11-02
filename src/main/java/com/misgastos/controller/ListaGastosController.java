@@ -2,6 +2,9 @@ package com.misgastos.controller;
 
 import com.misgastos.model.Gasto;
 import com.misgastos.service.GastoService;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -33,6 +36,7 @@ import java.util.Locale;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import com.misgastos.util.FiltroExcel;
+import com.misgastos.util.GastoDialogos;
 import javafx.scene.control.SelectionMode;
 import java.util.ArrayList;
 
@@ -87,6 +91,16 @@ public class ListaGastosController {
 
     @Autowired
     private GastoService gastoService;
+
+    @Autowired
+    private GastoDialogos gastoDialogos;
+
+    // Editar y eliminar con clic derecho: solo si el dashboard lo permite (administradores)
+    private final BooleanProperty edicionPermitida = new SimpleBooleanProperty(false);
+
+    public void setEdicionPermitida(boolean permitida) {
+        edicionPermitida.set(permitida);
+    }
 
     private ObservableList<Gasto> listaGastos;
 
@@ -189,7 +203,49 @@ public class ListaGastosController {
         		    c.getValue().getNombrePersona() == null ? "" : c.getValue().getNombrePersona()));
                
         		tableGastos.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-    
+
+        configurarMenuContextual();
+    }
+
+    /**
+     * Clic derecho sobre una fila: Editar o Eliminar, igual que en Buscar y Editar
+     * (solo para quien tenga permitida la edición).
+     * Eliminar respeta la selección múltiple: si la fila no estaba seleccionada,
+     * se elimina solo esa; si lo estaba, se eliminan todas las seleccionadas.
+     */
+    private void configurarMenuContextual() {
+        tableGastos.setRowFactory(tv -> {
+            TableRow<Gasto> fila = new TableRow<>();
+
+            MenuItem miEditar = new MenuItem("Editar");
+            miEditar.setOnAction(e -> {
+                if (!fila.isEmpty()) {
+                    log.debug("Editar gasto desde el historial, id={}", fila.getItem().getId());
+                    gastoDialogos.editar(fila.getItem(), this::recargarConservandoFiltros);
+                }
+            });
+
+            MenuItem miEliminar = new MenuItem("Eliminar");
+            miEliminar.setOnAction(e -> {
+                if (fila.isEmpty()) {
+                    return;
+                }
+                if (!tableGastos.getSelectionModel().getSelectedItems().contains(fila.getItem())) {
+                    tableGastos.getSelectionModel().clearSelection();
+                    tableGastos.getSelectionModel().select(fila.getItem());
+                }
+                log.debug("Eliminar desde el historial con clic derecho ({} seleccionado(s))",
+                        tableGastos.getSelectionModel().getSelectedItems().size());
+                handleEliminar();
+            });
+
+            ContextMenu menu = new ContextMenu(miEditar, miEliminar);
+            fila.contextMenuProperty().bind(
+                    Bindings.when(fila.emptyProperty().or(edicionPermitida.not()))
+                            .then((ContextMenu) null)
+                            .otherwise(menu));
+            return fila;
+        });
     }
 
     private void cargarGastos() {

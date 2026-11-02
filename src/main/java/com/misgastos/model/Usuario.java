@@ -29,6 +29,10 @@ public class Usuario {
     // Avatar opcional: "HOMBRE" o "MUJER" (null = se muestra la inicial del usuario)
     @Column(length = 10)
     private String avatar;
+    
+    // Ventanas permitidas, separadas por coma (null = las de su rol de siempre)
+    @Column(length = 500)
+    private String permisos;
 
     // Getters y Setters
     public Long getId() {
@@ -85,5 +89,13 @@ public class Usuario {
 
     public void setAvatar(String avatar) {
         this.avatar = avatar;
+    }
+    
+    public String getPermisos() {
+        return permisos;
+    }
+
+    public void setPermisos(String permisos) {
+        this.permisos = permisos;
     }
 }

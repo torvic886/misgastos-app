@@ -2,38 +2,48 @@ package com.misgastos.controller;
 
 import com.misgastos.service.GastoService;
 import com.misgastos.service.PresupuestoService;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.chart.BarChart;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.PieChart;
 import javafx.scene.chart.XYChart;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Tooltip;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Rectangle;
+import javafx.util.StringConverter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import javafx.scene.layout.FlowPane;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.NumberFormat;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
-import lombok.extern.slf4j.Slf4j;
-
-import javafx.application.Platform;
-import javafx.scene.Node;
-import javafx.scene.layout.StackPane;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 
 @Slf4j
 @Component
 public class InicioController {
+
+    private static final Locale CO = Locale.forLanguageTag("es-CO");
 
     @FXML private Label lblTotalHoy;
     @FXML private Label lblTotalSemana;
@@ -59,8 +69,17 @@ public class InicioController {
     @FXML private FlowPane flowPresupuestos;
     @FXML private Label lblPresupuestoResumen;
 
+    @FXML private Button btnVerHistorial;
+    @FXML private Button btnBuscarEditar;
+    private Runnable alVerHistorial;
+    private Runnable alBuscarEditar;
+
     @FXML private BarChart<String, Number> chartUltimosDias;
     @FXML private PieChart chartCategorias;
+    @FXML private LineChart<String, Number> chartTendencia;
+    @FXML private NumberAxis ejeY;
+    @FXML private NumberAxis ejeTendencia;
+    @FXML private Label lblTotalCentro;
 
     @Autowired
     private GastoService gastoService;
@@ -70,63 +89,87 @@ public class InicioController {
 
     @FXML
     public void initialize() {
+        StringConverter<Number> conversorPesos = new StringConverter<>() {
+            @Override public String toString(Number n) {
+                return formatearMonto(BigDecimal.valueOf(n.doubleValue()));
+            }
+            @Override public Number fromString(String s) { return null; }
+        };
+        ejeY.setTickLabelFormatter(conversorPesos);
+        ejeTendencia.setTickLabelFormatter(conversorPesos);
+
         cargarIndicadores();
         cargarTopProductos();
         cargarCategoriasResumen();
         cargarGraficoUltimosDias();
         cargarGraficoCategorias();
+        cargarTendenciaMensual();
         cargarPresupuestos();
     }
+
+    /** Lo llama el Dashboard al cargar Inicio: decide qué botones se ven y qué hacen. */
+    public void configurarAcciones(boolean verHistorial, boolean buscarEditar,
+                                   Runnable alHistorial, Runnable alBuscar) {
+        this.alVerHistorial = alHistorial;
+        this.alBuscarEditar = alBuscar;
+        if (btnVerHistorial != null) {
+            btnVerHistorial.setVisible(verHistorial);
+            btnVerHistorial.setManaged(verHistorial);
+        }
+        if (btnBuscarEditar != null) {
+            btnBuscarEditar.setVisible(buscarEditar);
+            btnBuscarEditar.setManaged(buscarEditar);
+        }
+    }
+
+    @FXML
+    private void handleVerHistorial() {
+        if (alVerHistorial != null) alVerHistorial.run();
+    }
+
+    @FXML
+    private void handleBuscarEditar() {
+        if (alBuscarEditar != null) alBuscarEditar.run();
+    }
+
+    // ==================== TARJETAS ====================
 
     private void cargarIndicadores() {
         LocalDate hoy = LocalDate.now();
 
-        // Hoy
         BigDecimal totalHoy = gastoService.calcularTotalPorPeriodo(hoy, hoy);
         lblTotalHoy.setText(formatearMonto(totalHoy));
-
         LocalDate ayer = hoy.minusDays(1);
-        BigDecimal totalAyer = gastoService.calcularTotalPorPeriodo(ayer, ayer);
-        actualizarCambio(lblCambioHoy, hboxCambioHoy, totalHoy, totalAyer);
+        actualizarCambio(lblCambioHoy, hboxCambioHoy, totalHoy,
+                gastoService.calcularTotalPorPeriodo(ayer, ayer));
 
-        // Semana (lunes a domingo)
         LocalDate inicioSemana = hoy.with(TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY));
         LocalDate finSemana = hoy.with(TemporalAdjusters.nextOrSame(java.time.DayOfWeek.SUNDAY));
         BigDecimal totalSemana = gastoService.calcularTotalPorPeriodo(inicioSemana, finSemana);
         lblTotalSemana.setText(formatearMonto(totalSemana));
+        actualizarCambio(lblCambioSemana, hboxCambioSemana, totalSemana,
+                gastoService.calcularTotalPorPeriodo(inicioSemana.minusWeeks(1), finSemana.minusWeeks(1)));
 
-        LocalDate inicioSemanaAnterior = inicioSemana.minusWeeks(1);
-        LocalDate finSemanaAnterior = finSemana.minusWeeks(1);
-        BigDecimal totalSemanaAnterior = gastoService.calcularTotalPorPeriodo(inicioSemanaAnterior, finSemanaAnterior);
-        actualizarCambio(lblCambioSemana, hboxCambioSemana, totalSemana, totalSemanaAnterior);
-
-        // Mes
         LocalDate inicioMes = hoy.withDayOfMonth(1);
         LocalDate finMes = hoy.with(TemporalAdjusters.lastDayOfMonth());
         BigDecimal totalMes = gastoService.calcularTotalPorPeriodo(inicioMes, finMes);
         lblTotalMes.setText(formatearMonto(totalMes));
+        actualizarCambio(lblCambioMes, hboxCambioMes, totalMes,
+                gastoService.calcularTotalPorPeriodo(inicioMes.minusMonths(1), inicioMes.minusDays(1)));
 
-        LocalDate inicioMesAnterior = inicioMes.minusMonths(1);
-        LocalDate finMesAnterior = inicioMes.minusDays(1);
-        BigDecimal totalMesAnterior = gastoService.calcularTotalPorPeriodo(inicioMesAnterior, finMesAnterior);
-        actualizarCambio(lblCambioMes, hboxCambioMes, totalMes, totalMesAnterior);
-
-        // Año
         LocalDate inicioAnio = hoy.withDayOfYear(1);
         LocalDate finAnio = hoy.with(TemporalAdjusters.lastDayOfYear());
         BigDecimal totalAnio = gastoService.calcularTotalPorPeriodo(inicioAnio, finAnio);
         lblTotalAnio.setText(formatearMonto(totalAnio));
-
-        LocalDate inicioAnioAnterior = inicioAnio.minusYears(1);
-        LocalDate finAnioAnterior = finAnio.minusYears(1);
-        BigDecimal totalAnioAnterior = gastoService.calcularTotalPorPeriodo(inicioAnioAnterior, finAnioAnterior);
-        actualizarCambio(lblCambioAnio, hboxCambioAnio, totalAnio, totalAnioAnterior);
+        actualizarCambio(lblCambioAnio, hboxCambioAnio, totalAnio,
+                gastoService.calcularTotalPorPeriodo(inicioAnio.minusYears(1), finAnio.minusYears(1)));
     }
 
     private void actualizarCambio(Label label, HBox container, BigDecimal actual, BigDecimal anterior) {
+        container.getStyleClass().removeAll("stat-change-positive", "stat-change-negative", "stat-change-neutral");
+
         if (anterior.compareTo(BigDecimal.ZERO) == 0) {
             label.setText("Sin datos previos");
-            container.getStyleClass().removeAll("stat-change-positive", "stat-change-negative");
             container.getStyleClass().add("stat-change-neutral");
             return;
         }
@@ -135,22 +178,22 @@ public class InicioController {
         BigDecimal porcentaje = diferencia.divide(anterior, 4, RoundingMode.HALF_UP)
                                          .multiply(BigDecimal.valueOf(100));
 
-        String simbolo = diferencia.compareTo(BigDecimal.ZERO) >= 0 ? "↑" : "↓";
-        String texto = String.format("%s %.1f%%", simbolo, Math.abs(porcentaje.doubleValue()));
-        label.setText(texto);
+        String simbolo = diferencia.signum() >= 0 ? "\u2191" : "\u2193";
+        label.setText(String.format(CO, "%s %.1f%% vs. anterior", simbolo, Math.abs(porcentaje.doubleValue())));
 
-        container.getStyleClass().removeAll("stat-change-positive", "stat-change-negative", "stat-change-neutral");
-        if (diferencia.compareTo(BigDecimal.ZERO) > 0) {
-            container.getStyleClass().add("stat-change-negative"); // Más gasto = negativo
-        } else if (diferencia.compareTo(BigDecimal.ZERO) < 0) {
-            container.getStyleClass().add("stat-change-positive"); // Menos gasto = positivo
+        if (diferencia.signum() > 0) {
+            container.getStyleClass().add("stat-change-negative");   // más gasto = rojo
+        } else if (diferencia.signum() < 0) {
+            container.getStyleClass().add("stat-change-positive");   // menos gasto = verde
         } else {
             container.getStyleClass().add("stat-change-neutral");
         }
     }
 
+    // ==================== LISTAS (PESTAÑAS) ====================
+
     private void cargarTopProductos() {
-        List<Map<String, Object>> topProductos = gastoService.obtenerTopProductos(5);
+        List<Map<String, Object>> topProductos = gastoService.obtenerTopProductos(10);
         vboxTopProductos.getChildren().clear();
 
         int posicion = 1;
@@ -158,33 +201,28 @@ public class InicioController {
             String producto = (String) item.get("producto");
             BigDecimal total = (BigDecimal) item.get("total");
 
-            HBox itemBox = new HBox(10);
-            itemBox.getStyleClass().add("panel-item");
-            itemBox.setStyle("-fx-alignment: center-left;");
-
             Label lblPosicion = new Label(posicion + ".");
-            lblPosicion.setStyle("-fx-font-weight: bold; -fx-text-fill: #9ca3af; -fx-min-width: 25;");
+            lblPosicion.setMinWidth(22);
+            lblPosicion.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #9ca3af;");
 
             Label lblProducto = new Label(producto);
-            lblProducto.getStyleClass().add("item-label");
             lblProducto.setMaxWidth(Double.MAX_VALUE);
-            HBox.setHgrow(lblProducto, javafx.scene.layout.Priority.ALWAYS);
+            lblProducto.setStyle("-fx-font-size: 11px; -fx-text-fill: #334155;");
+            HBox.setHgrow(lblProducto, Priority.ALWAYS);
 
             Label lblTotal = new Label(formatearMonto(total));
-            lblTotal.getStyleClass().add("item-value");
-            // Negrita en el valor
-            lblTotal.setStyle("-fx-font-weight: bold; -fx-text-fill: #1e293b;");
+            lblTotal.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #1e293b;");
 
-            itemBox.getChildren().addAll(lblPosicion, lblProducto, lblTotal);
-            vboxTopProductos.getChildren().add(itemBox);
-
+            HBox fila = new HBox(8, lblPosicion, lblProducto, lblTotal);
+            fila.setAlignment(Pos.CENTER_LEFT);
+            vboxTopProductos.getChildren().add(fila);
             posicion++;
         }
 
         if (topProductos.isEmpty()) {
-            Label lblVacio = new Label("No hay productos registrados");
-            lblVacio.setStyle("-fx-text-fill: #9ca3af; -fx-font-style: italic;");
-            vboxTopProductos.getChildren().add(lblVacio);
+            Label vacio = new Label("No hay productos registrados");
+            vacio.setStyle("-fx-text-fill: #9ca3af; -fx-font-style: italic; -fx-font-size: 11px;");
+            vboxTopProductos.getChildren().add(vacio);
         }
     }
 
@@ -192,42 +230,40 @@ public class InicioController {
         Map<String, BigDecimal> categorias = gastoService.obtenerGastosPorCategoria();
         vboxCategorias.getChildren().clear();
 
-        // Numeración
+        List<Map.Entry<String, BigDecimal>> ordenadas = categorias.entrySet().stream()
+                .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
+                .collect(Collectors.toList());
+
         int posicion = 1;
-
-        for (Map.Entry<String, BigDecimal> entry : categorias.entrySet()) {
-            HBox itemBox = new HBox(10);
-            itemBox.getStyleClass().add("panel-item");
-            itemBox.setStyle("-fx-alignment: center-left;");
-
-            // Número de posición
+        for (Map.Entry<String, BigDecimal> entry : ordenadas) {
             Label lblPosicion = new Label(posicion + ".");
-            lblPosicion.setStyle("-fx-font-weight: bold; -fx-text-fill: #9ca3af; -fx-min-width: 25;");
+            lblPosicion.setMinWidth(22);
+            lblPosicion.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #9ca3af;");
 
             Label lblCategoria = new Label(entry.getKey());
-            lblCategoria.getStyleClass().add("item-label");
             lblCategoria.setMaxWidth(Double.MAX_VALUE);
-            HBox.setHgrow(lblCategoria, javafx.scene.layout.Priority.ALWAYS);
+            lblCategoria.setStyle("-fx-font-size: 11px; -fx-text-fill: #334155;");
+            HBox.setHgrow(lblCategoria, Priority.ALWAYS);
 
             Label lblTotal = new Label(formatearMonto(entry.getValue()));
-            lblTotal.getStyleClass().add("item-value");
-            // Negrita en el valor
-            lblTotal.setStyle("-fx-font-weight: bold; -fx-text-fill: #1e293b;");
+            lblTotal.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #1e293b;");
 
-            itemBox.getChildren().addAll(lblPosicion, lblCategoria, lblTotal);
-            vboxCategorias.getChildren().add(itemBox);
-
+            HBox fila = new HBox(8, lblPosicion, lblCategoria, lblTotal);
+            fila.setAlignment(Pos.CENTER_LEFT);
+            vboxCategorias.getChildren().add(fila);
             posicion++;
         }
 
         if (categorias.isEmpty()) {
-            Label lblVacio = new Label("No hay categorías registradas");
-            lblVacio.setStyle("-fx-text-fill: #9ca3af; -fx-font-style: italic;");
-            vboxCategorias.getChildren().add(lblVacio);
+            Label vacio = new Label("No hay categorías registradas");
+            vacio.setStyle("-fx-text-fill: #9ca3af; -fx-font-style: italic; -fx-font-size: 11px;");
+            vboxCategorias.getChildren().add(vacio);
         }
     }
 
-    /** Panel de presupuesto del mes: ocupa el lugar del encabezado cuando hay topes fijados. */
+    // ==================== PRESUPUESTO ====================
+
+    /** Panel de presupuesto del mes: se muestra debajo del encabezado cuando hay topes fijados. */
     private void cargarPresupuestos() {
         try {
             flowPresupuestos.getChildren().clear();
@@ -239,8 +275,6 @@ public class InicioController {
             boolean hay = !filas.isEmpty();
             panelPresupuestos.setVisible(hay);
             panelPresupuestos.setManaged(hay);
-            panelEncabezado.setVisible(!hay);
-            panelEncabezado.setManaged(!hay);
             if (!hay) {
                 return;
             }
@@ -266,8 +300,8 @@ public class InicioController {
                 Label porcentaje = new Label(Math.round(pct) + " %");
                 porcentaje.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: " + colorTexto + ";");
 
-                javafx.scene.layout.Region espacio = new javafx.scene.layout.Region();
-                HBox.setHgrow(espacio, javafx.scene.layout.Priority.ALWAYS);
+                Region espacio = new Region();
+                HBox.setHgrow(espacio, Priority.ALWAYS);
 
                 ProgressBar barra = new ProgressBar(Math.min(pct / 100.0, 1.0));
                 barra.setMaxWidth(Double.MAX_VALUE);
@@ -288,9 +322,11 @@ public class InicioController {
                 flowPresupuestos.getChildren().add(mas);
             }
         } catch (Exception e) {
-        	log.warn("No se pudo cargar el presupuesto", e);
+            log.warn("No se pudo cargar el presupuesto", e);
         }
     }
+
+    // ==================== GRÁFICOS ====================
 
     private void cargarGraficoUltimosDias() {
         chartUltimosDias.getData().clear();
@@ -307,23 +343,29 @@ public class InicioController {
             series.getData().add(new XYChart.Data<>(etiqueta, total.doubleValue()));
         }
 
+        // Eje con margen arriba para que quepa el valor sobre la barra más alta
+        double max = series.getData().stream().mapToDouble(d -> d.getYValue().doubleValue()).max().orElse(0);
+        double tope = max <= 0 ? 100 : max * 1.25;
+        double paso = Math.pow(10, Math.floor(Math.log10(tope / 4)));
+        paso = Math.ceil((tope / 4) / paso) * paso;
+        ejeY.setAutoRanging(false);
+        ejeY.setLowerBound(0);
+        ejeY.setUpperBound(paso * 4);
+        ejeY.setTickUnit(paso);
+        ejeY.setMinorTickVisible(false);
+
         chartUltimosDias.getData().add(series);
         chartUltimosDias.setLegendVisible(false);
 
         Platform.runLater(() -> {
             for (XYChart.Series<String, Number> serie : chartUltimosDias.getData()) {
                 for (XYChart.Data<String, Number> data : serie.getData()) {
-
                     double valor = data.getYValue().doubleValue();
                     if (valor <= 0) continue;
 
                     Node node = data.getNode();
                     if (node instanceof StackPane bar) {
-
-                        // Etiqueta compacta arriba de la barra con mejor posicionamiento
-                        Label label = new Label(
-                            formatearMonto(BigDecimal.valueOf(valor))
-                        );
+                        Label label = new Label(formatearMonto(BigDecimal.valueOf(valor)));
                         label.setStyle(
                             "-fx-font-size: 10px; " +
                             "-fx-font-weight: bold; " +
@@ -333,165 +375,117 @@ public class InicioController {
                             "-fx-padding: 3 8;"
                         );
                         label.setMouseTransparent(true);
+                        label.setMinWidth(Region.USE_PREF_SIZE);
                         StackPane.setAlignment(label, Pos.TOP_CENTER);
-                        // Ajustar margen para que no tape la barra
-                        StackPane.setMargin(label, new Insets(-22, 0, 0, 0));
+                        StackPane.setMargin(label, new javafx.geometry.Insets(-22, 0, 0, 0));
                         bar.getChildren().add(label);
 
-                        // Tooltip con fecha + valor completo
-                        String textoTooltip =
-                                data.getXValue() + "\n" +
-                                formatearMontoCompleto(BigDecimal.valueOf(valor));
-
-                        Tooltip tooltip = new Tooltip(textoTooltip);
-                        tooltip.setStyle("""
-                            -fx-font-size: 12px;
-                            -fx-font-weight: bold;
-                        """);
-
-                        Tooltip.install(bar, tooltip);
+                        Tooltip.install(bar, new Tooltip(
+                                data.getXValue() + "\n" + formatearMonto(BigDecimal.valueOf(valor))));
                     }
                 }
             }
         });
     }
 
-    private String formatearMontoCompleto(BigDecimal monto) {
-        return String.format("%,.0f", monto.doubleValue());
-    }
-
-
     private void cargarGraficoCategorias() {
         chartCategorias.getData().clear();
-        if (vboxLeyendaCategorias != null) {
-            vboxLeyendaCategorias.getChildren().clear();
-        }
+        vboxLeyendaCategorias.getChildren().clear();
 
         Map<String, BigDecimal> categorias = gastoService.obtenerGastosPorCategoria();
+        BigDecimal totalGeneral = categorias.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+        lblTotalCentro.setText(formatearMonto(totalGeneral));
 
-        BigDecimal totalGeneral = categorias.values().stream()
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        String[] colores = {"#2563eb", "#7c3aed", "#0891b2", "#16a34a", "#f59e0b", "#ec4899", "#94a3b8"};
 
-        // Colores modernos y vibrantes para cada categoría
-        String[] colores = {
-            "#e91e63",  // Rosa/magenta vibrante
-            "#9c27b0",  // Púrpura
-            "#3f51b5",  // Azul índigo
-            "#00bcd4",  // Cian
-            "#4caf50",  // Verde
-            "#ff9800",  // Naranja
-            "#f44336"   // Rojo
-        };
+        List<Map.Entry<String, BigDecimal>> ordenadas = categorias.entrySet().stream()
+                .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
+                .collect(Collectors.toList());
 
-        // Ordenar categorías por monto descendente
-        List<Map.Entry<String, BigDecimal>> categoriasOrdenadas = categorias.entrySet().stream()
-            .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
-            .collect(Collectors.toList());
+        int i = 0;
+        for (Map.Entry<String, BigDecimal> entry : ordenadas) {
+            final String color = colores[i % colores.length];
+            double pct = totalGeneral.signum() == 0 ? 0
+                    : entry.getValue().multiply(BigDecimal.valueOf(100))
+                            .divide(totalGeneral, 1, RoundingMode.HALF_UP).doubleValue();
+            String pctTexto = String.format(CO, "%.1f%%", pct);
 
-        int colorIndex = 0;
-
-        for (Map.Entry<String, BigDecimal> entry : categoriasOrdenadas) {
-
-            PieChart.Data slice = new PieChart.Data(
-                    entry.getKey(),
-                    entry.getValue().doubleValue()
-            );
-
+            PieChart.Data slice = new PieChart.Data(entry.getKey(), entry.getValue().doubleValue());
             chartCategorias.getData().add(slice);
-
-            // Aplicar color personalizado a cada slice
-            final int currentIndex = colorIndex;
-            final String colorActual = colores[colorIndex % colores.length];
-
-            Platform.runLater(() -> {
-                slice.getNode().setStyle(
-                    "-fx-pie-color: " + colorActual + ";"
-                );
-            });
-
-            // Tooltip con valor + porcentaje (sin símbolo $)
-            double porcentaje = totalGeneral.compareTo(BigDecimal.ZERO) == 0
-                    ? 0
-                    : entry.getValue()
-                            .multiply(BigDecimal.valueOf(100))
-                            .divide(totalGeneral, 1, RoundingMode.HALF_UP)
-                            .doubleValue();
-
-            Tooltip tooltip = new Tooltip(
-                    entry.getKey() + "\n" +
-                    formatearMontoCompleto(entry.getValue()) + "\n" +
-                    String.format("%.1f%%", porcentaje)
-            );
-
-            Tooltip.install(slice.getNode(), tooltip);
-
-            // Crear leyenda personalizada lateral para las primeras 5 categorías
-            if (colorIndex < 5 && vboxLeyendaCategorias != null) {
-                HBox leyendaItem = new HBox(8);
-                leyendaItem.setAlignment(Pos.CENTER_LEFT);
-
-                // Cuadro de color más grande para mejor visibilidad
-                Rectangle colorBox = new Rectangle(12, 12);
-                colorBox.setFill(javafx.scene.paint.Color.web(colorActual));
-                colorBox.setArcWidth(3);
-                colorBox.setArcHeight(3);
-
-                // VBox para nombre y porcentaje
-                VBox infoBox = new VBox(2);
-
-                // Nombre de categoría
-                Label lblNombre = new Label(entry.getKey());
-                lblNombre.setStyle("-fx-font-size: 11px; -fx-text-fill: #334155; -fx-font-weight: 600;");
-                lblNombre.setMaxWidth(130);
-                lblNombre.setWrapText(false);
-
-                // Porcentaje con monto
-                Label lblDetalle = new Label(String.format("%.1f%% - %s", porcentaje, formatearMonto(entry.getValue())));
-                lblDetalle.setStyle("-fx-font-size: 9px; -fx-text-fill: #64748b; -fx-font-weight: 500;");
-
-                infoBox.getChildren().addAll(lblNombre, lblDetalle);
-
-                leyendaItem.getChildren().addAll(colorBox, infoBox);
-                vboxLeyendaCategorias.getChildren().add(leyendaItem);
+            if (slice.getNode() != null) {
+                slice.getNode().setStyle("-fx-pie-color: " + color + ";");
+                Tooltip.install(slice.getNode(), new Tooltip(
+                        entry.getKey() + "\n" + formatearMonto(entry.getValue()) + "\n" + pctTexto));
             }
 
-            colorIndex++;
+            Rectangle cuadro = new Rectangle(10, 10);
+            cuadro.setFill(javafx.scene.paint.Color.web(color));
+            cuadro.setArcWidth(3);
+            cuadro.setArcHeight(3);
+
+            Label lbl = new Label(entry.getKey() + "  (" + pctTexto + ")");
+            lbl.setStyle("-fx-font-size: 11px; -fx-text-fill: #334155;");
+
+            HBox fila = new HBox(8, cuadro, lbl);
+            fila.setAlignment(Pos.CENTER_LEFT);
+            vboxLeyendaCategorias.getChildren().add(fila);
+            i++;
         }
 
-        // Si hay más de 5 categorías, agregar indicador "Otras"
-        if (categoriasOrdenadas.size() > 5 && vboxLeyendaCategorias != null) {
-            HBox otrasBox = new HBox(8);
-            otrasBox.setAlignment(Pos.CENTER_LEFT);
-
-            Rectangle colorBox = new Rectangle(12, 12);
-            colorBox.setFill(javafx.scene.paint.Color.web("#e2e8f0"));
-            colorBox.setArcWidth(3);
-            colorBox.setArcHeight(3);
-
-            Label lblOtras = new Label("... y " + (categoriasOrdenadas.size() - 5) + " mas");
-            lblOtras.setStyle("-fx-font-size: 10px; -fx-text-fill: #94a3b8; -fx-font-style: italic;");
-
-            otrasBox.getChildren().addAll(colorBox, lblOtras);
-            vboxLeyendaCategorias.getChildren().add(otrasBox);
+        if (ordenadas.isEmpty()) {
+            Label vacio = new Label("Sin gastos registrados");
+            vacio.setStyle("-fx-text-fill: #9ca3af; -fx-font-style: italic;");
+            vboxLeyendaCategorias.getChildren().add(vacio);
         }
     }
 
-    /**
-     * Formatea montos grandes de forma compacta
-     * Ejemplos:
-     * - 1,234.56 -> 1.2K
-     * - 1,234,567.89 -> 1.2M
-     * - 999.99 -> 1.0K
-     */
-    private String formatearMonto(BigDecimal monto) {
-        double valor = monto.doubleValue();
+    /** Total de cada uno de los últimos 12 meses. El mes actual (incompleto) va marcado con *. */
+    private void cargarTendenciaMensual() {
+        chartTendencia.getData().clear();
 
-        if (valor >= 1_000_000) {
-            return String.format("%.1fM", valor / 1_000_000);
-        } else if (valor >= 1_000) {
-            return String.format("%.1fK", valor / 1_000);
-        } else {
-            return String.format("%.0f", valor);
+        XYChart.Series<String, Number> serie = new XYChart.Series<>();
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("MMM yy", CO);
+        YearMonth actual = YearMonth.now();
+
+        double max = 0;
+        for (int i = 11; i >= 0; i--) {
+            YearMonth ym = actual.minusMonths(i);
+            BigDecimal total = gastoService.calcularTotalPorPeriodo(ym.atDay(1), ym.atEndOfMonth());
+            String etiqueta = ym.format(fmt).replace(".", "") + (i == 0 ? "*" : "");
+            serie.getData().add(new XYChart.Data<>(etiqueta, total.doubleValue()));
+            max = Math.max(max, total.doubleValue());
         }
+
+        double tope = max <= 0 ? 100 : max * 1.15;
+        double paso = Math.pow(10, Math.floor(Math.log10(tope / 4)));
+        paso = Math.ceil((tope / 4) / paso) * paso;
+        ejeTendencia.setAutoRanging(false);
+        ejeTendencia.setLowerBound(0);
+        ejeTendencia.setUpperBound(paso * 4);
+        ejeTendencia.setTickUnit(paso);
+        ejeTendencia.setMinorTickVisible(false);
+
+        chartTendencia.getData().add(serie);
+
+        Platform.runLater(() -> {
+            int n = serie.getData().size();
+            int idx = 0;
+            for (XYChart.Data<String, Number> d : serie.getData()) {
+                if (d.getNode() != null) {
+                    String extra = (idx == n - 1) ? "\n(mes en curso)" : "";
+                    Tooltip.install(d.getNode(), new Tooltip(
+                            d.getXValue().replace("*", "") + "\n"
+                            + formatearMonto(BigDecimal.valueOf(d.getYValue().doubleValue())) + extra));
+                }
+                idx++;
+            }
+        });
+    }
+
+    /** Pesos colombianos sin decimales: $ 1.234.567 */
+    private String formatearMonto(BigDecimal monto) {
+        if (monto == null) monto = BigDecimal.ZERO;
+        NumberFormat f = NumberFormat.getIntegerInstance(CO);
+        return "$ " + f.format(monto);
     }
 }

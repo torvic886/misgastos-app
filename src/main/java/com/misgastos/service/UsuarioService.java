@@ -13,6 +13,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import com.misgastos.model.Ventana;
+import java.util.EnumSet;
+import java.util.Objects;
+import java.util.Set;
+import java.util.StringJoiner;
 
 @Service
 @Transactional
@@ -192,6 +197,72 @@ public class UsuarioService {
                 "Usuario eliminado: " + username
             );
         }
+    }
+    
+    // ==================== PERMISOS POR VENTANA ====================
+    /** Guarda las ventanas permitidas de un usuario. ventanas = null: vuelve a los permisos de su rol. */
+    public Usuario guardarPermisos(Long id, Set<Ventana> ventanas, String usuarioModificador) {
+        exigirAdministradorGeneral(usuarioModificador);
+        Usuario usuario = usuarioRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        String textoAntes = usuario.getPermisos();
+        Set<Ventana> antes = Ventana.efectivas(usuario.getRol(), textoAntes);
+
+        String textoNuevo = null;
+        Set<Ventana> despues = Ventana.porDefecto(usuario.getRol());
+        if (ventanas != null) {
+            Set<Ventana> limpio = EnumSet.noneOf(Ventana.class);
+            limpio.addAll(ventanas);
+            // efectivas() aplica la regla de Usuarios: solo el Administrador general la tiene
+            despues = Ventana.efectivas(usuario.getRol(), Ventana.aTexto(limpio));
+            textoNuevo = Ventana.aTexto(despues);
+        }
+
+        if (Objects.equals(textoAntes, textoNuevo)) {
+            log.debug("Permisos sin cambios: usuario id {}", id);
+            return usuario;
+        }
+
+        usuario.setPermisos(textoNuevo);
+        Usuario guardado = usuarioRepository.save(usuario);
+
+        String detalle = "Permisos de " + usuario.getUsername() + ": "
+            + (textoNuevo == null ? "vuelven a los de su rol" : diferenciaPermisos(antes, despues));
+        if (detalle.length() > 500) {
+            detalle = detalle.substring(0, 497) + "...";
+        }
+        log.info("Permisos de un usuario actualizados");
+        log.debug("Permisos actualizados: usuario id {}, {}", id, detalle);
+
+        final String detalleFinal = detalle;
+        usuarioRepository.findByUsername(usuarioModificador).ifPresent(m ->
+            auditoriaService.registrarAccion(m.getId(), "PERMISOS_USUARIO", detalleFinal));
+
+        return guardado;
+    }
+
+    private String diferenciaPermisos(Set<Ventana> antes, Set<Ventana> despues) {
+        StringJoiner agregadas = new StringJoiner(", ");
+        StringJoiner quitadas = new StringJoiner(", ");
+        for (Ventana v : Ventana.values()) {
+            if (despues.contains(v) && !antes.contains(v)) {
+                agregadas.add(v.getEtiqueta());
+            } else if (!despues.contains(v) && antes.contains(v)) {
+                quitadas.add(v.getEtiqueta());
+            }
+        }
+        StringBuilder sb = new StringBuilder();
+        if (agregadas.length() > 0) {
+            sb.append("Agregó: ").append(agregadas).append(". ");
+        }
+        if (quitadas.length() > 0) {
+            sb.append("Quitó: ").append(quitadas).append(". ");
+        }
+        if (sb.length() == 0) {
+            sb.append("Quedan como permisos personalizados, sin cambios de ventanas.");
+        }
+        return sb.toString().trim();
     }
     
     // ==================== AUTENTICACIÓN ====================
