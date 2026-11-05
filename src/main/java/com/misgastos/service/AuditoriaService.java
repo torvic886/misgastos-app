@@ -77,4 +77,9 @@ public class AuditoriaService {
     public List<String> listarAcciones() {
         return auditoriaLogRepository.listarAcciones();
     }
+    
+    /** Anota un cambio a nombre del usuario actual. Nunca rompe la operación. */
+    public void registrarCambio(String accion, String detalles) {
+        registrarCambioGasto(accion, detalles);
+    }
 }

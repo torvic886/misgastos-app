@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.SVGPath?>
+
+<VBox spacing="12" style="-fx-padding: 0;"
+	styleClass="content, gasto-screen" xmlns="http://javafx.com/javafx/17"
+	xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="com.misgastos.controller.GestionMaquinasController">
+
+	<!-- ============ ENCABEZADO ============ -->
+	<HBox spacing="10" alignment="CENTER_LEFT" styleClass="table-card">
+		<HBox spacing="10" alignment="CENTER_LEFT"
+			styleClass="panel-header">
+			<Label styleClass="icon-circle">
+				<graphic>
+					<SVGPath styleClass="icon-white"
+						content="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM7.5 18c-.83 0-1.5-.67-1.5-1.5S6.67 15 7.5 15s1.5.67 1.5 1.5S8.33 18 7.5 18zm0-9C6.67 9 6 8.33 6 7.5S6.67 6 7.5 6 9 6.67 9 7.5 8.33 9 7.5 9zm4.5 4.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4.5 4.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm0-9c-.83 0-1.5-.67-1.5-1.5S15.67 6 16.5 6s1.5.67 1.5 1.5S17.33 9 16.5 9z" />
+				</graphic>
+			</Label>
+			<VBox spacing="2">
+				<Label text="Gestión de Máquinas" styleClass="panel-title" />
+				<Label text="Registra máquinas, dalas de baja o reactívalas"
+					styleClass="panel-subtitle" />
+			</VBox>
+		</HBox>
+		<Region HBox.hgrow="ALWAYS" />
+		<Button text="Ingresar máquina"
+			styleClass="toolbar-button, toolbar-blue" onAction="#handleNueva">
+			<graphic>
+				<SVGPath styleClass="toolbar-icon"
+					content="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+			</graphic>
+		</Button>
+		<Button text="Actualizar"
+			styleClass="toolbar-button, toolbar-neutral"
+			onAction="#handleRefresh">
+			<graphic>
+				<SVGPath styleClass="toolbar-icon"
+					content="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
+			</graphic>
+		</Button>
+	</HBox>
+
+	<!-- ============ BUSCADOR ============ -->
+	<HBox spacing="10" alignment="CENTER_LEFT"
+		styleClass="table-card, filter-bar">
+		<Label text="Buscar:" styleClass="field-caption" />
+		<TextField fx:id="txtBuscar"
+			promptText="Código de la máquina..." prefWidth="260"
+			styleClass="search-field" />
+	</HBox>
+
+	<!-- ============ PESTAÑAS ============ -->
+	<VBox spacing="10" VBox.vgrow="ALWAYS" styleClass="table-card">
+		<TabPane fx:id="tabPane" tabClosingPolicy="UNAVAILABLE"
+			VBox.vgrow="ALWAYS">
+			<tabs>
+				<Tab fx:id="tabActivas" text="Activas">
+					<content>
+						<TableView fx:id="tablaActivas"
+							style="-fx-fixed-cell-size: 34px;">
+							<columnResizePolicy>
+								<TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+							</columnResizePolicy>
+							<columns>
+								<TableColumn fx:id="colActCodigo" text="Código"
+									prefWidth="90" style="-fx-alignment: CENTER;" />
+								<TableColumn fx:id="colActNombre" text="Nombre"
+									prefWidth="130" style="-fx-alignment: CENTER_LEFT;" />
+								<TableColumn fx:id="colActSerial" text="Serial"
+									prefWidth="110" style="-fx-alignment: CENTER;" />
+								<TableColumn fx:id="colActJuego" text="Juego"
+									prefWidth="130" style="-fx-alignment: CENTER_LEFT;" />
+								<TableColumn fx:id="colActDenominacion"
+									text="Denominación" prefWidth="110"
+									style="-fx-alignment: CENTER_RIGHT;" />
+								<TableColumn fx:id="colActFechaAlta"
+									text="Fecha de alta" prefWidth="110"
+									style="-fx-alignment: CENTER;" />
+
+							</columns>
+							<placeholder>
+								<Label text="No hay máquinas activas"
+									styleClass="card-hint" />
+							</placeholder>
+						</TableView>
+					</content>
+				</Tab>
+				<Tab fx:id="tabBajas" text="Bajas">
+					<content>
+						<TableView fx:id="tablaBajas"
+							style="-fx-fixed-cell-size: 34px;">
+							<columnResizePolicy>
+								<TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+							</columnResizePolicy>
+							<columns>
+								<TableColumn fx:id="colBajaCodigo" text="Código"
+									prefWidth="90" style="-fx-alignment: CENTER;" />
+								<TableColumn fx:id="colBajaNombre" text="Nombre"
+									prefWidth="120" style="-fx-alignment: CENTER_LEFT;" />
+								<TableColumn fx:id="colBajaJuego" text="Juego"
+									prefWidth="120" style="-fx-alignment: CENTER_LEFT;" />
+								<TableColumn fx:id="colBajaDenominacion"
+									text="Denominación" prefWidth="110"
+									style="-fx-alignment: CENTER_RIGHT;" />
+								<TableColumn fx:id="colBajaFecha"
+									text="Fecha de baja" prefWidth="110"
+									style="-fx-alignment: CENTER;" />
+								<TableColumn fx:id="colBajaMotivo" text="Motivo"
+									prefWidth="200" style="-fx-alignment: CENTER_LEFT;" />
+
+							</columns>
+							<placeholder>
+								<Label text="No hay máquinas de baja"
+									styleClass="card-hint" />
+							</placeholder>
+						</TableView>
+					</content>
+				</Tab>
+			</tabs>
+		</TabPane>
+	</VBox>
+
+</VBox>

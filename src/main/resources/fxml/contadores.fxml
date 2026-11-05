@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.SVGPath?>
+
+<VBox spacing="12" style="-fx-padding: 0;"
+	styleClass="content, gasto-screen" xmlns="http://javafx.com/javafx/17"
+	xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="com.misgastos.controller.ContadoresController">
+
+	<!-- ============ ENCABEZADO ============ -->
+	<HBox spacing="10" alignment="CENTER_LEFT" styleClass="table-card">
+		<HBox spacing="10" alignment="CENTER_LEFT"
+			styleClass="panel-header">
+			<Label styleClass="icon-circle">
+				<graphic>
+					<SVGPath styleClass="icon-white"
+						content="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z" />
+				</graphic>
+			</Label>
+			<VBox spacing="2">
+				<Label text="Contadores" styleClass="panel-title" />
+				<Label
+					text="Registra las lecturas de cada máquina por periodo"
+					styleClass="panel-subtitle" />
+			</VBox>
+		</HBox>
+	</HBox>
+
+	<HBox spacing="12" VBox.vgrow="ALWAYS">
+
+		<ScrollPane fitToWidth="true" hbarPolicy="NEVER"
+			vbarPolicy="AS_NEEDED" styleClass="form-scroll" prefWidth="221"
+			minWidth="221" maxWidth="221">
+			<VBox spacing="4" styleClass="form-card, contadores-form"
+				style="-fx-padding: 14 12 14 12; -fx-background-color: white; -fx-background-radius: 12;">
+
+				<Label text="N.º de máquina:" styleClass="form-label" />
+				<TextField fx:id="txtCodigo" promptText="Ej: 9033"
+					styleClass="search-field, campo-grande"
+					style="-fx-pref-height: 36px; -fx-font-size: 13px;" />
+				<Label fx:id="lblMaquina" text="" wrapText="true"
+					style="-fx-font-size: 11px; -fx-text-fill: #64748b;" />
+
+				<Label text="Fecha del periodo:"
+					styleClass="form-label, campo-sep" />
+				<DatePicker fx:id="dpFecha" maxWidth="Infinity" styleClass="campo-grande"
+					style="-fx-pref-height: 36px;" />
+
+				<Label text="Periodo:" styleClass="form-label, campo-sep" />
+				<Label fx:id="lblPeriodo" text="—" maxWidth="Infinity"
+					styleClass="periodo-badge"
+					style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1d4ed8; -fx-background-color: #eff6ff; -fx-background-radius: 8; -fx-padding: 8 12;" />
+
+				<Label text="Contador In:" styleClass="form-label, campo-sep" />
+				<TextField fx:id="txtIn" promptText="Ej: 92.480.000"
+					styleClass="search-field, campo-grande"
+					style="-fx-pref-height: 36px; -fx-font-size: 13px;" />
+
+				<Label text="Contador Out:" styleClass="form-label, campo-sep" />
+				<TextField fx:id="txtOut" promptText="Ej: 65.015.100"
+					styleClass="search-field, campo-grande"
+					style="-fx-pref-height: 36px; -fx-font-size: 13px;" />
+
+				<Label text="Prem (Jackpot):"
+					styleClass="form-label, campo-sep" />
+				<TextField fx:id="txtPrem" promptText="Ej: 1.018.443"
+					styleClass="search-field, campo-grande"
+					style="-fx-pref-height: 36px; -fx-font-size: 13px;" />
+
+				<CheckBox fx:id="chkReinicio" text="Reinicio de contador"
+					styleClass="check-reinicio" wrapText="true" maxWidth="Infinity"
+					style="-fx-text-fill: #0f172a; -fx-font-size: 13px; -fx-padding: 12 0 0 0;" />
+
+				<Label fx:id="lblUltima" text="" wrapText="true"
+					style="-fx-font-size: 11px; -fx-text-fill: #64748b; -fx-padding: 6 0 0 0;" />
+
+				<Label fx:id="lblEstado" text="" wrapText="true"
+					managed="false" visible="false" />
+
+				<HBox spacing="6" alignment="CENTER"
+					style="-fx-padding: 10 0 0 0;">
+					<Button text="Limpiar" styleClass="btn-limpiar, btn-form" style="-fx-pref-height: 38px;"
+						onAction="#handleLimpiar" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+					<Button fx:id="btnGuardar" text="Guardar"
+						styleClass="btn-guardar, btn-form" style="-fx-pref-height: 38px;" onAction="#handleGuardar"
+						HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+				</HBox>
+			</VBox>
+		</ScrollPane>
+
+		<!-- ============ HISTORIAL ============ -->
+		<VBox spacing="10" HBox.hgrow="ALWAYS" styleClass="table-card">
+			<HBox spacing="8" alignment="CENTER_LEFT">
+				<Label fx:id="lblHistorial" text="Historial de contadores"
+					styleClass="panel-title" />
+				<Region HBox.hgrow="ALWAYS" />
+				<Label text="Desde:" styleClass="form-label" />
+				<DatePicker fx:id="dpDesde" prefWidth="135" />
+				<Label text="Hasta:" styleClass="form-label" />
+				<DatePicker fx:id="dpHasta" prefWidth="135" />
+			</HBox>
+			<TableView fx:id="tabla" VBox.vgrow="ALWAYS"
+				style="-fx-fixed-cell-size: 34px;">
+				<columnResizePolicy>
+					<TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+				</columnResizePolicy>
+				<columns>
+					<TableColumn fx:id="colFecha" minWidth="85" prefWidth="85" text="Fecha"
+						style="-fx-alignment: CENTER;" />
+					<TableColumn fx:id="colDen" minWidth="40" prefWidth="40" text="Den"
+						style="-fx-alignment: CENTER;" />
+					<TableColumn fx:id="colMaquina" minWidth="65" prefWidth="65" text="Máquina"
+						style="-fx-alignment: CENTER;" />
+					<TableColumn fx:id="colPeriodo" minWidth="55" prefWidth="55" text="Periodo"
+						style="-fx-alignment: CENTER;" />
+					<TableColumn fx:id="colIn" minWidth="95" prefWidth="95" text="Contador_In" />
+					<TableColumn fx:id="colOut" minWidth="95" prefWidth="95" text="Contador_Out" />
+					<TableColumn fx:id="colPrem" minWidth="95" prefWidth="95" text="Prem(Jackpot)" />
+					<TableColumn fx:id="colDif" minWidth="95" prefWidth="95" text="Diferencia" />
+					<TableColumn fx:id="colTotal" minWidth="85" prefWidth="85" text="Total" />
+				</columns>
+				<placeholder>
+					<Label
+						text="Escribe el número de una máquina para ver su historial"
+						styleClass="card-hint" />
+				</placeholder>
+			</TableView>
+
+			<HBox alignment="CENTER_RIGHT" spacing="8">
+				<Label text="Total del rango" styleClass="form-label" />
+				<Label fx:id="lblTotalHistorial" text="0"
+					style="-fx-font-size: 15px; -fx-font-weight: bold;" />
+			</HBox>
+
+		</VBox>
+	</HBox>
+</VBox>

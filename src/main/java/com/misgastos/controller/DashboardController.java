@@ -70,6 +70,9 @@ public class DashboardController {
     @FXML private Button btnPresupuestos;
     @FXML private Button btnCorregirDatos;
     @FXML private Button btnToggleMenu;
+    @FXML private Button btnMaquinas;
+    @FXML private Button btnContadores;
+    @FXML private Label lblGrupoMaquinas;
     @FXML private Label lblGrupoGastos;
     @FXML private Label lblGrupoPersonas;
     @FXML private Label lblGrupoSistema;
@@ -193,6 +196,8 @@ public class DashboardController {
             case CORREGIR_DATOS -> btnCorregirDatos;
             case RESPALDO -> btnRespaldo;
             case DIAGNOSTICO -> btnDiagnostico;
+            case MAQUINAS -> btnMaquinas;
+            case CONTADORES -> btnContadores;
         };
     }
 
@@ -209,7 +214,8 @@ public class DashboardController {
         quitarGrupoSiVacio(lblGrupoGastos, "GASTOS");
         quitarGrupoSiVacio(lblGrupoPersonas, "PERSONAS");
         quitarGrupoSiVacio(lblGrupoSistema, "SISTEMA");
-
+        quitarGrupoSiVacio(lblGrupoMaquinas, "MAQUINAS");
+        
         if (!permisos.contains(Ventana.INICIO)) {
             abrirPrimeraVentanaPermitida();
         }
@@ -236,8 +242,9 @@ public class DashboardController {
         // Respaldo y Diagnóstico quedan fuera: piden su clave y no deben saltar al iniciar sesión
         Ventana[] orden = {
             Ventana.GASTOS, Ventana.INFORMES, Ventana.CONSULTAS, Ventana.CLIENTES, Ventana.BILLETEROS,
-            Ventana.REPORTES_BILLETEROS, Ventana.PRESUPUESTOS, Ventana.REGISTRO_CAMBIOS,
+            Ventana.REPORTES_BILLETEROS, Ventana.MAQUINAS, Ventana.PRESUPUESTOS, Ventana.REGISTRO_CAMBIOS,
             Ventana.CORREGIR_DATOS, Ventana.USUARIOS
+            
         };
         for (Ventana v : orden) {
             if (permisos.contains(v)) {
@@ -262,6 +269,8 @@ public class DashboardController {
             case CLIENTES -> handleClientes();
             case BILLETEROS -> handleBilleteros();
             case REPORTES_BILLETEROS -> handleReportesBilleteros();
+            case MAQUINAS -> handleMaquinas();
+            case CONTADORES -> handleContadores();
             case PRESUPUESTOS -> handlePresupuestos();
             case REGISTRO_CAMBIOS -> handleRegistroCambios();
             case CORREGIR_DATOS -> handleCorregirDatos();
@@ -405,6 +414,9 @@ public class DashboardController {
         if (esUsuarioNormal()) {
             log.debug("Ocultando opciones de administrador");
             sidebar.getChildren().remove(lblGrupoSistema);
+            sidebar.getChildren().remove(lblGrupoMaquinas);
+            sidebar.getChildren().remove(btnMaquinas);
+            sidebar.getChildren().remove(btnContadores);
             sidebar.getChildren().removeIf(node -> {
                 if (node instanceof Button) {
                     Button btn = (Button) node;
@@ -670,6 +682,26 @@ public class DashboardController {
         log.debug("Navegando a Gestión de Billeteros");
         establecerBotonActivo(btnBilleteros);
         cargarVista("/fxml/gestion-billeteros.fxml");
+    }
+    
+    @FXML
+    public void handleMaquinas() {
+        if (sinPermiso(Ventana.MAQUINAS)) {
+            return;
+        }
+        log.debug("Navegando a Gestión de Máquinas");
+        establecerBotonActivo(btnMaquinas);
+        cargarVista("/fxml/gestion-maquinas.fxml");
+    }
+    
+    @FXML
+    public void handleContadores() {
+        if (sinPermiso(Ventana.CONTADORES)) {
+            return;
+        }
+        log.debug("Navegando a Contadores");
+        establecerBotonActivo(btnContadores);
+        cargarVista("/fxml/contadores.fxml");
     }
 
     @FXML

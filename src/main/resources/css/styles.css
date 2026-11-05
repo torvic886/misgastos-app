@@ -1733,6 +1733,52 @@
 .inicio-tabs .tab:selected .tab-label { -fx-text-fill: white; }
 .inicio-tabs > .tab-content-area { -fx-background-color: transparent; }
 
+/* ===== Pegar al final de tu archivo CSS principal ===== */
+
+.contadores-form .campo-grande,
+.contadores-form .date-picker.campo-grande > .text-field {
+    -fx-pref-height: 38px;
+    -fx-min-height: 38px;
+    -fx-font-size: 14px;
+}
+
+.contadores-form .campo-sep { -fx-padding: 10 0 0 0; }
+
+.periodo-badge {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1d4ed8;
+    -fx-background-color: #eff6ff;
+    -fx-background-radius: 8;
+    -fx-padding: 8 12;
+    -fx-pref-height: 38px;
+}
+
+/* Checkbox visible y con estado marcado claro */
+.check-reinicio {
+    -fx-font-size: 13px;
+    -fx-text-fill: #0f172a;
+    -fx-cursor: hand;
+    -fx-padding: 14 0 0 0;
+}
+.check-reinicio .box {
+    -fx-background-color: #94a3b8, white;
+    -fx-background-insets: 0, 1.5;
+    -fx-background-radius: 5, 4;
+    -fx-padding: 5;
+}
+.check-reinicio:hover .box { -fx-background-color: #3b82f6, white; }
+.check-reinicio:selected .box {
+    -fx-background-color: #16a34a;
+    -fx-background-insets: 0;
+}
+.check-reinicio:selected .mark { -fx-background-color: white; }
+
+.btn-form {
+    -fx-pref-height: 40px;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
 /* ===========================
    NOTA SOBRE TRANSICIONES
    =========================== */

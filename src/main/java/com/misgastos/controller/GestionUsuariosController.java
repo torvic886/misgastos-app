@@ -25,7 +25,7 @@ import java.util.Set;
 @Component
 public class GestionUsuariosController {
 
-    private static final String[] GRUPOS = {"GASTOS", "PERSONAS", "SISTEMA"};
+    private static final String[] GRUPOS = {"GASTOS", "PERSONAS", "MAQUINAS", "SISTEMA"};
 
     @FXML private TextField txtUsername;
     @FXML private PasswordField txtPassword;
@@ -161,7 +161,7 @@ public class GestionUsuariosController {
         casillas.clear();
         for (String grupo : GRUPOS) {
             VBox columna = new VBox(6);
-            Label titulo = new Label(grupo);
+            Label titulo = new Label("MAQUINAS".equals(grupo) ? "MÁQUINAS" : grupo);
             titulo.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #64748b;");
             columna.getChildren().add(titulo);
             for (Ventana v : Ventana.values()) {
@@ -185,13 +185,15 @@ public class GestionUsuariosController {
             : "Permisos personalizados");
     }
 
-    /** Usuarios es exclusiva del Administrador general: marcada y bloqueada para él, desmarcada y bloqueada para los demás. */
     private void marcarCasillas(Set<Ventana> ventanas, String rol) {
         boolean general = Rol.ADMIN_GENERAL.name().equals(rol);
         for (Map.Entry<Ventana, CheckBox> e : casillas.entrySet()) {
             CheckBox casilla = e.getValue();
-            if (e.getKey() == Ventana.USUARIOS) {
-                casilla.setSelected(general);
+            if (general) {
+                casilla.setSelected(true);
+                casilla.setDisable(true);
+            } else if (e.getKey() == Ventana.USUARIOS) {
+                casilla.setSelected(false);
                 casilla.setDisable(true);
             } else {
                 casilla.setSelected(ventanas.contains(e.getKey()));

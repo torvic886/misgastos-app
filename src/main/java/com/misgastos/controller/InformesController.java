@@ -10,6 +10,7 @@ import com.misgastos.service.ClienteInformeService.Tipo;
 import com.misgastos.service.GastoService;
 import com.misgastos.service.InformeService;
 import com.misgastos.service.diseno.Diseno;
+import com.misgastos.service.ContadoresInformeService;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
@@ -32,7 +33,9 @@ public class InformesController {
 	// NUEVO: texto que identifica el informe de parqueaderos y bonos
 	private static final String CLAVE_CLIENTES = "Consolidado por cliente";
 	private static final String CLAVE_CAT_PROD = "categoría y producto";
-
+	private static final String CLAVE_CONTADORES = "Contadores por rango";
+	private static final String CLAVE_CASINO = "Casino Victory";
+	
 	@FXML
 	private ComboBox<String> cmbTipoInforme;
 	@FXML
@@ -70,7 +73,10 @@ public class InformesController {
 	private InformeService informeService;
 	@Autowired
 	private ClienteInformeService clienteInformeService; // NUEVO
-
+	@Autowired
+	private ContadoresInformeService contadoresInformeService;
+	
+	
 	private String informeActual = "";
 
 	@FXML
@@ -92,6 +98,8 @@ public class InformesController {
 		cmbTipoInforme.getItems().addAll("📊 Informe General Mensual", 
 				"👥 Consolidado por cliente",
 				"📦 Gastos por categoría y producto",// NUEVO
+				"🎰 Contadores por rango",
+				"🏆 Informe Casino Victory Armenia",
 				"📂 Informe por Categoría",
 				"📦 Informe por Producto", 
 				"⚖️ Informe Comparativo", 
@@ -167,7 +175,21 @@ public class InformesController {
 			String informe = "";
 			boolean esClientes = false;
 
-			if (tipoInforme.contains(CLAVE_CAT_PROD)) {
+			if (tipoInforme.contains(CLAVE_CONTADORES)) {
+			    esClientes = true; // ya pone sus propias cifras abajo
+			    var r = contadoresInformeService.generarContadores(inicio, fin);
+			    informe = contadoresInformeService.textoContadores(inicio, fin);
+			    lblTotalGastos.setText(String.valueOf(r.lecturas()));
+			    lblMontoTotal.setText(Diseno.moneda(r.total()));
+			    lblCategorias.setText(String.valueOf(r.grupos().size()));
+			} else if (tipoInforme.contains(CLAVE_CASINO)) {
+			    esClientes = true;
+			    var r = contadoresInformeService.generarCasino(inicio, fin);
+			    informe = contadoresInformeService.textoCasino(inicio, fin);
+			    lblTotalGastos.setText(String.valueOf(r.filas().size()));
+			    lblMontoTotal.setText(Diseno.moneda(r.total()));
+			    lblCategorias.setText(String.valueOf(r.filas().size()));
+			} else if (tipoInforme.contains(CLAVE_CAT_PROD)) {
 				informe = informeService.generarInformeCategoriaProducto(inicio, fin);
 			} else if (tipoInforme.contains(CLAVE_CLIENTES)) { // NUEVO
 				esClientes = true;
@@ -295,7 +317,11 @@ public class InformesController {
 				LocalDate inicio = dpFechaInicio.getValue();
 				LocalDate fin = dpFechaFin.getValue();
 
-				if (tipoInforme.contains(CLAVE_CAT_PROD)) {
+				if (tipoInforme.contains(CLAVE_CONTADORES)) {
+				    contadoresInformeService.exportarContadoresPDF(inicio, fin, archivo.getAbsolutePath());
+				} else if (tipoInforme.contains(CLAVE_CASINO)) {
+				    contadoresInformeService.exportarCasinoPDF(inicio, fin, archivo.getAbsolutePath());
+				} else if (tipoInforme.contains(CLAVE_CAT_PROD)) {
 					informeService.exportarCategoriaProductoPDF(inicio, fin, archivo.getAbsolutePath());
 				} else if (tipoInforme.contains(CLAVE_CLIENTES)) { // NUEVO
 					exportarClientes(false, archivo, inicio, fin);
@@ -354,7 +380,11 @@ public class InformesController {
 				LocalDate inicio = dpFechaInicio.getValue();
 				LocalDate fin = dpFechaFin.getValue();
 
-				if (tipoInforme.contains(CLAVE_CAT_PROD)) {
+				if (tipoInforme.contains(CLAVE_CONTADORES)) {
+				    contadoresInformeService.exportarContadoresExcel(inicio, fin, archivo.getAbsolutePath());
+				} else if (tipoInforme.contains(CLAVE_CASINO)) {
+				    contadoresInformeService.exportarCasinoExcel(inicio, fin, archivo.getAbsolutePath());
+				} else if (tipoInforme.contains(CLAVE_CAT_PROD)) {
 					informeService.exportarCategoriaProductoExcel(inicio, fin, archivo.getAbsolutePath());
 				} else if (tipoInforme.contains(CLAVE_CLIENTES)) { // NUEVO
 					exportarClientes(true, archivo, inicio, fin);

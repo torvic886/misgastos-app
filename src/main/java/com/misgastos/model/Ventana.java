@@ -15,6 +15,8 @@ public enum Ventana {
     CLIENTES("Clientes", "PERSONAS", "/fxml/clientes.fxml"),
     BILLETEROS("Billeteros", "PERSONAS", "/fxml/gestion-billeteros.fxml"),
     REPORTES_BILLETEROS("Reportes Billeteros", "PERSONAS", "/fxml/reportes-billeteros.fxml"),
+    MAQUINAS("Máquinas", "MAQUINAS", "/fxml/gestion-maquinas.fxml"),
+    CONTADORES("Contadores", "MAQUINAS", "/fxml/contadores.fxml"),
     PRESUPUESTOS("Presupuestos", "SISTEMA", "/fxml/presupuestos.fxml"),
     REGISTRO_CAMBIOS("Registro de cambios", "SISTEMA", "/fxml/registro-cambios.fxml"),
     CORREGIR_DATOS("Corregir datos", "SISTEMA", "/fxml/corregir-datos.fxml"),
@@ -100,19 +102,20 @@ public enum Ventana {
     }
 
     /**
-     * Ventanas efectivas de un usuario. Sin permisos guardados (null) se usan los de su rol.
-     * Usuarios es exclusiva del Administrador general: él siempre la tiene y nadie más.
+     * Ventanas efectivas de un usuario. El Administrador general siempre tiene todas,
+     * incluidas las que se agreguen después, sin importar los permisos guardados.
+     * Sin permisos guardados (null) los demás usan los de su rol.
+     * Usuarios es exclusiva del Administrador general.
      */
     public static Set<Ventana> efectivas(String rol, String permisosGuardados) {
+        if ("ADMIN_GENERAL".equals(rol)) {
+            return EnumSet.allOf(Ventana.class);
+        }
         if (permisosGuardados == null) {
             return porDefecto(rol);
         }
         Set<Ventana> resultado = desdeTexto(permisosGuardados);
-        if ("ADMIN_GENERAL".equals(rol)) {
-            resultado.add(USUARIOS);
-        } else {
-            resultado.remove(USUARIOS);
-        }
+        resultado.remove(USUARIOS);
         return resultado;
     }
 }
