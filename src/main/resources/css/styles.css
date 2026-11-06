@@ -1788,6 +1788,27 @@
     -fx-alignment: CENTER;
     -fx-padding: 8 8;
 }
+
+.dialog-pane {
+    -fx-background-color: white;
+    -fx-font-size: 13px;
+}
+.dialog-pane > .header-panel {
+    -fx-background-color: #f1f5f9;
+    -fx-padding: 14 18 12 18;
+}
+.dialog-pane > .header-panel .label {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #0f172a;
+}
+.dialog-pane > .content.label {
+    -fx-padding: 14 18 8 18;
+    -fx-text-fill: #334155;
+}
+.dialog-pane > .button-bar > .container {
+    -fx-padding: 8 18 14 18;
+}
 /* ===========================
    NOTA SOBRE TRANSICIONES
    =========================== */

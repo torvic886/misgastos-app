@@ -30,65 +30,78 @@
 
 	<HBox spacing="12" VBox.vgrow="ALWAYS">
 
-		<ScrollPane fitToWidth="true" hbarPolicy="NEVER"
-			vbarPolicy="AS_NEEDED" styleClass="form-scroll" prefWidth="221"
-			minWidth="221" maxWidth="221">
-			<VBox spacing="4" styleClass="form-card, contadores-form"
-				style="-fx-padding: 14 12 14 12; -fx-background-color: white; -fx-background-radius: 12;">
+		<VBox prefWidth="240" minWidth="240" maxWidth="240"
+			style="-fx-background-color: white; -fx-background-radius: 12;">
+			<ScrollPane fitToWidth="true" hbarPolicy="NEVER"
+				vbarPolicy="AS_NEEDED" styleClass="form-scroll" VBox.vgrow="ALWAYS">
+				<VBox spacing="1" styleClass="form-card, contadores-form"
+					style="-fx-padding: 6 10 2 10; -fx-background-color: white; -fx-background-radius: 12;">
 
-				<Label text="N.º de máquina:" styleClass="form-label" />
-				<TextField fx:id="txtCodigo" promptText="Ej: 9033"
-					styleClass="search-field, campo-grande"
-					style="-fx-pref-height: 36px; -fx-font-size: 13px;" />
-				<Label fx:id="lblMaquina" text="" wrapText="true"
-					style="-fx-font-size: 11px; -fx-text-fill: #64748b;" />
+					<Label text="N.º de máquina:" styleClass="form-label"
+						style="-fx-font-size: 11px;" />
+					<TextField fx:id="txtCodigo" promptText="Ej: 9033"
+						styleClass="search-field, campo-grande"
+						style="-fx-pref-height: 26px; -fx-min-height: 26px; -fx-font-size: 11px; -fx-padding: 0 6;" />
+					<Label fx:id="lblMaquina" text="" wrapText="true"
+						style="-fx-font-size: 10px; -fx-text-fill: #64748b;" />
 
-				<Label text="Fecha del periodo:"
-					styleClass="form-label, campo-sep" />
-				<DatePicker fx:id="dpFecha" maxWidth="Infinity"
-					styleClass="campo-grande" style="-fx-pref-height: 36px;" />
+					<Label text="Fecha del periodo:" styleClass="form-label"
+						style="-fx-font-size: 11px;" />
+					<DatePicker fx:id="dpFecha" maxWidth="Infinity"
+						styleClass="campo-grande"
+						style="-fx-pref-height: 26px; -fx-min-height: 26px; -fx-font-size: 11px;" />
 
-				<Label text="Periodo:" styleClass="form-label, campo-sep" />
-				<ComboBox fx:id="cmbPeriodo" maxWidth="Infinity"
-					styleClass="campo-grande" style="-fx-pref-height: 38px;" />
+					<Label text="Periodo:" styleClass="form-label"
+						style="-fx-font-size: 11px;" />
+					<ComboBox fx:id="cmbPeriodo" maxWidth="Infinity"
+						styleClass="campo-grande"
+						style="-fx-pref-height: 26px; -fx-min-height: 26px; -fx-font-size: 11px;" />
 
-				<Label text="Contador In:" styleClass="form-label, campo-sep" />
-				<TextField fx:id="txtIn" promptText="Ej: 92.480.000"
-					styleClass="search-field, campo-grande"
-					style="-fx-pref-height: 36px; -fx-font-size: 13px;" />
+					<Label text="Contador In:" styleClass="form-label"
+						style="-fx-font-size: 11px;" />
+					<TextField fx:id="txtIn" promptText="Ej: 92.480.000"
+						styleClass="search-field, campo-grande"
+						style="-fx-pref-height: 26px; -fx-min-height: 26px; -fx-font-size: 11px; -fx-padding: 0 6;" />
 
-				<Label text="Contador Out:" styleClass="form-label, campo-sep" />
-				<TextField fx:id="txtOut" promptText="Ej: 65.015.100"
-					styleClass="search-field, campo-grande"
-					style="-fx-pref-height: 36px; -fx-font-size: 13px;" />
+					<Label text="Contador Out:" styleClass="form-label"
+						style="-fx-font-size: 11px;" />
+					<TextField fx:id="txtOut" promptText="Ej: 65.015.100"
+						styleClass="search-field, campo-grande"
+						style="-fx-pref-height: 26px; -fx-min-height: 26px; -fx-font-size: 11px; -fx-padding: 0 6;" />
 
-				<Label text="Prem (Jackpot):"
-					styleClass="form-label, campo-sep" />
-				<TextField fx:id="txtPrem" promptText="Ej: 1.018.443"
-					styleClass="search-field, campo-grande"
-					style="-fx-pref-height: 36px; -fx-font-size: 13px;" />
+					<Label text="Prem (Jackpot):" styleClass="form-label"
+						style="-fx-font-size: 11px;" />
+					<TextField fx:id="txtPrem" promptText="Ej: 1.018.443"
+						styleClass="search-field, campo-grande"
+						style="-fx-pref-height: 26px; -fx-min-height: 26px; -fx-font-size: 11px; -fx-padding: 0 6;" />
 
-				<CheckBox fx:id="chkReinicio" text="Reinicio de contador"
-					styleClass="check-reinicio" wrapText="true" maxWidth="Infinity"
-					style="-fx-text-fill: #0f172a; -fx-font-size: 13px; -fx-padding: 12 0 0 0;" />
+					<CheckBox fx:id="chkReinicio" text="Reinicio de contador"
+						styleClass="check-reinicio" wrapText="true" maxWidth="Infinity"
+						style="-fx-text-fill: #0f172a; -fx-font-size: 11px; -fx-padding: 4 0 0 0;" />
 
-				<Label fx:id="lblUltima" text="" wrapText="true"
-					style="-fx-font-size: 11px; -fx-text-fill: #64748b; -fx-padding: 6 0 0 0;" />
+					<CheckBox fx:id="chkIntermedia"
+						text="Lectura intermedia (daño/cambio)" wrapText="true"
+						maxWidth="Infinity"
+						style="-fx-text-fill: #0f172a; -fx-font-size: 11px; -fx-padding: 2 0 0 0;" />
 
+					<Label fx:id="lblUltima" text="" wrapText="true"
+						style="-fx-font-size: 10px; -fx-text-fill: #64748b; -fx-padding: 2 0 0 0;" />
+				</VBox>
+			</ScrollPane>
+
+			<VBox spacing="4" style="-fx-padding: 4 10 8 10;">
 				<Label fx:id="lblEstado" text="" wrapText="true"
 					managed="false" visible="false" />
-
-				<HBox spacing="6" alignment="CENTER"
-					style="-fx-padding: 10 0 0 0;">
+				<HBox spacing="6" alignment="CENTER">
 					<Button text="Limpiar" styleClass="btn-limpiar, btn-form"
-						style="-fx-pref-height: 38px;" onAction="#handleLimpiar"
+						style="-fx-pref-height: 30px;" onAction="#handleLimpiar"
 						HBox.hgrow="ALWAYS" maxWidth="Infinity" />
 					<Button fx:id="btnGuardar" text="Guardar"
-						styleClass="btn-guardar, btn-form" style="-fx-pref-height: 38px;"
+						styleClass="btn-guardar, btn-form" style="-fx-pref-height: 30px;"
 						onAction="#handleGuardar" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
 				</HBox>
 			</VBox>
-		</ScrollPane>
+		</VBox>
 
 		<!-- ============ HISTORIAL ============ -->
 		<VBox spacing="10" HBox.hgrow="ALWAYS" styleClass="table-card">
@@ -96,10 +109,31 @@
 				<Label fx:id="lblHistorial" text="Historial de contadores"
 					styleClass="panel-title" />
 				<Region HBox.hgrow="ALWAYS" />
-				<Label text="Desde:" styleClass="form-label" />
-				<DatePicker fx:id="dpDesde" prefWidth="135" />
-				<Label text="Hasta:" styleClass="form-label" />
-				<DatePicker fx:id="dpHasta" prefWidth="135" />
+				<Label text="Desde:" styleClass="form-label"
+					minWidth="-Infinity" />
+				<DatePicker fx:id="dpDesde" prefWidth="140"
+					minWidth="-Infinity" />
+				<Label text="Hasta:" styleClass="form-label"
+					minWidth="-Infinity" />
+				<DatePicker fx:id="dpHasta" prefWidth="140"
+					minWidth="-Infinity" />
+			</HBox>
+			<HBox spacing="6" alignment="CENTER_RIGHT">
+				<Button text="◀ Anterior" onAction="#handleMesAnterior"
+					styleClass="btn-limpiar, btn-form" style="-fx-pref-height: 32px;"
+					minWidth="-Infinity" />
+				<Button text="Este mes" onAction="#handleEsteMes"
+					styleClass="btn-limpiar, btn-form" style="-fx-pref-height: 32px;"
+					minWidth="-Infinity" />
+				<Button text="Siguiente ▶" onAction="#handleMesSiguiente"
+					styleClass="btn-limpiar, btn-form" style="-fx-pref-height: 32px;"
+					minWidth="-Infinity" />
+				<Button text="1ª quincena" onAction="#handleQuincena1"
+					styleClass="btn-limpiar, btn-form" style="-fx-pref-height: 32px;"
+					minWidth="-Infinity" />
+				<Button text="2ª quincena" onAction="#handleQuincena2"
+					styleClass="btn-limpiar, btn-form" style="-fx-pref-height: 32px;"
+					minWidth="-Infinity" />
 			</HBox>
 			<TableView fx:id="tabla" VBox.vgrow="ALWAYS"
 				style="-fx-fixed-cell-size: 34px;">
