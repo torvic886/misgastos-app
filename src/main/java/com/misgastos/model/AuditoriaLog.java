@@ -19,6 +19,7 @@ public class AuditoriaLog {
     private String accion;
     
     @Column(nullable = false)
+    @Convert(converter = LocalDateTimeConverter.class)
     private LocalDateTime fecha = LocalDateTime.now();
     
     @Column(length = 500)

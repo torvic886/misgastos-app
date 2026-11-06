@@ -103,55 +103,81 @@ public class LecturaService {
 
 	// ==================== EDITAR Y ANULAR ====================
 
-	public Lectura editar(Long id, LocalDate fecha, Long in, Long out, Long prem) {
-		Lectura l = obtener(id);
-		if (l.isAnulada()) {
-			throw new RuntimeException("La lectura está anulada y no se puede editar");
-		}
-		validar(fecha, in, out, prem);
+    public Lectura editar(Long id, LocalDate fecha, Long in, Long out, Long prem) {
+        return editar(id, fecha, in, out, prem, null);
+}
 
-		List<Lectura> validas = validas(l.getMaquina().getId());
-		int pos = indiceDe(validas, id);
-		Lectura previa = pos > 0 ? validas.get(pos - 1) : null;
-		Lectura sig = pos >= 0 && pos < validas.size() - 1 ? validas.get(pos + 1) : null;
+public Lectura editar(Long id, LocalDate fecha, Long in, Long out, Long prem, Integer nuevoPeriodo) {
+        Lectura l = obtener(id);
+        if (l.isAnulada()) {
+                throw new RuntimeException("La lectura está anulada y no se puede editar");
+        }
+        validar(fecha, in, out, prem);
 
-		// La copia del periodo 3 acompaña a su lectura: se edita junto con ella
-		Lectura copia = (l.getPeriodo() == 3 && sig != null && Lectura.COPIA.equals(sig.getTipo())) ? sig : null;
-		Lectura despues = copia != null ? (pos + 2 < validas.size() ? validas.get(pos + 2) : null) : sig;
+        int periodoAntes = l.getPeriodo();
+        int periodoNuevo = nuevoPeriodo != null ? nuevoPeriodo : periodoAntes;
+        if (periodoNuevo < 1 || periodoNuevo > 3) {
+                throw new RuntimeException("El periodo debe ser 1, 2 o 3");
+        }
+        if (periodoNuevo != periodoAntes && Lectura.COPIA.equals(l.getTipo())) {
+                throw new RuntimeException("La fila base (copia) no admite cambio de periodo");
+        }
 
-		if (previa != null && fecha.isBefore(previa.getFecha())) {
-			throw new RuntimeException(
-					"La fecha no puede ser anterior a la lectura previa (" + previa.getFecha() + ")");
-		}
-		if (despues != null && fecha.isAfter(despues.getFecha())) {
-			throw new RuntimeException(
-					"La fecha no puede ser posterior a la lectura siguiente (" + despues.getFecha() + ")");
-		}
+        List<Lectura> validas = validas(l.getMaquina().getId());
+        int pos = indiceDe(validas, id);
+        Lectura previa = pos > 0 ? validas.get(pos - 1) : null;
+        Lectura sig = pos >= 0 && pos < validas.size() - 1 ? validas.get(pos + 1) : null;
 
-		String antes = descripcion(l);
-		l.setFecha(fecha);
-		l.setContadorIn(in);
-		l.setContadorOut(out);
-		l.setContadorPrem(prem);
-		if (Lectura.COPIA.equals(l.getTipo())) {
-			l.setTipo(Lectura.NORMAL);
-		}
-		lecturaRepository.save(l);
+        // La copia del periodo 3 acompaña a su lectura: se edita junto con ella
+        Lectura copia = (periodoAntes == 3 && sig != null && Lectura.COPIA.equals(sig.getTipo())) ? sig : null;
+        Lectura despues = copia != null ? (pos + 2 < validas.size() ? validas.get(pos + 2) : null) : sig;
 
-		if (copia != null) {
-			copia.setFecha(fecha);
-			copia.setContadorIn(in);
-			copia.setContadorOut(out);
-			copia.setContadorPrem(prem);
-			lecturaRepository.save(copia);
-		}
+        if (previa != null && fecha.isBefore(previa.getFecha())) {
+                throw new RuntimeException(
+                                "La fecha no puede ser anterior a la lectura previa (" + previa.getFecha() + ")");
+        }
+        if (despues != null && fecha.isAfter(despues.getFecha())) {
+                throw new RuntimeException(
+                                "La fecha no puede ser posterior a la lectura siguiente (" + despues.getFecha() + ")");
+        }
 
-		log.info("Lectura editada");
-		log.debug("Lectura editada: id {}", id);
-		auditoriaService.registrarCambio("EDITAR_LECTURA", "Máquina " + l.getMaquina().getCodigo() + ", periodo "
-				+ l.getPeriodo() + ": " + antes + " → " + descripcion(l));
-		return l;
-	}
+        String antes = descripcion(l);
+        l.setFecha(fecha);
+        l.setContadorIn(in);
+        l.setContadorOut(out);
+        l.setContadorPrem(prem);
+        l.setPeriodo(periodoNuevo);
+        if (Lectura.COPIA.equals(l.getTipo())) {
+                l.setTipo(Lectura.NORMAL);
+        }
+        lecturaRepository.save(l);
+
+        if (copia != null) {
+                if (periodoNuevo == 3) {
+                        copia.setFecha(fecha);
+                        copia.setContadorIn(in);
+                        copia.setContadorOut(out);
+                        copia.setContadorPrem(prem);
+                        lecturaRepository.save(copia);
+                } else {
+                        marcarAnulada(copia, "Copia de la lectura cuyo periodo cambió de 3 a " + periodoNuevo);
+                }
+        } else if (periodoNuevo == 3 && periodoAntes != 3) {
+                Lectura nuevaCopia = nueva(l.getMaquina(), fecha, in, out, prem);
+                nuevaCopia.setDenominacion(l.getDenominacion());
+                nuevaCopia.setPeriodo(1);
+                nuevaCopia.setTipo(Lectura.COPIA);
+                lecturaRepository.save(nuevaCopia);
+        }
+
+        String cambioPeriodo = periodoAntes != periodoNuevo
+                        ? " [periodo " + periodoAntes + " → " + periodoNuevo + "]" : "";
+        log.info("Lectura editada");
+        log.debug("Lectura editada: id {}", id);
+        auditoriaService.registrarCambio("EDITAR_LECTURA", "Máquina " + l.getMaquina().getCodigo() + ", periodo "
+                        + l.getPeriodo() + ": " + antes + " → " + descripcion(l) + cambioPeriodo);
+        return l;
+}
 
 	public void anular(Long id, String motivo) {
 		if (motivo == null || motivo.isBlank()) {

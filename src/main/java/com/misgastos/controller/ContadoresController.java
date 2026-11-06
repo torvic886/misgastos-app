@@ -36,10 +36,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.time.YearMonth;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 @Slf4j
 @Component
@@ -214,7 +216,7 @@ public class ContadoresController {
         int dia = dpFecha.getValue().getDayOfMonth();
         cmbPeriodo.setValue(dia <= 8 ? 1 : dia <= 23 ? 2 : 3);
     }
-    
+
     /** Propone la fecha de la próxima lectura según la última: día 16 o último día del mes. */
     private void sugerirFecha(Lectura ultima) {
         int siguiente = lecturaService.siguientePeriodo(maquinaActual.getId());
@@ -241,18 +243,15 @@ public class ContadoresController {
             lblTotalHistorial.setText(dinero(BigDecimal.ZERO));
             return;
         }
-        
-        
 
-        
         // Lecturas de todas las máquinas ya calculadas por el servicio.
         // No recalculamos ningún Total en el controlador.
         List<FilaContador> todas = lecturaService.filas(null, null, null);
-        Map<Long, List<FilaContador>> porMaquina = new java.util.LinkedHashMap<>();
-        Map<Long, FilaContador> basesSinLectura = new java.util.LinkedHashMap<>();
-        Map<Long, Maquina> maquinas = new java.util.LinkedHashMap<>();
-        Map<Long, FilaContador> ultimasPrevias = new java.util.LinkedHashMap<>();
-        
+        Map<Long, List<FilaContador>> porMaquina = new LinkedHashMap<>();
+        Map<Long, FilaContador> basesSinLectura = new LinkedHashMap<>();
+        Map<Long, Maquina> maquinas = new LinkedHashMap<>();
+        Map<Long, FilaContador> ultimasPrevias = new LinkedHashMap<>();
+
         LocalDate inicioMesAnterior = desde == null ? null
                 : desde.withDayOfMonth(1).minusMonths(1);
         for (FilaContador f : todas) {
@@ -263,7 +262,7 @@ public class ContadoresController {
             if (desde != null && l.getFecha().isBefore(desde)) {
                 ultimasPrevias.put(id, f); // la última que se asigne es la más reciente
             }
-            
+
             boolean dentro = (desde == null || !l.getFecha().isBefore(desde))
                     && (hasta == null || !l.getFecha().isAfter(hasta));
             if (dentro && !Lectura.COPIA.equals(l.getTipo())) {
@@ -343,7 +342,7 @@ public class ContadoresController {
             }
         }
     }
-    
+
     private void ponerRango(LocalDate desde, LocalDate hasta) {
         LocalDate actual = dpDesde.getValue();
         // Se asigna en un orden que nunca deja Desde > Hasta, ni siquiera un instante
@@ -492,20 +491,20 @@ public class ContadoresController {
 
         boolean reinicio = chkReinicio.isSelected();
         try {
-        	if (!reinicio && lecturaService.contadorMenor(maquinaActual.getId(), in, out, prem)) {
-        	    Boolean esDano = preguntarReinicio();
-        	    if (esDano == null) {
-        	        return;
-        	    }
-        	    reinicio = true;
-        	    if (esDano) {
-        	        chkIntermedia.setSelected(true);
-        	    }
-        	}
+            if (!reinicio && lecturaService.contadorMenor(maquinaActual.getId(), in, out, prem)) {
+                Boolean esDano = preguntarReinicio();
+                if (esDano == null) {
+                    return;
+                }
+                reinicio = true;
+                if (esDano) {
+                    chkIntermedia.setSelected(true);
+                }
+            }
 
             Long codigo = maquinaActual.getCodigo();
             Lectura l = lecturaService.registrar(maquinaActual.getId(), dpFecha.getValue(), in, out, prem, reinicio,
-            		primeraLectura ? cmbPeriodo.getValue() : null, chkIntermedia.isSelected());
+                    primeraLectura ? cmbPeriodo.getValue() : null, chkIntermedia.isSelected());
 
             // El historial de la máquina se queda visible; solo se limpian los contadores
             txtIn.clear();
@@ -605,6 +604,10 @@ public class ContadoresController {
 
         DatePicker dp = new DatePicker(l.getFecha());
         dp.setMaxWidth(Double.MAX_VALUE);
+
+        ComboBox<Integer> cbPeriodo = new ComboBox<>(FXCollections.observableArrayList(1, 2, 3));
+        cbPeriodo.setValue(l.getPeriodo());
+        cbPeriodo.setMaxWidth(Double.MAX_VALUE);
         TextField tIn = campoNumero(l.getContadorIn());
         TextField tOut = campoNumero(l.getContadorOut());
         TextField tPrem = campoNumero(l.getContadorPrem());
@@ -614,6 +617,7 @@ public class ContadoresController {
 
         VBox contenido = new VBox(8,
                 new Label("Fecha:"), dp,
+                new Label("Periodo:"), cbPeriodo,
                 new Label("Contador In:"), tIn,
                 new Label("Contador Out:"), tOut,
                 new Label("Contador Prem:"), tPrem,
@@ -631,7 +635,7 @@ public class ContadoresController {
             try {
                 confirmarFecha(dp);
                 lecturaService.editar(l.getId(), dp.getValue(),
-                        leerEntero(tIn), leerEntero(tOut), leerEntero(tPrem));
+                        leerEntero(tIn), leerEntero(tOut), leerEntero(tPrem), cbPeriodo.getValue());
             } catch (Exception e) {
                 lblError.setText(e.getMessage());
                 ev.consume();
@@ -708,10 +712,12 @@ public class ContadoresController {
         for (TableColumn<FilaHist, String> c : List.of(colDif, colTotal)) {
             celdaCifra(c);
         }
-        for (TableColumn<FilaHist, String> c : List.of(colDen, colMaquina, colPeriodo)) {
+        for (TableColumn<FilaHist, String> c : List.of(colDen, colMaquina)) {
             celdaCentrada(c);
         }
+        // Doble clic para editar en la misma celda. campo: 0 fecha, 1 In, 2 Out, 3 Prem, 4 periodo
         celdaEditable(colFecha, 0, false);
+        celdaEditable(colPeriodo, 4, false);
         celdaEditable(colIn, 1, true);
         celdaEditable(colOut, 2, true);
         celdaEditable(colPrem, 3, true);
@@ -801,7 +807,7 @@ public class ContadoresController {
      * Texto de una celda: el valor en lecturas y en la base gris, el título en encabezados
      * y vacío en totales y espacios.
      */
-    private SimpleStringProperty dato(FilaHist h, String titulo, java.util.function.Function<FilaContador, String> extractor) {
+    private SimpleStringProperty dato(FilaHist h, String titulo, Function<FilaContador, String> extractor) {
         return switch (h.clase()) {
             case LECTURA, BASE -> new SimpleStringProperty(extractor.apply(h.fila()));
             case ENCABEZADO -> new SimpleStringProperty(titulo);
@@ -827,7 +833,7 @@ public class ContadoresController {
         });
     }
 
-    /** Columnas centradas (Fecha, Den, Máquina, Periodo): los títulos usan el estilo del encabezado. */
+    /** Columnas centradas (Den, Máquina): los títulos usan el estilo del encabezado. */
     private void celdaCentrada(TableColumn<FilaHist, String> col) {
         col.setCellFactory(c -> new TableCell<FilaHist, String>() {
             @Override
@@ -840,7 +846,10 @@ public class ContadoresController {
         });
     }
 
-    /** Celda editable con doble clic: Enter guarda, Esc cancela. campo: 0 fecha, 1 In, 2 Out, 3 Prem. */
+    /**
+     * Celda editable con doble clic: Enter guarda, Esc cancela.
+     * campo: 0 fecha, 1 In, 2 Out, 3 Prem, 4 periodo.
+     */
     private void celdaEditable(TableColumn<FilaHist, String> col, int campo, boolean derecha) {
         col.setCellFactory(c -> new TableCell<FilaHist, String>() {
             private TextField editor;
@@ -863,11 +872,14 @@ public class ContadoresController {
                 Lectura l = fila.lectura();
                 String inicial = campo == 0
                         ? l.getFecha().format(formatoFecha)
+                        : campo == 4 ? String.valueOf(l.getPeriodo())
                         : miles.format(campo == 1 ? l.getContadorIn()
                                 : campo == 2 ? l.getContadorOut() : l.getContadorPrem());
 
                 TextField campoEdicion = new TextField(inicial);
-                if (campo != 0) {
+                if (campo == 4) {
+                    soloDigitos(campoEdicion, 1);
+                } else if (campo != 0) {
                     aplicarFormatoMiles(campoEdicion, 15);
                 }
                 campoEdicion.setStyle("-fx-pref-height: 28px; -fx-font-size: 12px; -fx-padding: 2 6;"
@@ -930,7 +942,7 @@ public class ContadoresController {
         });
     }
 
-    /** Guarda el cambio de una celda con la misma regla y auditoría de "Editar lectura". */
+    /** Guarda el cambio de una celda con la misma regla y auditoría de "Editar lectura". campo 4 = periodo. */
     private void guardarCelda(FilaContador fila, int campo, String texto) {
         Lectura l = fila.lectura();
         try {
@@ -938,6 +950,7 @@ public class ContadoresController {
             Long in = l.getContadorIn();
             Long out = l.getContadorOut();
             Long prem = l.getContadorPrem();
+            Integer periodo = null; // null = no cambia el periodo
 
             if (campo == 0) {
                 fecha = LocalDate.parse(texto.trim(),
@@ -945,11 +958,14 @@ public class ContadoresController {
             } else {
                 String limpio = texto == null ? "" : texto.replaceAll("[^0-9]", "");
                 if (limpio.isEmpty()) {
-                    mostrarEstado("El contador no puede quedar vacío", true);
+                    mostrarEstado(campo == 4 ? "El periodo no puede quedar vacío"
+                            : "El contador no puede quedar vacío", true);
                     return;
                 }
                 long valor = Long.parseLong(limpio);
-                if (campo == 1) {
+                if (campo == 4) {
+                    periodo = (int) valor;
+                } else if (campo == 1) {
                     in = valor;
                 } else if (campo == 2) {
                     out = valor;
@@ -958,7 +974,7 @@ public class ContadoresController {
                 }
             }
 
-            lecturaService.editar(l.getId(), fecha, in, out, prem);
+            lecturaService.editar(l.getId(), fecha, in, out, prem, periodo);
             actualizarPanel();
             mostrarEstado("Lectura editada", false);
         } catch (DateTimeParseException e) {
