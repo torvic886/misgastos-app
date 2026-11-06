@@ -23,6 +23,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.util.Set;
+import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -43,7 +46,7 @@ public class ContadoresController {
     @FXML private TextField txtCodigo;
     @FXML private Label lblMaquina;
     @FXML private DatePicker dpFecha;
-    @FXML private Label lblPeriodo;
+    @FXML private ComboBox<Integer> cmbPeriodo;
     @FXML private TextField txtIn;
     @FXML private TextField txtOut;
     @FXML private TextField txtPrem;
@@ -64,7 +67,7 @@ public class ContadoresController {
     @FXML private TableColumn<FilaHist, String> colDif;
     @FXML private TableColumn<FilaHist, String> colTotal;
     
-    private enum Clase { LECTURA, TOTAL, ESPACIO }
+    private enum Clase { LECTURA, ENCABEZADO, TOTAL, ESPACIO }
 
     /** Una fila de la tabla: lectura, total de la máquina o espacio entre máquinas. */
     private record FilaHist(Clase clase, FilaContador fila, Maquina maquina, BigDecimal total) { }
@@ -80,11 +83,21 @@ public class ContadoresController {
 
     private final Map<Long, Maquina> activasPorCodigo = new HashMap<>();
     private Maquina maquinaActual;
+    private boolean primeraLectura;
 
     private final DecimalFormat miles;
     private final DecimalFormat pesos;
     private final DateTimeFormatter formatoFecha = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
+    /** Títulos de la fila de encabezado entre máquinas (todas las columnas). */
+    private static final Set<String> TITULOS = Set.of("Fecha", "Den", "Máquina", "Periodo",
+            "Contador_In", "Contador_Out", "Prem(Jackpot)", "Diferencia", "Total");
+
+    /** Mismo tamaño y peso que el encabezado de la tabla (11 px, negrita). */
+    private static final String ESTILO_TITULO =
+            "-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;"
+            + " -fx-alignment: CENTER; -fx-padding: 8 2 8 2;";
+    
     public ContadoresController() {
         DecimalFormatSymbols s = new DecimalFormatSymbols(new Locale("es", "CO"));
         s.setGroupingSeparator('.');
@@ -97,6 +110,9 @@ public class ContadoresController {
     public void initialize() {
         log.debug("Inicializando pantalla de contadores");
         dpFecha.setValue(LocalDate.now());
+        cmbPeriodo.getItems().addAll(1, 2, 3);
+        cmbPeriodo.setDisable(true);
+        dpFecha.valueProperty().addListener((obs, a, n) -> sugerirPeriodo());
 
         soloDigitos(txtCodigo, 12);
         aplicarFormatoMiles(txtIn, 15);
@@ -159,29 +175,21 @@ public class ContadoresController {
         ocultarEstado();
         maquinaActual = m;
         lblMaquina.setText(m.getNombre() + " · " + m.getJuego() + " · Den. " + pesos.format(m.getDenominacion().longValue()));
-        boolean sinLecturas = actualizarPanel();
-
-        // Primera lectura: se proponen los contadores base de la máquina
-        if (sinLecturas && txtIn.getText().isEmpty() && txtOut.getText().isEmpty()) {
-            if (m.getContadorIn() != null) {
-                txtIn.setText(miles.format(m.getContadorIn()));
-            }
-            if (m.getContadorOut() != null) {
-                txtOut.setText(miles.format(m.getContadorOut()));
-            }
-        }
+        actualizarPanel();
     }
 
-    /** Recarga periodo y última lectura de la máquina actual, y la tabla. Devuelve true si no tiene lecturas. */
     private boolean actualizarPanel() {
         boolean sinLecturas = false;
         if (maquinaActual != null) {
             List<FilaContador> propias = lecturaService.filas(maquinaActual.getId(), null, null);
-            lblPeriodo.setText("Periodo " + lecturaService.siguientePeriodo(maquinaActual.getId()));
+            primeraLectura = propias.isEmpty();
+            cmbPeriodo.setDisable(!primeraLectura);
             if (propias.isEmpty()) {
-                lblUltima.setText("Sin lecturas: esta será la primera (periodo 1)");
+                lblUltima.setText("Sin lecturas: esta será la primera. Escoja su periodo");
                 sinLecturas = true;
+                sugerirPeriodo();
             } else {
+                cmbPeriodo.setValue(lecturaService.siguientePeriodo(maquinaActual.getId()));
                 Lectura u = propias.get(propias.size() - 1).lectura();
                 lblUltima.setText("Última lectura: " + u.getFecha().format(formatoFecha) + " · periodo "
                         + u.getPeriodo() + " · In " + miles.format(u.getContadorIn())
@@ -191,6 +199,15 @@ public class ContadoresController {
         }
         refrescarTabla();
         return sinLecturas;
+    }
+    
+    /** En la primera lectura de la máquina se sugiere el periodo según el día; se puede cambiar. */
+    private void sugerirPeriodo() {
+        if (maquinaActual == null || !primeraLectura || dpFecha.getValue() == null) {
+            return;
+        }
+        int dia = dpFecha.getValue().getDayOfMonth();
+        cmbPeriodo.setValue(dia <= 8 ? 1 : dia <= 23 ? 2 : 3);
     }
     
     /** Todas las máquinas del rango de fechas, en bloques: lecturas, total y un espacio. */
@@ -206,8 +223,13 @@ public class ContadoresController {
 
         List<FilaHist> filas = new ArrayList<>();
         BigDecimal granTotal = BigDecimal.ZERO;
+        boolean primera = true;
         for (List<FilaContador> grupo : porMaquina.values()) {
             Maquina m = grupo.get(0).lectura().getMaquina();
+            if (!primera) {
+                filas.add(new FilaHist(Clase.ENCABEZADO, null, m, null));
+            }
+            primera = false;
             BigDecimal suma = BigDecimal.ZERO;
             for (FilaContador f : grupo) {
                 filas.add(new FilaHist(Clase.LECTURA, f, m, null));
@@ -241,7 +263,9 @@ public class ContadoresController {
     private void limpiarMaquina() {
         maquinaActual = null;
         lblMaquina.setText("");
-        lblPeriodo.setText("—");
+        primeraLectura = false;
+        cmbPeriodo.setValue(null);
+        cmbPeriodo.setDisable(true);
         lblUltima.setText("");
         txtIn.clear();
         txtOut.clear();
@@ -291,6 +315,12 @@ public class ContadoresController {
             txtPrem.requestFocus();
             return;
         }
+        
+        if (primeraLectura && cmbPeriodo.getValue() == null) {
+            mostrarEstado("Escoja el periodo de la primera lectura", true);
+            cmbPeriodo.requestFocus();
+            return;
+        }
 
         boolean reinicio = chkReinicio.isSelected();
         try {
@@ -302,7 +332,8 @@ public class ContadoresController {
             }
 
             Long codigo = maquinaActual.getCodigo();
-            Lectura l = lecturaService.registrar(maquinaActual.getId(), dpFecha.getValue(), in, out, prem, reinicio);
+            Lectura l = lecturaService.registrar(maquinaActual.getId(), dpFecha.getValue(), in, out, prem, reinicio,
+                    primeraLectura ? cmbPeriodo.getValue() : null);
 
             // El historial de la máquina se queda visible; solo se limpian los contadores
             txtIn.clear();
@@ -425,35 +456,42 @@ public class ContadoresController {
     // ==================== TABLA ====================
 
     private void configurarTabla() {
-        colFecha.setCellValueFactory(c -> dato(c.getValue(), f -> f.lectura().getFecha().format(formatoFecha)));
-        colDen.setCellValueFactory(c -> dato(c.getValue(), f ->
-                f.lectura().getDenominacion().stripTrailingZeros().toPlainString()));
-        colMaquina.setCellValueFactory(c -> dato(c.getValue(), f ->
-                String.valueOf(f.lectura().getMaquina().getCodigo())));
-        colPeriodo.setCellValueFactory(c -> dato(c.getValue(), f -> String.valueOf(f.lectura().getPeriodo())));
-        colIn.setCellValueFactory(c -> dato(c.getValue(), f -> pesos.format(f.lectura().getContadorIn())));
-        colOut.setCellValueFactory(c -> dato(c.getValue(), f -> pesos.format(f.lectura().getContadorOut())));
-        colPrem.setCellValueFactory(c -> dato(c.getValue(), f -> pesos.format(f.lectura().getContadorPrem())));
-        colDif.setCellValueFactory(c -> {
-            FilaHist h = c.getValue();
-            if (h.clase() == Clase.TOTAL) {
-                return new SimpleStringProperty("Total " + h.maquina().getCodigo());
-            }
-            return dato(h, f -> dinero(f.diferencia()));
-        });
-        colTotal.setCellValueFactory(c -> {
-            FilaHist h = c.getValue();
-            if (h.clase() == Clase.TOTAL) {
-                return new SimpleStringProperty(dinero(h.total()));
-            }
-            return dato(h, f -> f.total() == null && Lectura.REINICIO.equals(f.lectura().getTipo())
-                    ? "Reinicio" : dinero(f.total()));
-        });
+    	colFecha.setCellValueFactory(c -> dato(c.getValue(), "Fecha", f -> f.lectura().getFecha().format(formatoFecha)));
+    	colDen.setCellValueFactory(c -> dato(c.getValue(), "Den", f ->
+    	        f.lectura().getDenominacion().stripTrailingZeros().toPlainString()));
+    	colMaquina.setCellValueFactory(c -> dato(c.getValue(), "Máquina", f ->
+    	        String.valueOf(f.lectura().getMaquina().getCodigo())));
+    	colPeriodo.setCellValueFactory(c -> dato(c.getValue(), "Periodo", f -> String.valueOf(f.lectura().getPeriodo())));
+    	colIn.setCellValueFactory(c -> dato(c.getValue(), "Contador_In", f -> pesos.format(f.lectura().getContadorIn())));
+    	colOut.setCellValueFactory(c -> dato(c.getValue(), "Contador_Out", f -> pesos.format(f.lectura().getContadorOut())));
+    	colPrem.setCellValueFactory(c -> dato(c.getValue(), "Prem(Jackpot)", f -> pesos.format(f.lectura().getContadorPrem())));
+    	colDif.setCellValueFactory(c -> {
+    	    FilaHist h = c.getValue();
+    	    if (h.clase() == Clase.TOTAL) {
+    	        return new SimpleStringProperty("Total " + h.maquina().getCodigo());
+    	    }
+    	    return dato(h, "Diferencia", f -> dinero(f.diferencia()));
+    	});
+    	colTotal.setCellValueFactory(c -> {
+    	    FilaHist h = c.getValue();
+    	    if (h.clase() == Clase.TOTAL) {
+    	        return new SimpleStringProperty(dinero(h.total()));
+    	    }
+    	    return dato(h, "Total", f -> f.total() == null && Lectura.REINICIO.equals(f.lectura().getTipo())
+    	            ? "Reinicio" : dinero(f.total()));
+    	});
         ajustarColumnas();
         
-        for (TableColumn<FilaHist, String> c : List.of(colIn, colOut, colPrem, colDif, colTotal)) {
+        for (TableColumn<FilaHist, String> c : List.of(colDif, colTotal)) {
             celdaCifra(c);
         }
+        for (TableColumn<FilaHist, String> c : List.of(colDen, colMaquina, colPeriodo)) {
+            celdaCentrada(c);
+        }
+        celdaEditable(colFecha, 0, false);
+        celdaEditable(colIn, 1, true);
+        celdaEditable(colOut, 2, true);
+        celdaEditable(colPrem, 3, true);
 
         tabla.setRowFactory(tv -> {
             TableRow<FilaHist> fila = new TableRow<>() {
@@ -464,6 +502,8 @@ public class ContadoresController {
                         setStyle("");
                     } else if (h.clase() == Clase.TOTAL) {
                         setStyle("-fx-background-color: #fef9c3; -fx-font-weight: bold;");
+                    } else if (h.clase() == Clase.ENCABEZADO) {
+                        setStyle("-fx-background-color: #e8eef9; -fx-font-weight: bold;");
                     } else {
                         setStyle("-fx-background-color: transparent;");
                     }
@@ -528,12 +568,15 @@ public class ContadoresController {
         col.prefWidthProperty().bind(tabla.widthProperty().subtract(22).multiply(fraccion));
     }
 
-    /** Texto de una celda de lectura; en totales y espacios queda vacío. */
-    private SimpleStringProperty dato(FilaHist h, java.util.function.Function<FilaContador, String> extractor) {
-        return new SimpleStringProperty(h.clase() == Clase.LECTURA ? extractor.apply(h.fila()) : "");
+    /** Texto de una celda: el valor en lecturas, el título en encabezados y vacío en totales y espacios. */
+    private SimpleStringProperty dato(FilaHist h, String titulo, java.util.function.Function<FilaContador, String> extractor) {
+        return switch (h.clase()) {
+            case LECTURA -> new SimpleStringProperty(extractor.apply(h.fila()));
+            case ENCABEZADO -> new SimpleStringProperty(titulo);
+            default -> new SimpleStringProperty("");
+        };
     }
 
-    /** Cifras a la derecha con su margen; los negativos (utilidad en contra) se ven en rojo. */
     private void celdaCifra(TableColumn<FilaHist, String> col) {
         col.setCellFactory(c -> new TableCell<FilaHist, String>() {
             @Override
@@ -541,10 +584,157 @@ public class ContadoresController {
                 super.updateItem(item, empty);
                 setText(empty ? null : item);
                 boolean negativo = !empty && item != null && item.startsWith("-");
-                setStyle("-fx-alignment: CENTER_RIGHT; -fx-padding: 8 10 8 6;"
-                        + (negativo ? " -fx-text-fill: #dc2626;" : ""));
+                boolean titulo = !empty && item != null && TITULOS.contains(item);
+                if (titulo) {
+                    setStyle(ESTILO_TITULO);
+                } else {
+                    setStyle("-fx-alignment: CENTER_RIGHT; -fx-padding: 8 10 8 6;"
+                            + (negativo ? " -fx-text-fill: #dc2626;" : ""));
+                }
             }
         });
+    }
+
+    /** Columnas centradas (Fecha, Den, Máquina, Periodo): los títulos usan el estilo del encabezado. */
+    private void celdaCentrada(TableColumn<FilaHist, String> col) {
+        col.setCellFactory(c -> new TableCell<FilaHist, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty ? null : item);
+                boolean titulo = !empty && item != null && TITULOS.contains(item);
+                setStyle(titulo ? ESTILO_TITULO : "-fx-alignment: CENTER;");
+            }
+        });
+    }
+    
+    /** Celda editable con doble clic: Enter guarda, Esc cancela. campo: 0 fecha, 1 In, 2 Out, 3 Prem. */
+    private void celdaEditable(TableColumn<FilaHist, String> col, int campo, boolean derecha) {
+        col.setCellFactory(c -> new TableCell<FilaHist, String>() {
+            private TextField editor;
+
+            {
+                setOnMouseClicked(e -> {
+                    if (e.getClickCount() == 2 && !isEmpty() && esLectura()) {
+                        iniciarEdicion();
+                    }
+                });
+            }
+
+            private boolean esLectura() {
+                return getTableRow() != null && getTableRow().getItem() != null
+                        && getTableRow().getItem().clase() == Clase.LECTURA;
+            }
+
+            private void iniciarEdicion() {
+                FilaContador fila = getTableRow().getItem().fila();
+                Lectura l = fila.lectura();
+                String inicial = campo == 0
+                        ? l.getFecha().format(formatoFecha)
+                        : miles.format(campo == 1 ? l.getContadorIn()
+                                : campo == 2 ? l.getContadorOut() : l.getContadorPrem());
+
+                TextField campoEdicion = new TextField(inicial);
+                if (campo != 0) {
+                    aplicarFormatoMiles(campoEdicion, 15);
+                }
+                campoEdicion.setStyle("-fx-pref-height: 28px; -fx-font-size: 12px; -fx-padding: 2 6;"
+                        + (derecha ? " -fx-alignment: CENTER_RIGHT;" : " -fx-alignment: CENTER;"));
+                editor = campoEdicion;
+
+                setText(null);
+                setGraphic(campoEdicion);
+                setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+                Platform.runLater(() -> {
+                    campoEdicion.requestFocus();
+                    campoEdicion.selectAll();
+                });
+
+                campoEdicion.setOnKeyPressed(ev -> {
+                    if (ev.getCode() == KeyCode.ENTER) {
+                        String texto = campoEdicion.getText();
+                        terminar();
+                        guardarCelda(fila, campo, texto);
+                        ev.consume();
+                    } else if (ev.getCode() == KeyCode.ESCAPE) {
+                        terminar();
+                        ev.consume();
+                    }
+                });
+                campoEdicion.focusedProperty().addListener((obs, antes, enfocado) -> {
+                    if (!enfocado && editor == campoEdicion) {
+                        terminar();
+                    }
+                });
+            }
+
+            private void terminar() {
+                if (editor == null) {
+                    return;
+                }
+                editor = null;
+                setGraphic(null);
+                setContentDisplay(ContentDisplay.TEXT_ONLY);
+                setText(getItem());
+            }
+
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                editor = null;
+                setGraphic(null);
+                setContentDisplay(ContentDisplay.TEXT_ONLY);
+                setText(empty ? null : item);
+                boolean titulo = !empty && item != null && TITULOS.contains(item);
+                boolean negativo = !empty && item != null && item.startsWith("-");
+                if (titulo) {
+                    setStyle(ESTILO_TITULO);
+                } else {
+                    setStyle((derecha ? "-fx-alignment: CENTER_RIGHT; -fx-padding: 8 10 8 6;"
+                            : "-fx-alignment: CENTER;")
+                            + (negativo ? " -fx-text-fill: #dc2626;" : ""));
+                }
+            }
+        });
+    }
+
+    /** Guarda el cambio de una celda con la misma regla y auditoría de "Editar lectura". */
+    private void guardarCelda(FilaContador fila, int campo, String texto) {
+        Lectura l = fila.lectura();
+        try {
+            LocalDate fecha = l.getFecha();
+            Long in = l.getContadorIn();
+            Long out = l.getContadorOut();
+            Long prem = l.getContadorPrem();
+
+            if (campo == 0) {
+                fecha = LocalDate.parse(texto.trim(),
+                        DateTimeFormatter.ofPattern("d/M/uuuu").withResolverStyle(ResolverStyle.STRICT));
+            } else {
+                String limpio = texto == null ? "" : texto.replaceAll("[^0-9]", "");
+                if (limpio.isEmpty()) {
+                    mostrarEstado("El contador no puede quedar vacío", true);
+                    return;
+                }
+                long valor = Long.parseLong(limpio);
+                if (campo == 1) {
+                    in = valor;
+                } else if (campo == 2) {
+                    out = valor;
+                } else {
+                    prem = valor;
+                }
+            }
+
+            lecturaService.editar(l.getId(), fecha, in, out, prem);
+            actualizarPanel();
+            mostrarEstado("Lectura editada", false);
+        } catch (DateTimeParseException e) {
+            mostrarEstado("Fecha inválida: escríbala como dd/mm/aaaa", true);
+        } catch (Exception e) {
+            log.error("No se pudo editar la lectura {}", l.getId(), e);
+            mostrarEstado(e.getMessage(), true);
+        }
     }
 
     private String tipoLegible(String tipo) {

@@ -48,6 +48,12 @@ public class LecturaService {
     }
 
     public Lectura registrar(Long maquinaId, LocalDate fecha, Long in, Long out, Long prem, boolean reinicio) {
+        return registrar(maquinaId, fecha, in, out, prem, reinicio, null);
+    }
+
+    /** periodoInicial solo se usa en la primera lectura de la máquina (null = periodo 1). */
+    public Lectura registrar(Long maquinaId, LocalDate fecha, Long in, Long out, Long prem,
+                             boolean reinicio, Integer periodoInicial) {
         Maquina m = maquinaRepository.findById(maquinaId)
                 .orElseThrow(() -> new RuntimeException("Máquina no encontrada"));
         if (!m.isActiva()) {
@@ -65,9 +71,15 @@ public class LecturaService {
                     + "Si la máquina se reinició, registra un reinicio.");
         }
 
+        int periodo = ant != null ? ant.getPeriodo() % 3 + 1 : (periodoInicial != null ? periodoInicial : 1);
+        if (periodo < 1 || periodo > 3) {
+            throw new RuntimeException("El periodo debe ser 1, 2 o 3");
+        }
+
         Lectura l = nueva(m, fecha, in, out, prem);
-        l.setPeriodo(ant == null ? 1 : ant.getPeriodo() % 3 + 1);
-        l.setTipo(ant == null ? Lectura.INICIAL : reinicio ? Lectura.REINICIO : Lectura.NORMAL);
+        l.setPeriodo(periodo);
+        // La primera lectura es normal: se compara contra la base de la máquina
+        l.setTipo(ant != null && reinicio ? Lectura.REINICIO : Lectura.NORMAL);
         lecturaRepository.save(l);
 
         // Al cerrar el periodo 3 comienza un ciclo nuevo: el periodo 1 copia los contadores del 3
@@ -199,13 +211,14 @@ public class LecturaService {
         return lecturaRepository.findByMaquinaIdOrderByFechaAscIdAsc(maquinaId);
     }
 
-    /** Diferencia y total de cada lectura válida, comparada con la válida anterior de la máquina. */
     private List<FilaContador> calcular(Maquina m) {
         List<FilaContador> filas = new ArrayList<>();
         Lectura ant = null;
         for (Lectura l : validas(m.getId())) {
             BigDecimal dif = pesos(l.getContadorIn() - l.getContadorOut() - l.getContadorPrem(), l);
             BigDecimal total = null;
+            // La primera lectura es solo el punto de partida: no lleva Total.
+            // Las demás: su Diferencia menos la Diferencia de la lectura anterior.
             if (ant != null && Lectura.NORMAL.equals(l.getTipo())) {
                 long delta = (l.getContadorIn() - ant.getContadorIn())
                         - (l.getContadorOut() - ant.getContadorOut())
@@ -217,6 +230,7 @@ public class LecturaService {
         }
         return filas;
     }
+
     
     @Transactional(readOnly = true)
     public boolean existenLecturas(Long maquinaId) {

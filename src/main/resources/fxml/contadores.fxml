@@ -45,13 +45,12 @@
 
 				<Label text="Fecha del periodo:"
 					styleClass="form-label, campo-sep" />
-				<DatePicker fx:id="dpFecha" maxWidth="Infinity" styleClass="campo-grande"
-					style="-fx-pref-height: 36px;" />
+				<DatePicker fx:id="dpFecha" maxWidth="Infinity"
+					styleClass="campo-grande" style="-fx-pref-height: 36px;" />
 
 				<Label text="Periodo:" styleClass="form-label, campo-sep" />
-				<Label fx:id="lblPeriodo" text="—" maxWidth="Infinity"
-					styleClass="periodo-badge"
-					style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1d4ed8; -fx-background-color: #eff6ff; -fx-background-radius: 8; -fx-padding: 8 12;" />
+				<ComboBox fx:id="cmbPeriodo" maxWidth="Infinity"
+					styleClass="campo-grande" style="-fx-pref-height: 38px;" />
 
 				<Label text="Contador In:" styleClass="form-label, campo-sep" />
 				<TextField fx:id="txtIn" promptText="Ej: 92.480.000"
@@ -81,11 +80,12 @@
 
 				<HBox spacing="6" alignment="CENTER"
 					style="-fx-padding: 10 0 0 0;">
-					<Button text="Limpiar" styleClass="btn-limpiar, btn-form" style="-fx-pref-height: 38px;"
-						onAction="#handleLimpiar" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
-					<Button fx:id="btnGuardar" text="Guardar"
-						styleClass="btn-guardar, btn-form" style="-fx-pref-height: 38px;" onAction="#handleGuardar"
+					<Button text="Limpiar" styleClass="btn-limpiar, btn-form"
+						style="-fx-pref-height: 38px;" onAction="#handleLimpiar"
 						HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+					<Button fx:id="btnGuardar" text="Guardar"
+						styleClass="btn-guardar, btn-form" style="-fx-pref-height: 38px;"
+						onAction="#handleGuardar" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
 				</HBox>
 			</VBox>
 		</ScrollPane>
@@ -107,19 +107,24 @@
 					<TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
 				</columnResizePolicy>
 				<columns>
-					<TableColumn fx:id="colFecha" minWidth="85" prefWidth="85" text="Fecha"
-						style="-fx-alignment: CENTER;" />
-					<TableColumn fx:id="colDen" minWidth="40" prefWidth="40" text="Den"
-						style="-fx-alignment: CENTER;" />
-					<TableColumn fx:id="colMaquina" minWidth="65" prefWidth="65" text="Máquina"
-						style="-fx-alignment: CENTER;" />
-					<TableColumn fx:id="colPeriodo" minWidth="55" prefWidth="55" text="Periodo"
-						style="-fx-alignment: CENTER;" />
-					<TableColumn fx:id="colIn" minWidth="95" prefWidth="95" text="Contador_In" />
-					<TableColumn fx:id="colOut" minWidth="95" prefWidth="95" text="Contador_Out" />
-					<TableColumn fx:id="colPrem" minWidth="95" prefWidth="95" text="Prem(Jackpot)" />
-					<TableColumn fx:id="colDif" minWidth="95" prefWidth="95" text="Diferencia" />
-					<TableColumn fx:id="colTotal" minWidth="85" prefWidth="85" text="Total" />
+					<TableColumn fx:id="colFecha" minWidth="85"
+						prefWidth="85" text="Fecha" style="-fx-alignment: CENTER;" />
+					<TableColumn fx:id="colDen" minWidth="40"
+						prefWidth="40" text="Den" style="-fx-alignment: CENTER;" />
+					<TableColumn fx:id="colMaquina" minWidth="65"
+						prefWidth="65" text="Máquina" style="-fx-alignment: CENTER;" />
+					<TableColumn fx:id="colPeriodo" minWidth="55"
+						prefWidth="55" text="Periodo" style="-fx-alignment: CENTER;" />
+					<TableColumn fx:id="colIn" minWidth="95" prefWidth="95"
+						text="Contador_In" />
+					<TableColumn fx:id="colOut" minWidth="95"
+						prefWidth="95" text="Contador_Out" />
+					<TableColumn fx:id="colPrem" minWidth="95"
+						prefWidth="95" text="Prem(Jackpot)" />
+					<TableColumn fx:id="colDif" minWidth="95"
+						prefWidth="95" text="Diferencia" />
+					<TableColumn fx:id="colTotal" minWidth="85"
+						prefWidth="85" text="Total" />
 				</columns>
 				<placeholder>
 					<Label

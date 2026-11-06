@@ -127,6 +127,12 @@ public class ModalMaquinaController {
         String limpio = campo.getText() == null ? "" : campo.getText().replaceAll("[^0-9]", "");
         return limpio.isEmpty() ? null : Long.parseLong(limpio);
     }
+    
+    /** Contador vacío = 0 (las máquinas nuevas arrancan en cero). */
+    private Long contadorOCero(TextField campo) {
+        Long valor = leerEntero(campo);
+        return valor == null ? 0L : valor;
+    }
 
     /** Diferencia (In - Out - Prem) en vivo; si es negativa se muestra con signo menos y en rojo. */
     private void actualizarDiferencia() {
@@ -231,9 +237,9 @@ public class ModalMaquinaController {
         try {
             Long codigo = Long.parseLong(txtCodigo.getText().trim());
             BigDecimal denominacion = new BigDecimal(txtDenominacion.getText().replaceAll("[^0-9]", ""));
-            Long contadorIn = leerEntero(txtContadorIn);
-            Long contadorOut = leerEntero(txtContadorOut);
-            Long contadorPrem = leerEntero(txtContadorPrem);
+            Long contadorIn = contadorOCero(txtContadorIn);
+            Long contadorOut = contadorOCero(txtContadorOut);
+            Long contadorPrem = contadorOCero(txtContadorPrem);
 
             if (maquina == null) {
                 maquinaService.crear(codigo, denominacion, txtNombre.getText(), txtSerial.getText(),
@@ -300,24 +306,6 @@ public class ModalMaquinaController {
             mostrarError("Debe ingresar el juego");
             txtJuego.requestFocus();
             return false;
-        }
-
-        if (!txtContadorIn.isDisabled()) {
-            if (leerEntero(txtContadorIn) == null) {
-                mostrarError("Debe ingresar el Contador In");
-                txtContadorIn.requestFocus();
-                return false;
-            }
-            if (leerEntero(txtContadorOut) == null) {
-                mostrarError("Debe ingresar el Contador Out");
-                txtContadorOut.requestFocus();
-                return false;
-            }
-            if (leerEntero(txtContadorPrem) == null) {
-                mostrarError("Debe ingresar el Contador Prem (Jackpot)");
-                txtContadorPrem.requestFocus();
-                return false;
-            }
         }
 
         if (dpFechaAlta.getValue() == null) {

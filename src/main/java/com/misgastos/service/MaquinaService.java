@@ -31,7 +31,7 @@ public class MaquinaService {
     public Maquina crear(Long codigo, BigDecimal denominacion, String nombre, String serial, String juego,
                          Long contadorIn, Long contadorOut, Long contadorPrem, LocalDate fechaAlta) {
         validarDatos(codigo, denominacion, nombre, serial, juego);
-        validarContadores(contadorIn, contadorOut, contadorPrem);
+        
         if (maquinaRepository.existsByCodigo(codigo)) {
             log.warn("No se creó la máquina: el código ya existe");
             log.debug("Código duplicado al crear máquina: {}", codigo);
@@ -44,17 +44,14 @@ public class MaquinaService {
         m.setNombre(nombre.trim());
         m.setSerial(serial.trim());
         m.setJuego(juego.trim());
-        m.setContadorIn(contadorIn);
-        m.setContadorOut(contadorOut);
-        m.setContadorPrem(contadorPrem);
+        m.setContadorIn(contadorIn == null ? 0L : contadorIn);
+        m.setContadorOut(contadorOut == null ? 0L : contadorOut);
+        m.setContadorPrem(contadorPrem == null ? 0L : contadorPrem);
         m.setFechaAlta(fechaAlta != null ? fechaAlta : LocalDate.now());
         m.setActiva(true);
 
         Maquina guardada = maquinaRepository.save(m);
 
-        // Los contadores con los que entra la máquina son su primera lectura (periodo 1)
-        lecturaService.registrar(guardada.getId(), guardada.getFechaAlta(),
-                contadorIn, contadorOut, contadorPrem, false);
 
         log.info("Máquina creada");
         log.debug("Máquina creada: id {}, código {}", guardada.getId(), codigo);

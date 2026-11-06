@@ -1779,6 +1779,15 @@
     -fx-font-size: 13px;
     -fx-font-weight: bold;
 }
+
+/* Fila de títulos repetida entre máquinas (pantalla Contadores) */
+.table-view .table-row-cell.fila-encabezado .table-cell {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #334155;
+    -fx-alignment: CENTER;
+    -fx-padding: 8 8;
+}
 /* ===========================
    NOTA SOBRE TRANSICIONES
    =========================== */
