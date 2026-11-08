@@ -35,7 +35,7 @@ public class ClienteInformeService {
 
     public enum Tipo { TODOS, BONOS, PARQUEADEROS }
 
-    public enum Orden { MAYOR_TOTAL, NOMBRE }
+    public enum Orden { MAYOR_TOTAL, NOMBRE, CEDULA, APELLIDO }
 
     public record FilaCliente(String cedula, String nombre, BigDecimal bonos, BigDecimal parqueaderos) {
         public BigDecimal total() {
@@ -108,6 +108,17 @@ public class ClienteInformeService {
 
         if (orden == Orden.NOMBRE) {
             filas.sort((a, b) -> a.nombre().compareToIgnoreCase(b.nombre()));
+        } else if (orden == Orden.CEDULA) {
+            // Menos dígitos primero, así 9772865 queda antes que 94254603
+            filas.sort((a, b) -> {
+                int c = Integer.compare(a.cedula().length(), b.cedula().length());
+                return c != 0 ? c : a.cedula().compareTo(b.cedula());
+            });
+        } else if (orden == Orden.APELLIDO) {
+            filas.sort((a, b) -> {
+                int c = apellidoDe(a.nombre()).compareToIgnoreCase(apellidoDe(b.nombre()));
+                return c != 0 ? c : a.nombre().compareToIgnoreCase(b.nombre());
+            });
         } else {
             filas.sort((a, b) -> {
                 int c = b.total().compareTo(a.total());
@@ -122,6 +133,18 @@ public class ClienteInformeService {
             totalParqueaderos = totalParqueaderos.add(f.parqueaderos());
         }
         return new Resultado(filas, totalBonos, totalParqueaderos);
+    }
+    
+    /** Apellido para ordenar: con 4 o más palabras las dos últimas; si no, la última. */
+    private static String apellidoDe(String nombre) {
+        if (nombre == null || nombre.isBlank()) {
+            return "";
+        }
+        String[] p = nombre.trim().split("\\s+");
+        if (p.length >= 4) {
+            return p[p.length - 2] + " " + p[p.length - 1];
+        }
+        return p[p.length - 1];
     }
 
     // ==================== EXCEL ====================

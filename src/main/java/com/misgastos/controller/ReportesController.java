@@ -1,6 +1,8 @@
 package com.misgastos.controller;
 
 import com.misgastos.service.ReporteService;
+import com.misgastos.util.SelectorFecha;
+
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.DatePicker;
@@ -29,6 +31,8 @@ public class ReportesController {
     public void initialize() {
         // Configurar fechas por defecto (mes actual)
         LocalDate hoy = LocalDate.now();
+        SelectorFecha.configurar(dpFechaInicio);
+        SelectorFecha.configurar(dpFechaFin);
         dpFechaInicio.setValue(hoy.withDayOfMonth(1));
         dpFechaFin.setValue(hoy);
     }

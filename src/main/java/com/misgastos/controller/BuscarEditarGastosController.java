@@ -27,6 +27,8 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import com.misgastos.util.FiltroExcel;
+import com.misgastos.util.SelectorFecha;
+
 import lombok.extern.slf4j.Slf4j;
 import javafx.beans.property.SimpleStringProperty;
 
@@ -84,7 +86,9 @@ public class BuscarEditarGastosController {
     }
 
     private void configurarFechas() {
-        dpFechaFin.setValue(LocalDate.now());
+    	SelectorFecha.configurar(dpFechaFin);
+    	SelectorFecha.configurar(dpFechaInicio);
+    	dpFechaFin.setValue(LocalDate.now());
         dpFechaInicio.setValue(LocalDate.now().minusMonths(1));
     }
 
@@ -429,7 +433,9 @@ public class BuscarEditarGastosController {
         grid.setVgap(10);
         grid.setPadding(new Insets(20));
 
-        DatePicker dpFecha = new DatePicker(gasto.getFecha());
+        DatePicker dpFecha = new DatePicker();
+        SelectorFecha.configurar(dpFecha);
+        dpFecha.setValue(gasto.getFecha());
         TextField txtHora = new TextField(gasto.getHora().format(DateTimeFormatter.ofPattern("HH:mm")));
 
         ComboBox<Categoria> cmbCategoria = new ComboBox<>();

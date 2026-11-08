@@ -37,6 +37,8 @@ import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import com.misgastos.util.FiltroExcel;
 import com.misgastos.util.GastoDialogos;
+import com.misgastos.util.SelectorFecha;
+
 import javafx.scene.control.SelectionMode;
 import java.util.ArrayList;
 
@@ -121,6 +123,8 @@ public class ListaGastosController {
 
     private void configurarFechasPorDefecto() {
         LocalDate hoy = LocalDate.now();
+        SelectorFecha.configurar(dpFechaInicio);
+        SelectorFecha.configurar(dpFechaFin);
         dpFechaInicio.setValue(hoy.withDayOfMonth(1)); // Primer día del mes actual
         dpFechaFin.setValue(hoy);
     }

@@ -108,6 +108,15 @@
 								<TableColumn fx:id="colBajaFecha"
 									text="Fecha de baja" prefWidth="110"
 									style="-fx-alignment: CENTER;" />
+								<TableColumn fx:id="colBajaIn" text="Contador_In"
+									minWidth="100" prefWidth="110"
+									style="-fx-alignment: CENTER-RIGHT;" />
+								<TableColumn fx:id="colBajaOut" text="Contador_Out"
+									minWidth="100" prefWidth="110"
+									style="-fx-alignment: CENTER-RIGHT;" />
+								<TableColumn fx:id="colBajaPrem"
+									text="Prem(Jackpot)" minWidth="100" prefWidth="110"
+									style="-fx-alignment: CENTER-RIGHT;" />
 								<TableColumn fx:id="colBajaMotivo" text="Motivo"
 									prefWidth="200" style="-fx-alignment: CENTER_LEFT;" />
 

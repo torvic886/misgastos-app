@@ -458,7 +458,7 @@ public class ReporteBilleteroService {
         PdfDocument pdf = new PdfDocument(writer);
         
         // 🆕 CAMBIAR A ORIENTACIÓN HORIZONTAL (Landscape)
-        pdf.setDefaultPageSize(com.itextpdf.kernel.geom.PageSize.A4.rotate());
+        pdf.setDefaultPageSize(com.itextpdf.kernel.geom.PageSize.LETTER.rotate());
         
         Document document = new Document(pdf);
         

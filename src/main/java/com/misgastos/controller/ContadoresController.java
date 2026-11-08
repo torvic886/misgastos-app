@@ -2,6 +2,7 @@ package com.misgastos.controller;
 
 import com.misgastos.model.FilaContador;
 import com.misgastos.model.Lectura;
+import com.misgastos.util.SelectorFecha;
 import com.misgastos.model.Maquina;
 import com.misgastos.service.LecturaService;
 import com.misgastos.service.MaquinaService;
@@ -142,6 +143,9 @@ public class ContadoresController {
         dpHasta.setValue(hoy.withDayOfMonth(hoy.lengthOfMonth()));
         dpDesde.valueProperty().addListener((obs, a, n) -> refrescarTabla());
         dpHasta.valueProperty().addListener((obs, a, n) -> refrescarTabla());
+        SelectorFecha.configurar(dpFecha);
+        SelectorFecha.configurar(dpDesde);
+        SelectorFecha.configurar(dpHasta);
         refrescarTabla();
         // La línea del nombre de la máquina solo ocupa espacio cuando tiene texto
         lblMaquina.managedProperty().bind(lblMaquina.textProperty().isNotEmpty());
@@ -602,7 +606,9 @@ public class ContadoresController {
         dialogo.setTitle("Editar lectura");
         dialogo.setHeaderText("Máquina " + l.getMaquina().getCodigo() + " · periodo " + l.getPeriodo());
 
-        DatePicker dp = new DatePicker(l.getFecha());
+        DatePicker dp = new DatePicker();
+        SelectorFecha.configurar(dp);
+        dp.setValue(l.getFecha());
         dp.setMaxWidth(Double.MAX_VALUE);
 
         ComboBox<Integer> cbPeriodo = new ComboBox<>(FXCollections.observableArrayList(1, 2, 3));

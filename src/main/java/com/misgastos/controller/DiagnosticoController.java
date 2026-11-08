@@ -5,6 +5,8 @@ import com.misgastos.diagnostico.EntradaLog;
 import com.misgastos.diagnostico.FiltroLogs;
 import com.misgastos.diagnostico.LectorLogs;
 import com.misgastos.diagnostico.PaginaLogs;
+import com.misgastos.util.SelectorFecha;
+
 import javafx.animation.PauseTransition;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -107,6 +109,8 @@ public class DiagnosticoController {
     public void initialize() {
         cmbNivel.getItems().setAll(TODOS_NIVELES, "ERROR", "WARN", "INFO", "DEBUG");
         cmbNivel.setValue(TODOS_NIVELES);
+        SelectorFecha.configurar(dpHasta);
+        SelectorFecha.configurar(dpDesde);
         dpHasta.setValue(LocalDate.now());
         dpDesde.setValue(LocalDate.now().minusDays(7));
         lblCarpeta.setText(lector.carpeta().toString());

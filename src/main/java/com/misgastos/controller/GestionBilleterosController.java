@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component;
 
 import com.misgastos.model.Billetero;
 import com.misgastos.service.BilleteroService;
+import com.misgastos.util.SelectorFecha;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
@@ -77,6 +78,8 @@ public class GestionBilleterosController {
     
     @FXML
     public void initialize() {
+    	SelectorFecha.configurar(dpFechaDesde);
+    	SelectorFecha.configurar(dpFechaHasta);
     	log.debug("Inicializando gestión de billeteros");
         configurarTabla();
         configurarBusqueda();

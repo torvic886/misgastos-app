@@ -80,7 +80,9 @@ public class GastoDialogos {
         ButtonType btnGuardar = new ButtonType("💾 Guardar", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(btnGuardar, ButtonType.CANCEL);
 
-        DatePicker dpFecha = new DatePicker(gasto.getFecha());
+        DatePicker dpFecha = new DatePicker();
+        SelectorFecha.configurar(dpFecha);
+        dpFecha.setValue(gasto.getFecha());
 
         Spinner<Integer> spHora = new Spinner<>(0, 23, gasto.getHora().getHour());
         Spinner<Integer> spMin = new Spinner<>(0, 59, gasto.getHora().getMinute());

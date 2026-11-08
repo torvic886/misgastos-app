@@ -2,6 +2,8 @@ package com.misgastos.controller;
 
 import com.misgastos.model.Maquina;
 import com.misgastos.service.MaquinaService;
+import com.misgastos.util.SelectorFecha;
+
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
@@ -60,6 +62,7 @@ public class ModalMaquinaController {
     public void initialize() {
         log.debug("Inicializando modal de máquina");
 
+        SelectorFecha.configurar(dpFechaAlta);
         dpFechaAlta.setValue(LocalDate.now());
 
         // Código: solo dígitos (máximo 12)

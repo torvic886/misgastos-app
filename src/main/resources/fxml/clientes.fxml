@@ -3,6 +3,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.SVGPath?>
+<?import javafx.scene.control.ComboBox?>
 
 <VBox spacing="12" styleClass="content, gasto-screen"
 	xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
@@ -11,7 +12,8 @@
 	<VBox spacing="10" VBox.vgrow="ALWAYS" styleClass="table-card">
 
 		<!-- Encabezado: titulo a la izquierda, contador a la derecha -->
-		<HBox spacing="10" alignment="CENTER_LEFT" styleClass="panel-header">
+		<HBox spacing="10" alignment="CENTER_LEFT"
+			styleClass="panel-header">
 			<Label styleClass="icon-circle">
 				<graphic>
 					<SVGPath styleClass="icon-white"
@@ -53,19 +55,57 @@
 				</graphic>
 			</Button>
 
+			<Button text="Exportar a Excel" onAction="#handleExportar"
+				styleClass="toolbar-button, toolbar-neutral" minWidth="-Infinity">
+				<graphic>
+					<SVGPath styleClass="toolbar-icon"
+						content="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+				</graphic>
+			</Button>
+
 			<Separator orientation="VERTICAL" />
 
-			<TextField fx:id="txtBuscar" promptText="Buscar por cédula o nombre"
-				HBox.hgrow="ALWAYS" maxWidth="Infinity" minWidth="140"
-				styleClass="search-field" />
+			<ComboBox fx:id="cmbOrden" prefWidth="130" />
 
-			<Button text="Eliminar seleccionados" onAction="#handleEliminar"
-				styleClass="toolbar-button, toolbar-red" minWidth="-Infinity">
+			<TextField fx:id="txtBuscar"
+				promptText="Buscar por cédula o nombre" HBox.hgrow="ALWAYS"
+				maxWidth="Infinity" minWidth="140" styleClass="search-field" />
+
+			<Button text="Eliminar seleccionados"
+				onAction="#handleEliminar" styleClass="toolbar-button, toolbar-red"
+				minWidth="-Infinity">
 				<graphic>
 					<SVGPath styleClass="toolbar-icon"
 						content="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
 				</graphic>
 			</Button>
+		</HBox>
+
+		<HBox spacing="8" alignment="CENTER_LEFT">
+			<Label text="Desde:" styleClass="form-label"
+				minWidth="-Infinity" />
+			<DatePicker fx:id="dpDesde" prefWidth="140"
+				minWidth="-Infinity" />
+			<Label text="Hasta:" styleClass="form-label"
+				minWidth="-Infinity" />
+			<DatePicker fx:id="dpHasta" prefWidth="140"
+				minWidth="-Infinity" />
+			<Region HBox.hgrow="ALWAYS" />
+			<Button text="◀ Anterior" onAction="#handleMesAnterior"
+				styleClass="btn-limpiar, btn-form" style="-fx-pref-height: 32px;"
+				minWidth="-Infinity" />
+			<Button text="Este mes" onAction="#handleEsteMes"
+				styleClass="btn-limpiar, btn-form" style="-fx-pref-height: 32px;"
+				minWidth="-Infinity" />
+			<Button text="Siguiente ▶" onAction="#handleMesSiguiente"
+				styleClass="btn-limpiar, btn-form" style="-fx-pref-height: 32px;"
+				minWidth="-Infinity" />
+			<Button text="1ª quincena" onAction="#handleQuincena1"
+				styleClass="btn-limpiar, btn-form" style="-fx-pref-height: 32px;"
+				minWidth="-Infinity" />
+			<Button text="2ª quincena" onAction="#handleQuincena2"
+				styleClass="btn-limpiar, btn-form" style="-fx-pref-height: 32px;"
+				minWidth="-Infinity" />
 		</HBox>
 
 		<TableView fx:id="tablaClientes" VBox.vgrow="ALWAYS"
@@ -74,8 +114,29 @@
 				<TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
 			</columnResizePolicy>
 			<columns>
-				<TableColumn fx:id="colCedula" text="Cédula" prefWidth="160" minWidth="120" />
-				<TableColumn fx:id="colNombre" text="Nombre" prefWidth="420" minWidth="200" />
+				<TableColumn fx:id="colCedula" text="Cédula"
+					prefWidth="150" minWidth="150" maxWidth="150"
+					style="-fx-alignment: CENTER-LEFT;" />
+				<TableColumn fx:id="colNombre" text="Nombre"
+					prefWidth="320" minWidth="200" />
+				<TableColumn fx:id="colTelefono" text="Teléfono"
+					prefWidth="130" minWidth="130" maxWidth="130"
+					style="-fx-alignment: CENTER-LEFT;" />
+				<TableColumn fx:id="colEtiqueta" text="Etiqueta"
+					prefWidth="100" minWidth="100" maxWidth="100"
+					style="-fx-alignment: CENTER-LEFT;" />
+				<TableColumn fx:id="colCumple" text="Cumpleaños"
+					prefWidth="120" minWidth="120" maxWidth="120"
+					style="-fx-alignment: CENTER-LEFT;" />
+				<TableColumn fx:id="colBonos" text="Bonos"
+					prefWidth="80" minWidth="80" maxWidth="80"
+					style="-fx-alignment: CENTER;" />
+				<TableColumn fx:id="colParqueaderos" text="Parqueaderos"
+					prefWidth="115" minWidth="115" maxWidth="115"
+					style="-fx-alignment: CENTER;" />
+				<TableColumn fx:id="colBingos" text="Bingos"
+					prefWidth="80" minWidth="80" maxWidth="80"
+					style="-fx-alignment: CENTER;" />
 			</columns>
 		</TableView>
 

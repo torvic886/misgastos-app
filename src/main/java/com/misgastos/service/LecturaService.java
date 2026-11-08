@@ -320,6 +320,11 @@ public Lectura editar(Long id, LocalDate fecha, Long in, Long out, Long prem, In
 		List<Lectura> validas = validas(maquinaId);
 		return validas.isEmpty() ? null : validas.get(validas.size() - 1);
 	}
+	
+    @Transactional(readOnly = true)
+    public Lectura ultimaLectura(Long maquinaId) {
+        return ultimaValida(maquinaId);
+    }
 
 	private int indiceDe(List<Lectura> lista, Long id) {
 		for (int i = 0; i < lista.size(); i++) {
@@ -344,6 +349,30 @@ public Lectura editar(Long id, LocalDate fecha, Long in, Long out, Long prem, In
 		l.setDenominacion(m.getDenominacion());
 		return l;
 	}
+	
+    /** Lectura inicial de una máquina recién creada: fecha de alta, sus contadores y periodo según el día. */
+    public Lectura registrarInicial(Maquina m) {
+        LocalDate fecha = m.getFechaAlta();
+        int dia = fecha.getDayOfMonth();
+        int periodo = dia <= 8 ? 1 : dia <= 23 ? 2 : 3;
+
+        Lectura l = nueva(m, fecha, m.getContadorIn(), m.getContadorOut(), m.getContadorPrem());
+        l.setPeriodo(periodo);
+        l.setTipo(Lectura.INICIAL);
+        lecturaRepository.save(l);
+
+        if (periodo == 3) {
+            Lectura copia = nueva(m, fecha, m.getContadorIn(), m.getContadorOut(), m.getContadorPrem());
+            copia.setPeriodo(1);
+            copia.setTipo(Lectura.COPIA);
+            lecturaRepository.save(copia);
+        }
+
+        log.debug("Lectura inicial: máquina {}, periodo {}", m.getCodigo(), periodo);
+        auditoriaService.registrarCambio("REGISTRAR_LECTURA",
+                "Máquina " + m.getCodigo() + ", periodo " + periodo + " (INICIAL), fecha " + fecha);
+        return l;
+    }
 
 	private void marcarAnulada(Lectura l, String motivo) {
 		l.setAnulada(true);

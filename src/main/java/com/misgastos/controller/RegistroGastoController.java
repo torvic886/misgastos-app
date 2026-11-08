@@ -20,6 +20,7 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableRow;
 
 import com.misgastos.model.Categoria;
+import com.misgastos.model.Cliente;
 import com.misgastos.model.Gasto;
 import com.misgastos.model.Subcategoria;
 import com.misgastos.service.CategoriaService;
@@ -100,6 +101,8 @@ public class RegistroGastoController {
     // ✅ Flags de control
     private boolean productoNuevoYaConfigurado = false;
     private String ultimoProductoAutocompletado = null;
+    private final ContextMenu menuCedulas = new ContextMenu();
+    private boolean eligiendoCedula = false;
     private boolean formateandoMoneda = false;
     private boolean ignorarCambioTexto = false;
     private boolean actualizandoLista = false;
@@ -128,6 +131,7 @@ public class RegistroGastoController {
         //cargarUltimosGastos();
         configurarValidacionCedula();
         configurarCampoCedula();
+        configurarCedulaAutocomplete();
         configurarFormatoMoneda(); // ✅ NUEVO
 
         Platform.runLater(() -> cmbProducto.requestFocus());
@@ -957,6 +961,51 @@ public class RegistroGastoController {
 
         return count;
     }
+    
+    /** Sugiere clientes mientras se escribe la cédula; al escoger uno se llenan cédula y nombre. */
+    private void configurarCedulaAutocomplete() {
+        txtCedula.textProperty().addListener((obs, antes, nuevo) -> {
+            if (eligiendoCedula) {
+                return;
+            }
+            if (!txtCedula.isVisible() || nuevo == null || nuevo.isBlank()) {
+                menuCedulas.hide();
+                return;
+            }
+            String escrito = nuevo.trim();
+            List<Cliente> clientes = gastoService.buscarClientesPorCedula(escrito);
+            if (clientes.isEmpty()
+                    || (clientes.size() == 1 && clientes.get(0).getCedula().equals(escrito))) {
+                menuCedulas.hide();
+                return;
+            }
+
+            menuCedulas.getItems().clear();
+            for (Cliente c : clientes) {
+                MenuItem item = new MenuItem(c.getCedula() + " - " + c.getNombre());
+                item.setOnAction(e -> {
+                    eligiendoCedula = true;
+                    try {
+                        txtCedula.setText(c.getCedula());
+                    } finally {
+                        eligiendoCedula = false;
+                    }
+                    txtCedula.positionCaret(txtCedula.getText().length());
+                    (txtNombre.isEditable() ? txtNombre : txtCantidad).requestFocus();
+                });
+                menuCedulas.getItems().add(item);
+            }
+            if (!menuCedulas.isShowing()) {
+                menuCedulas.show(txtCedula, javafx.geometry.Side.BOTTOM, 0, 0);
+            }
+        });
+
+        txtCedula.focusedProperty().addListener((obs, antes, enfocado) -> {
+            if (!enfocado) {
+                menuCedulas.hide();
+            }
+        });
+    }
 
     private void configurarCampoCedula() {
         cmbCategoria.valueProperty().addListener((obs, oldVal, newVal) -> {
@@ -980,8 +1029,8 @@ public class RegistroGastoController {
 
             String sub = nombreSubcategoria.toLowerCase();
             mostrar = nombreCategoria.equalsIgnoreCase("Beneficios Clientes")
-                      && (sub.contains("bono") || sub.contains("parqueo")
-                          || sub.contains("parqueadero"));
+                    && (sub.contains("bono") || sub.contains("parqueo")
+                        || sub.contains("parqueadero") || sub.contains("bingo"));
         }
 
         lblCedula.setVisible(mostrar);

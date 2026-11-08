@@ -54,7 +54,7 @@ public class PdfEstilo implements AutoCloseable {
 
     public PdfEstilo(String ruta, String nombreInforme, boolean horizontal) throws IOException {
         this.nombreInforme = nombreInforme;
-        PageSize tamano = horizontal ? PageSize.A4.rotate() : PageSize.A4;
+        PageSize tamano = horizontal ? PageSize.LETTER.rotate() : PageSize.LETTER;
 
         pdf = new PdfDocument(new PdfWriter(ruta));
         pdf.setDefaultPageSize(tamano);

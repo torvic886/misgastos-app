@@ -1,7 +1,11 @@
 package com.misgastos.controller;
 
+import com.misgastos.model.Lectura;
 import com.misgastos.model.Maquina;
+import com.misgastos.service.LecturaService;
 import com.misgastos.service.MaquinaService;
+import com.misgastos.util.SelectorFecha;
+
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
@@ -56,9 +60,17 @@ public class GestionMaquinasController {
     @FXML private TableColumn<Maquina, String> colActJuego;
     @FXML private TableColumn<Maquina, String> colBajaNombre;
     @FXML private TableColumn<Maquina, String> colBajaJuego;
+    @FXML private TableColumn<Maquina, String> colBajaIn;
+    @FXML private TableColumn<Maquina, String> colBajaOut;
+    @FXML private TableColumn<Maquina, String> colBajaPrem;
     
     @Autowired
     private MaquinaService maquinaService;
+    
+    @Autowired
+    private LecturaService lecturaService;
+
+    private final java.util.Map<Long, Lectura> ultimasLecturas = new java.util.HashMap<>();
 
     @Autowired
     private ApplicationContext springContext;
@@ -125,6 +137,9 @@ public class GestionMaquinasController {
             return new SimpleStringProperty(motivo == null ? "" : motivo);
         });
 
+        colBajaIn.setCellValueFactory(c -> new SimpleStringProperty(contadorBaja(c.getValue(), 0)));
+        colBajaOut.setCellValueFactory(c -> new SimpleStringProperty(contadorBaja(c.getValue(), 1)));
+        colBajaPrem.setCellValueFactory(c -> new SimpleStringProperty(contadorBaja(c.getValue(), 2)));
     }
 
     // ==================== DATOS Y FILTRO ====================
@@ -134,6 +149,14 @@ public class GestionMaquinasController {
             activas.setAll(maquinaService.listarActivas());
             bajas.setAll(maquinaService.listarBajas());
 
+            ultimasLecturas.clear();
+            for (Maquina m : bajas) {
+                Lectura u = lecturaService.ultimaLectura(m.getId());
+                if (u != null) {
+                    ultimasLecturas.put(m.getId(), u);
+                }
+            }
+            
             tabActivas.setText("Activas (" + activas.size() + ")");
             tabBajas.setText("Bajas (" + bajas.size() + ")");
 
@@ -142,6 +165,16 @@ public class GestionMaquinasController {
             mostrarError("Error al cargar datos", e.getMessage());
             log.error("No se pudieron cargar las máquinas", e);
         }
+    }
+    
+    /** Último contador de la máquina (0 = In, 1 = Out, 2 = Prem); vacío si no tiene lecturas. */
+    private String contadorBaja(Maquina m, int cual) {
+        Lectura u = ultimasLecturas.get(m.getId());
+        if (u == null) {
+            return "";
+        }
+        long valor = cual == 0 ? u.getContadorIn() : cual == 1 ? u.getContadorOut() : u.getContadorPrem();
+        return currencyFormat.format(valor);
     }
 
     private void filtrar(String texto) {
@@ -186,7 +219,9 @@ public class GestionMaquinasController {
         dialogo.setTitle("Dar de baja la máquina");
         dialogo.setHeaderText("Máquina " + maquina.getCodigo());
 
-        DatePicker dpFecha = new DatePicker(LocalDate.now());
+        DatePicker dpFecha = new DatePicker();
+        SelectorFecha.configurar(dpFecha);
+        dpFecha.setValue(LocalDate.now());
         dpFecha.setMaxWidth(Double.MAX_VALUE);
         TextField txtMotivo = new TextField();
         txtMotivo.setPromptText("Motivo de la baja");

@@ -8,6 +8,8 @@ import com.misgastos.service.ConsultaTotalesService;
 import com.misgastos.service.ConsultaTotalesService.Fila;
 import com.misgastos.service.ConsultaTotalesService.Filtro;
 import com.misgastos.service.ConsultaTotalesService.Resultado;
+import com.misgastos.util.SelectorFecha;
+
 import javafx.animation.PauseTransition;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -198,6 +200,8 @@ public class ConsultaTotalesController {
             }
             programarConsulta();
         };
+        SelectorFecha.configurar(dpDesde);
+        SelectorFecha.configurar(dpHasta);
         dpDesde.valueProperty().addListener(alCambiarFecha);
         dpHasta.valueProperty().addListener(alCambiarFecha);
 

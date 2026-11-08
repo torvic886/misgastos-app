@@ -86,7 +86,7 @@
 					promptText="Nombre de la persona" visible="false"
 					managed="false" styleClass="search-field" />
 
-				<HBox spacing="10">
+				<VBox spacing="4">
 					<VBox spacing="4" HBox.hgrow="ALWAYS" prefWidth="0"
 						maxWidth="Infinity">
 						<Label text="Cantidad:" styleClass="form-label, campo-sep">
@@ -109,7 +109,7 @@
 						<TextField fx:id="txtValorUnitario" promptText="0.00"
 							styleClass="search-field" />
 					</VBox>
-				</HBox>
+				</VBox>
 
 				<Label text="Total:" styleClass="form-label, campo-sep">
 					<graphic>
@@ -126,7 +126,7 @@
 							content="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18z" />
 					</graphic>
 				</Label>
-				<TextArea fx:id="txtNotas" prefRowCount="3"
+				<TextArea fx:id="txtNotas" prefRowCount="6"
 					promptText="Observaciones del gasto..." styleClass="notas" />
 
 			</VBox>

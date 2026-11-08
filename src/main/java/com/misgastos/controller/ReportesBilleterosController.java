@@ -1,6 +1,8 @@
 package com.misgastos.controller;
 
 import com.misgastos.service.ReporteBilleteroService;
+import com.misgastos.util.SelectorFecha;
+
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -59,6 +61,11 @@ public class ReportesBilleterosController {
         LocalDate hoy = LocalDate.now();
         LocalDate inicioAnio = hoy.withDayOfYear(1);
 
+        SelectorFecha.configurar(dpMensualInicio);
+        SelectorFecha.configurar(dpMensualFin);
+        SelectorFecha.configurar(dpDiarioInicio);
+        SelectorFecha.configurar(dpDiarioFin);
+        
         dpMensualInicio.setValue(inicioAnio);
         dpMensualFin.setValue(hoy);
 

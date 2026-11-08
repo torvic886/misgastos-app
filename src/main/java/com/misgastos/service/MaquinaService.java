@@ -51,7 +51,7 @@ public class MaquinaService {
         m.setActiva(true);
 
         Maquina guardada = maquinaRepository.save(m);
-
+        lecturaService.registrarInicial(guardada);
 
         log.info("Máquina creada");
         log.debug("Máquina creada: id {}, código {}", guardada.getId(), codigo);

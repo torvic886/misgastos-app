@@ -5,6 +5,8 @@ import com.misgastos.repository.ClienteRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.slf4j.Logger;
+import java.time.LocalDate;
+import java.util.List;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -147,5 +149,58 @@ public class ClienteService {
             throw new IllegalArgumentException("El nombre no puede pasar de 100 letras.");
         }
         return nombre;
+    }
+    
+    /** Crea un cliente con teléfono, etiqueta y cumpleaños (los tres son opcionales). */
+    @Transactional
+    public Cliente crear(String cedulaTexto, String nombreTexto, String telefonoTexto,
+                         String etiquetaTexto, LocalDate cumpleanos) {
+        String telefono = normalizarTelefono(telefonoTexto);
+        String etiqueta = normalizarEtiqueta(etiquetaTexto);
+        Cliente cliente = crear(cedulaTexto, nombreTexto);
+        cliente.setTelefono(telefono);
+        cliente.setEtiqueta(etiqueta);
+        cliente.setCumpleanos(cumpleanos);
+        return clienteRepository.save(cliente);
+    }
+
+    /** Edita nombre, teléfono, etiqueta y cumpleaños en una sola transacción. */
+    @Transactional
+    public ResultadoEdicion actualizar(String cedula, String nombreTexto, String telefonoTexto,
+                                       String etiquetaTexto, LocalDate cumpleanos, boolean corregirGastos) {
+        String telefono = normalizarTelefono(telefonoTexto);
+        String etiqueta = normalizarEtiqueta(etiquetaTexto);
+        ResultadoEdicion resultado = actualizarNombre(cedula, nombreTexto, corregirGastos);
+        Cliente cliente = resultado.cliente();
+        cliente.setTelefono(telefono);
+        cliente.setEtiqueta(etiqueta);
+        cliente.setCumpleanos(cumpleanos);
+        cliente = clienteRepository.save(cliente);
+        return new ResultadoEdicion(cliente, resultado.gastosCorregidos());
+    }
+
+    private String normalizarTelefono(String texto) {
+        String t = texto == null ? "" : texto.replaceAll("[\\s-]", "");
+        if (t.isEmpty()) {
+            return null;
+        }
+        if (!t.matches("\\+?\\d+")) {
+            throw new IllegalArgumentException("El teléfono solo puede tener números (y un + al inicio).");
+        }
+        if (t.length() > 20) {
+            throw new IllegalArgumentException("El teléfono es demasiado largo (máximo 20 caracteres).");
+        }
+        return t;
+    }
+
+    private String normalizarEtiqueta(String texto) {
+        if (texto == null || texto.isBlank()) {
+            return null;
+        }
+        String e = texto.trim();
+        if (!List.of("Tipo 1", "Tipo 2", "Tipo 3").contains(e)) {
+            throw new IllegalArgumentException("La etiqueta debe ser Tipo 1, Tipo 2 o Tipo 3.");
+        }
+        return e;
     }
 }

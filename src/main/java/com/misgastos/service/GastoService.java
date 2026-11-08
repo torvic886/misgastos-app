@@ -283,6 +283,13 @@ public class GastoService {
             return deClientes;
         return gastoRepository.ultimoNombrePorCedula(ced);
     }
+    
+    public List<Cliente> buscarClientesPorCedula(String prefijo) {
+        if (prefijo == null || prefijo.isBlank()) {
+            return List.of();
+        }
+        return clienteRepository.findTop8ByCedulaStartingWithOrderByCedulaAsc(prefijo.trim());
+    }
 
     /** Crea el cliente solo si no existe; nunca pisa el nombre de uno que ya está. */
     private void guardarClienteSiNoExiste(String cedula, String nombre) {

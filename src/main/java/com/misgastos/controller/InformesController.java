@@ -10,6 +10,7 @@ import com.misgastos.service.ClienteInformeService.Tipo;
 import com.misgastos.service.GastoService;
 import com.misgastos.service.InformeService;
 import com.misgastos.service.diseno.Diseno;
+import com.misgastos.util.SelectorFecha;
 import com.misgastos.service.ContadoresInformeService;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -114,12 +115,14 @@ public class InformesController {
 	private void configurarFiltrosClientes() {
 		cmbTipoCliente.getItems().addAll("Todos", "Solo bonos", "Solo parqueaderos");
 		cmbTipoCliente.getSelectionModel().selectFirst();
-		cmbOrdenCliente.getItems().addAll("Mayor total", "Nombre");
-		cmbOrdenCliente.getSelectionModel().selectFirst();
+		cmbOrdenCliente.getItems().addAll("Nombre", "Mayor total", "Cédula", "Apellido");
+        cmbOrdenCliente.getSelectionModel().selectFirst();
 	}
 
 	private void configurarFechasPorDefecto() {
 		LocalDate hoy = LocalDate.now();
+		SelectorFecha.configurar(dpFechaInicio);
+		SelectorFecha.configurar(dpFechaFin);
 		dpFechaInicio.setValue(hoy.withDayOfMonth(1));
 		dpFechaFin.setValue(hoy);
 	}
@@ -457,7 +460,12 @@ public class InformesController {
 	}
 
 	private Orden ordenCliente() {
-		return cmbOrdenCliente.getSelectionModel().getSelectedIndex() == 1 ? Orden.NOMBRE : Orden.MAYOR_TOTAL;
+        return switch (cmbOrdenCliente.getSelectionModel().getSelectedIndex()) {
+        case 1 -> Orden.MAYOR_TOTAL;
+        case 2 -> Orden.CEDULA;
+        case 3 -> Orden.APELLIDO;
+        default -> Orden.NOMBRE;
+        };
 	}
 
 	private String periodoCliente(LocalDate inicio, LocalDate fin) {

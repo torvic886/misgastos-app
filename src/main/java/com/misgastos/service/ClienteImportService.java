@@ -134,7 +134,11 @@ public class ClienteImportService {
     @Transactional
     public void aplicar(VistaPrevia vista) {
         clienteRepository.saveAll(vista.nuevos());
-        clienteRepository.saveAll(vista.actualizados());
+        for (Cliente c : vista.actualizados()) {
+            Cliente destino = clienteRepository.findById(c.getCedula()).orElse(c);
+            destino.setNombre(c.getNombre());
+            clienteRepository.save(destino);
+        }
     }
 
     /** Devuelve solo dígitos, o null si la cédula no se puede leer bien. */

@@ -85,7 +85,7 @@ public final class InformeGastosPdf {
         pdf.getDocumentInfo().setTitle("Informe de gastos");
         pdf.getDocumentInfo().setCreator(Diseno.APP);
 
-        Document doc = new Document(pdf, PageSize.A4);
+        Document doc = new Document(pdf, PageSize.LETTER);
         doc.setMargins(36, 36, 50, 36);
         doc.setFont(normal);
         doc.setFontSize(9);

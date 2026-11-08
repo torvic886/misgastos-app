@@ -2,6 +2,8 @@ package com.misgastos.controller;
 
 import com.misgastos.model.Billetero;
 import com.misgastos.service.BilleteroService;
+import com.misgastos.util.SelectorFecha;
+
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
@@ -51,6 +53,7 @@ public class ModalBilleteroController {
     	log.debug("Inicializando modal de billetero");
         
         // Configurar fecha por defecto
+        SelectorFecha.configurar(dpFecha);
         dpFecha.setValue(LocalDate.now());
         
         // Configurar formato en tiempo real para Billetero

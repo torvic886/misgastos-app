@@ -4,6 +4,8 @@ import com.misgastos.model.AuditoriaLog;
 import com.misgastos.model.Usuario;
 import com.misgastos.service.AuditoriaService;
 import com.misgastos.service.UsuarioService;
+import com.misgastos.util.SelectorFecha;
+
 import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -123,6 +125,8 @@ public class RegistroCambiosController {
     private void valoresPorDefecto() {
         cmbUsuario.setValue(TODOS);
         cmbAccion.setValue(TODAS);
+        SelectorFecha.configurar(dpHasta);
+        SelectorFecha.configurar(dpDesde);
         dpHasta.setValue(LocalDate.now());
         dpDesde.setValue(LocalDate.now().minusDays(30));
     }
