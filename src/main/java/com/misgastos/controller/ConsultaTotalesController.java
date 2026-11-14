@@ -138,7 +138,7 @@ public class ConsultaTotalesController {
 
         // Espera corta para no consultar en cada tecla mientras se escribe
         espera = new PauseTransition(Duration.millis(250));
-        espera.setOnFinished(e -> consultar());
+        espera.setOnFinished(e -> javafx.application.Platform.runLater(this::consultar));
 
         cmbPeriodo.getItems().setAll(PERIODO_HOY, PERIODO_SEMANA, PERIODO_MES, PERIODO_ANIO,
                 PERIODO_TODO, PERIODO_PERSONALIZADO);

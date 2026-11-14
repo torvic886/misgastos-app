@@ -16,6 +16,12 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
+import javafx.geometry.Bounds;
+import javafx.scene.Node;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.stage.Popup;
+import com.misgastos.util.ProductoNormalizador;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -36,7 +42,7 @@ public class InformesController {
 	private static final String CLAVE_CAT_PROD = "categoría y producto";
 	private static final String CLAVE_CONTADORES = "Contadores por rango";
 	private static final String CLAVE_CASINO = "Casino Victory";
-	
+
 	@FXML
 	private ComboBox<String> cmbTipoInforme;
 	@FXML
@@ -47,6 +53,16 @@ public class InformesController {
 	private ComboBox<Categoria> cmbCategoria;
 	@FXML
 	private TextField txtProducto;
+	@FXML
+	private Label lblCategoria;
+	@FXML
+	private Label lblProducto;
+
+	// Sugerencias del campo Producto
+	private ListView<String> listaSugerencias;
+	private Popup popupProductos;
+	private List<String> productosActivos = List.of();
+	private boolean eligiendoProducto = false;
 	@FXML
 	private TextArea txtPreview;
 	@FXML
@@ -76,8 +92,7 @@ public class InformesController {
 	private ClienteInformeService clienteInformeService; // NUEVO
 	@Autowired
 	private ContadoresInformeService contadoresInformeService;
-	
-	
+
 	private String informeActual = "";
 
 	@FXML
@@ -85,6 +100,7 @@ public class InformesController {
 		configurarTiposInforme();
 		configurarFechasPorDefecto();
 		cargarCategorias();
+		configurarSugerenciasProducto();
 		configurarListeners();
 		configurarFiltrosClientes(); // NUEVO
 
@@ -96,18 +112,11 @@ public class InformesController {
 	}
 
 	private void configurarTiposInforme() {
-		cmbTipoInforme.getItems().addAll("📊 Informe General Mensual", 
-				"👥 Consolidado por cliente",
-				"📦 Gastos por categoría y producto",// NUEVO
-				"🎰 Contadores por rango",
-				"🏆 Informe Casino Victory Armenia",
-				"📂 Informe por Categoría",
-				"📦 Informe por Producto", 
-				"⚖️ Informe Comparativo", 
-				"🎯 Dashboard Ejecutivo",
-				"📋 Desglose por Subcategorías", 
-				"📅 Informe Anual"
-		);
+		cmbTipoInforme.getItems().addAll("📊 Informe General Mensual", "👥 Consolidado por cliente",
+				"📦 Gastos por categoría y producto", // NUEVO
+				"🎰 Contadores por rango", "🏆 Informe Casino Victory Armenia", "📂 Informe por Categoría",
+				"📦 Informe por Producto", "⚖️ Informe Comparativo", "🎯 Dashboard Ejecutivo",
+				"📋 Desglose por Subcategorías", "📅 Informe Anual");
 		cmbTipoInforme.getSelectionModel().selectFirst();
 	}
 
@@ -116,7 +125,7 @@ public class InformesController {
 		cmbTipoCliente.getItems().addAll("Todos", "Solo bonos", "Solo parqueaderos");
 		cmbTipoCliente.getSelectionModel().selectFirst();
 		cmbOrdenCliente.getItems().addAll("Nombre", "Mayor total", "Cédula", "Apellido");
-        cmbOrdenCliente.getSelectionModel().selectFirst();
+		cmbOrdenCliente.getSelectionModel().selectFirst();
 	}
 
 	private void configurarFechasPorDefecto() {
@@ -136,30 +145,133 @@ public class InformesController {
 
 	private void configurarListeners() {
 		// Mostrar/ocultar filtros según el tipo de informe
-		cmbTipoInforme.setOnAction(e -> {
-			String tipo = cmbTipoInforme.getValue();
+		cmbTipoInforme.setOnAction(e -> actualizarFiltrosVisibles());
+		actualizarFiltrosVisibles(); // estado inicial
+	}
 
-			// Resetear visibilidad
-			cmbCategoria.setVisible(false);
-			cmbCategoria.setManaged(false);
-			txtProducto.setVisible(false);
-			txtProducto.setManaged(false);
-			boxFiltrosClientes.setVisible(false); // NUEVO
-			boxFiltrosClientes.setManaged(false); // NUEVO
+	private void actualizarFiltrosVisibles() {
+		String tipo = cmbTipoInforme.getValue();
+		boolean verClientes = tipo != null && tipo.contains(CLAVE_CLIENTES);
+		boolean verCategoria = !verClientes && tipo != null && tipo.contains("Categoría");
+		boolean verProducto = !verClientes && !verCategoria && tipo != null && tipo.contains("Producto");
 
-			if (tipo != null) {
-				if (tipo.contains(CLAVE_CLIENTES)) { // NUEVO
-					boxFiltrosClientes.setVisible(true);
-					boxFiltrosClientes.setManaged(true);
-				} else if (tipo.contains("Categoría")) {
-					cmbCategoria.setVisible(true);
-					cmbCategoria.setManaged(true);
-				} else if (tipo.contains("Producto")) {
-					txtProducto.setVisible(true);
-					txtProducto.setManaged(true);
-				}
+		mostrar(lblCategoria, verCategoria);
+		mostrar(cmbCategoria, verCategoria);
+		mostrar(lblProducto, verProducto);
+		mostrar(txtProducto, verProducto);
+		mostrar(boxFiltrosClientes, verClientes);
+
+		if (!verProducto && popupProductos != null) {
+			popupProductos.hide();
+		}
+	}
+
+	private void mostrar(Node nodo, boolean visible) {
+		nodo.setVisible(visible);
+		nodo.setManaged(visible);
+	}
+
+// ==================== Sugerencias del campo Producto ====================
+
+	private void configurarSugerenciasProducto() {
+		listaSugerencias = new ListView<>();
+		listaSugerencias.setFocusTraversable(false);
+
+		popupProductos = new Popup();
+		popupProductos.setAutoHide(true);
+		popupProductos.setConsumeAutoHidingEvents(false); // el clic en el campo sigue llegando al campo
+		popupProductos.getContent().add(listaSugerencias);
+
+		// Clic en un producto de la lista
+		listaSugerencias.setOnMouseClicked(e -> {
+			String elegido = listaSugerencias.getSelectionModel().getSelectedItem();
+			if (elegido != null) {
+				elegirProducto(elegido);
 			}
 		});
+
+		// Al entrar al campo se cargan los productos; al salir se cierra la lista
+		txtProducto.focusedProperty().addListener((o, antes, enfocado) -> {
+			if (enfocado) {
+				productosActivos = gastoService.listarProductos();
+			} else {
+				popupProductos.hide();
+			}
+		});
+
+		// Clic en el campo: muestra todos los productos
+		txtProducto.setOnMouseClicked(e -> mostrarSugerencias());
+
+		// Al escribir: filtra
+		txtProducto.textProperty().addListener((o, antes, ahora) -> {
+			if (!eligiendoProducto && txtProducto.isFocused()) {
+				mostrarSugerencias();
+			}
+		});
+
+		// Teclado: abajo/arriba para moverse, Enter para elegir, Esc para cerrar
+		txtProducto.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
+			boolean abierta = popupProductos.isShowing();
+			if (e.getCode() == KeyCode.DOWN) {
+				if (abierta) {
+					moverSeleccion(1);
+				} else {
+					mostrarSugerencias();
+				}
+				e.consume();
+			} else if (e.getCode() == KeyCode.UP && abierta) {
+				moverSeleccion(-1);
+				e.consume();
+			} else if (e.getCode() == KeyCode.ENTER && abierta
+					&& listaSugerencias.getSelectionModel().getSelectedItem() != null) {
+				elegirProducto(listaSugerencias.getSelectionModel().getSelectedItem());
+				e.consume();
+			} else if (e.getCode() == KeyCode.ESCAPE && abierta) {
+				popupProductos.hide();
+				e.consume();
+			}
+		});
+	}
+
+	private void mostrarSugerencias() {
+		String q = ProductoNormalizador.clave(txtProducto.getText());
+		List<String> coincidencias = productosActivos.stream()
+				.filter(p -> q.isEmpty() || ProductoNormalizador.clave(p).contains(q)).toList();
+		if (coincidencias.isEmpty() || txtProducto.getScene() == null) {
+			popupProductos.hide();
+			return;
+		}
+		listaSugerencias.getItems().setAll(coincidencias);
+		listaSugerencias.getSelectionModel().clearSelection();
+		listaSugerencias.setPrefWidth(txtProducto.getWidth());
+		listaSugerencias.setPrefHeight(Math.min(coincidencias.size(), 8) * 24 + 2);
+		Bounds b = txtProducto.localToScreen(txtProducto.getBoundsInLocal());
+		if (b != null) {
+			popupProductos.show(txtProducto, b.getMinX(), b.getMaxY());
+		}
+	}
+
+	private void moverSeleccion(int paso) {
+		int total = listaSugerencias.getItems().size();
+		if (total == 0) {
+			return;
+		}
+		int actual = listaSugerencias.getSelectionModel().getSelectedIndex();
+		int nuevo = Math.max(0, Math.min(total - 1, actual + paso));
+		listaSugerencias.getSelectionModel().select(nuevo);
+		listaSugerencias.scrollTo(nuevo);
+	}
+
+	private void elegirProducto(String producto) {
+		eligiendoProducto = true;
+		try {
+			txtProducto.setText(producto);
+			txtProducto.positionCaret(producto.length());
+		} finally {
+			eligiendoProducto = false;
+		}
+		popupProductos.hide();
+		txtProducto.requestFocus();
 	}
 
 	@FXML
@@ -179,19 +291,19 @@ public class InformesController {
 			boolean esClientes = false;
 
 			if (tipoInforme.contains(CLAVE_CONTADORES)) {
-			    esClientes = true; // ya pone sus propias cifras abajo
-			    var r = contadoresInformeService.generarContadores(inicio, fin);
-			    informe = contadoresInformeService.textoContadores(inicio, fin);
-			    lblTotalGastos.setText(String.valueOf(r.lecturas()));
-			    lblMontoTotal.setText(Diseno.moneda(r.total()));
-			    lblCategorias.setText(String.valueOf(r.grupos().size()));
+				esClientes = true; // ya pone sus propias cifras abajo
+				var r = contadoresInformeService.generarContadores(inicio, fin);
+				informe = contadoresInformeService.textoContadores(inicio, fin);
+				lblTotalGastos.setText(String.valueOf(r.lecturas()));
+				lblMontoTotal.setText(Diseno.moneda(r.total()));
+				lblCategorias.setText(String.valueOf(r.grupos().size()));
 			} else if (tipoInforme.contains(CLAVE_CASINO)) {
-			    esClientes = true;
-			    var r = contadoresInformeService.generarCasino(inicio, fin);
-			    informe = contadoresInformeService.textoCasino(inicio, fin);
-			    lblTotalGastos.setText(String.valueOf(r.filas().size()));
-			    lblMontoTotal.setText(Diseno.moneda(r.total()));
-			    lblCategorias.setText(String.valueOf(r.filas().size()));
+				esClientes = true;
+				var r = contadoresInformeService.generarCasino(inicio, fin);
+				informe = contadoresInformeService.textoCasino(inicio, fin);
+				lblTotalGastos.setText(String.valueOf(r.filas().size()));
+				lblMontoTotal.setText(Diseno.moneda(r.total()));
+				lblCategorias.setText(String.valueOf(r.filas().size()));
 			} else if (tipoInforme.contains(CLAVE_CAT_PROD)) {
 				informe = informeService.generarInformeCategoriaProducto(inicio, fin);
 			} else if (tipoInforme.contains(CLAVE_CLIENTES)) { // NUEVO
@@ -321,9 +433,9 @@ public class InformesController {
 				LocalDate fin = dpFechaFin.getValue();
 
 				if (tipoInforme.contains(CLAVE_CONTADORES)) {
-				    contadoresInformeService.exportarContadoresPDF(inicio, fin, archivo.getAbsolutePath());
+					contadoresInformeService.exportarContadoresPDF(inicio, fin, archivo.getAbsolutePath());
 				} else if (tipoInforme.contains(CLAVE_CASINO)) {
-				    contadoresInformeService.exportarCasinoPDF(inicio, fin, archivo.getAbsolutePath());
+					contadoresInformeService.exportarCasinoPDF(inicio, fin, archivo.getAbsolutePath());
 				} else if (tipoInforme.contains(CLAVE_CAT_PROD)) {
 					informeService.exportarCategoriaProductoPDF(inicio, fin, archivo.getAbsolutePath());
 				} else if (tipoInforme.contains(CLAVE_CLIENTES)) { // NUEVO
@@ -384,9 +496,9 @@ public class InformesController {
 				LocalDate fin = dpFechaFin.getValue();
 
 				if (tipoInforme.contains(CLAVE_CONTADORES)) {
-				    contadoresInformeService.exportarContadoresExcel(inicio, fin, archivo.getAbsolutePath());
+					contadoresInformeService.exportarContadoresExcel(inicio, fin, archivo.getAbsolutePath());
 				} else if (tipoInforme.contains(CLAVE_CASINO)) {
-				    contadoresInformeService.exportarCasinoExcel(inicio, fin, archivo.getAbsolutePath());
+					contadoresInformeService.exportarCasinoExcel(inicio, fin, archivo.getAbsolutePath());
 				} else if (tipoInforme.contains(CLAVE_CAT_PROD)) {
 					informeService.exportarCategoriaProductoExcel(inicio, fin, archivo.getAbsolutePath());
 				} else if (tipoInforme.contains(CLAVE_CLIENTES)) { // NUEVO
@@ -460,12 +572,12 @@ public class InformesController {
 	}
 
 	private Orden ordenCliente() {
-        return switch (cmbOrdenCliente.getSelectionModel().getSelectedIndex()) {
-        case 1 -> Orden.MAYOR_TOTAL;
-        case 2 -> Orden.CEDULA;
-        case 3 -> Orden.APELLIDO;
-        default -> Orden.NOMBRE;
-        };
+		return switch (cmbOrdenCliente.getSelectionModel().getSelectedIndex()) {
+		case 1 -> Orden.MAYOR_TOTAL;
+		case 2 -> Orden.CEDULA;
+		case 3 -> Orden.APELLIDO;
+		default -> Orden.NOMBRE;
+		};
 	}
 
 	private String periodoCliente(LocalDate inicio, LocalDate fin) {

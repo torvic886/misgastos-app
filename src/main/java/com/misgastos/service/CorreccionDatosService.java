@@ -68,7 +68,7 @@ public class CorreccionDatosService {
     }
 
     /** Un valor tal como está guardado y en cuántos gastos aparece. */
-    public record ValorConteo(String valor, long cantidad) {
+    public record ValorConteo(String valor, long cantidad, double total) {
     }
 
     /** Resultado de corregir: gastos cambiados y clientes actualizados. */
@@ -79,13 +79,14 @@ public class CorreccionDatosService {
     @Transactional(readOnly = true)
     public List<ValorConteo> listar(Campo campo) {
         String c = campo.columna();
-        String sql = "SELECT " + c + ", COUNT(*) FROM gastos WHERE " + c + " IS NOT NULL AND TRIM(" + c
-            + ") <> '' GROUP BY " + c + " ORDER BY " + c + " COLLATE NOCASE";
+        String sql = "SELECT " + c + ", COUNT(*), COALESCE(SUM(valor_total), 0) FROM gastos WHERE " + c
+                + " IS NOT NULL AND TRIM(" + c + ") <> '' GROUP BY " + c + " ORDER BY " + c + " COLLATE NOCASE";
         @SuppressWarnings("unchecked")
         List<Object[]> filas = entityManager.createNativeQuery(sql).getResultList();
         List<ValorConteo> lista = new ArrayList<>(filas.size());
         for (Object[] f : filas) {
-            lista.add(new ValorConteo((String) f[0], ((Number) f[1]).longValue()));
+        	lista.add(new ValorConteo((String) f[0], ((Number) f[1]).longValue(),
+                    ((Number) f[2]).doubleValue()));
         }
         log.debug("Valores distintos de {}: {}", c, lista.size());
         return lista;

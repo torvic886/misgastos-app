@@ -137,7 +137,7 @@ public class MisGastosLauncher {
             MigracionesBase.aplicar(db);
 
             String dbPath = db.toString().replace('\\', '/');
-            System.setProperty("spring.datasource.url", "jdbc:sqlite:" + dbPath);
+            System.setProperty("spring.datasource.url", "jdbc:sqlite:" + dbPath + "?foreign_keys=on");
         } catch (Exception e) {
             throw new IllegalStateException("No se pudo preparar la base de datos", e);
         }

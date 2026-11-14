@@ -23,6 +23,10 @@ import javafx.scene.input.KeyEvent;
 import javafx.util.Duration;
 
 import java.util.List;
+import java.util.Optional;
+import javafx.event.ActionEvent;
+import javafx.geometry.Insets;
+import javafx.scene.layout.VBox;
 
 
 @Slf4j
@@ -192,7 +196,9 @@ public class ModalMaquinaController {
         PauseTransition pausa = new PauseTransition(Duration.millis(150));
         pausa.setOnFinished(e -> {
             btnGuardar.disarm();
-            btnGuardar.fire();
+            // fire() se difiere: handleGuardar puede abrir un diálogo con showAndWait,
+            // y JavaFX no lo permite mientras corre una animación.
+            javafx.application.Platform.runLater(btnGuardar::fire);
         });
         pausa.play();
     } 
@@ -248,8 +254,16 @@ public class ModalMaquinaController {
                 maquinaService.crear(codigo, denominacion, txtNombre.getText(), txtSerial.getText(),
                         txtJuego.getText(), contadorIn, contadorOut, contadorPrem, dpFechaAlta.getValue());
             } else {
+                LocalDate desde = null; // null = corregir todo el historial
+                if (maquina.getDenominacion().compareTo(denominacion) != 0) {
+                    Optional<Alcance> alcance = preguntarAlcance(maquina.getDenominacion(), denominacion);
+                    if (alcance.isEmpty()) {
+                        return; // canceló: no se guarda nada
+                    }
+                    desde = alcance.get().desde();
+                }
                 maquinaService.actualizar(maquina.getId(), codigo, denominacion, txtNombre.getText(),
-                        txtSerial.getText(), txtJuego.getText(), contadorIn, contadorOut, contadorPrem);
+                        txtSerial.getText(), txtJuego.getText(), contadorIn, contadorOut, contadorPrem, desde);
             }
 
             log.info("Máquina guardada correctamente");
@@ -266,6 +280,52 @@ public class ModalMaquinaController {
         }
     }
 
+    private record Alcance(LocalDate desde) { }
+
+    /** Pregunta si la nueva denominación aplica a todo el historial o solo desde una fecha. */
+    private Optional<Alcance> preguntarAlcance(BigDecimal anterior, BigDecimal nueva) {
+        Dialog<ButtonType> dialogo = new Dialog<>();
+        dialogo.setTitle("Cambio de denominación");
+        dialogo.setHeaderText("La denominación cambia de " + plainFormat.format(anterior.longValue())
+                + " a " + plainFormat.format(nueva.longValue()));
+
+        ToggleGroup grupo = new ToggleGroup();
+        RadioButton rbInicio = new RadioButton("Corregir todo el historial (desde el inicio)");
+        rbInicio.setToggleGroup(grupo);
+        rbInicio.setSelected(true);
+        RadioButton rbFecha = new RadioButton("Cambio real: aplicar solo desde una fecha");
+        rbFecha.setToggleGroup(grupo);
+
+        DatePicker dp = new DatePicker(LocalDate.now());
+        SelectorFecha.configurar(dp);
+        dp.setMaxWidth(Double.MAX_VALUE);
+        dp.disableProperty().bind(rbFecha.selectedProperty().not());
+
+        Label lblErrorFecha = new Label();
+        lblErrorFecha.setStyle("-fx-text-fill: #ef4444;");
+
+        VBox contenido = new VBox(8, rbInicio, rbFecha, dp, lblErrorFecha);
+        contenido.setPadding(new Insets(10));
+        dialogo.getDialogPane().setContent(contenido);
+        dialogo.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        dialogo.getDialogPane().getStylesheets().add(
+                getClass().getResource("/css/styles.css").toExternalForm());
+
+        Button ok = (Button) dialogo.getDialogPane().lookupButton(ButtonType.OK);
+        ok.addEventFilter(ActionEvent.ACTION, ev -> {
+            if (rbFecha.isSelected() && dp.getValue() == null) {
+                lblErrorFecha.setText("Seleccione la fecha");
+                ev.consume();
+            }
+        });
+
+        Optional<ButtonType> respuesta = dialogo.showAndWait();
+        if (respuesta.isEmpty() || respuesta.get() != ButtonType.OK) {
+            return Optional.empty();
+        }
+        return Optional.of(new Alcance(rbFecha.isSelected() ? dp.getValue() : null));
+    }
+    
     @FXML
     private void handleCancelar() {
         cerrarModal();

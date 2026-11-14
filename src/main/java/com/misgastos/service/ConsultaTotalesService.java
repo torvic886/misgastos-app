@@ -4,6 +4,8 @@ import com.misgastos.model.Categoria;
 import com.misgastos.model.Gasto;
 import com.misgastos.model.Subcategoria;
 import com.misgastos.model.Usuario;
+import com.misgastos.util.ProductoNormalizador;
+
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
@@ -21,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Consulta flexible de totales: el usuario combina filtros (periodo, categoría,
@@ -135,28 +138,31 @@ public class ConsultaTotalesService {
             jpql.append(" AND g.usuario.id = :usuarioId");
             params.put("usuarioId", f.usuarioId);
         }
-        if (hayTexto(f.producto)) {
-            if (f.productoExacto) {
-                // Misma comparación que usa GastoRepository.existeProducto
-                jpql.append(" AND UPPER(TRIM(REPLACE(REPLACE(g.producto, '  ', ' '), '  ', ' '))) "
-                        + "= UPPER(TRIM(REPLACE(REPLACE(:producto, '  ', ' '), '  ', ' ')))");
-            } else {
-                // Misma búsqueda que usa GastoRepository.buscarProductos
-                jpql.append(" AND UPPER(g.producto) LIKE UPPER(CONCAT('%', :producto, '%'))");
-            }
-            params.put("producto", f.producto.trim());
-        }
-        if (hayTexto(f.persona)) {
-            jpql.append(" AND (UPPER(g.cedula) LIKE UPPER(CONCAT('%', :persona, '%')) "
-                    + "OR UPPER(g.nombrePersona) LIKE UPPER(CONCAT('%', :persona, '%')))");
-            params.put("persona", f.persona.trim());
-        }
+
         jpql.append(" ORDER BY g.fecha DESC, g.hora DESC");
 
         TypedQuery<Gasto> query = em.createQuery(jpql.toString(), Gasto.class);
         params.forEach(query::setParameter);
         List<Gasto> gastos = query.getResultList();
 
+
+        // Producto y persona se filtran aquí y no en SQL: el UPPER/LIKE de SQLite no
+        // reconoce Ñ ni tildes. Se usa la misma clave que la pantalla de registro.
+        if (hayTexto(f.producto)) {
+            String buscado = ProductoNormalizador.clave(f.producto);
+            gastos = gastos.stream().filter(g -> {
+                String c = ProductoNormalizador.clave(g.getProducto());
+                return f.productoExacto ? c.equals(buscado) : c.contains(buscado);
+            }).collect(Collectors.toList());
+        }
+        if (hayTexto(f.persona)) {
+            String buscada = ProductoNormalizador.clave(f.persona);
+            gastos = gastos.stream().filter(g ->
+                    ProductoNormalizador.clave(g.getCedula()).contains(buscada)
+                    || ProductoNormalizador.clave(g.getNombrePersona()).contains(buscada))
+                    .collect(Collectors.toList());
+        }
+        
         // ----- Total: suma de las mismas filas que se muestran -----
         BigDecimal total = BigDecimal.ZERO;
         for (Gasto g : gastos) {
@@ -274,19 +280,9 @@ public class ConsultaTotalesService {
         return s != null && !s.isBlank();
     }
 
-    /**
-     * Clave para agrupar productos igual que los compara la base de datos en el
-     * filtro "exacto": sin espacios de más y con mayúsculas solo en a-z (como el
-     * UPPER de SQLite). Así, al hacer doble clic en un producto del desglose, el
-     * total filtrado es idéntico al del grupo.
-     */
+    /** Misma clave que usa el filtro, para que el total del grupo y el del filtro coincidan. */
     private static String claveProducto(String s) {
-        String t = s == null ? "" : s.trim().replaceAll("\\s+", " ");
-        StringBuilder sb = new StringBuilder(t.length());
-        for (char c : t.toCharArray()) {
-            sb.append(c >= 'a' && c <= 'z' ? (char) (c - 32) : c);
-        }
-        return sb.toString();
+        return ProductoNormalizador.clave(s);
     }
 
     private static String nombreMes(YearMonth ym) {

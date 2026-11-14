@@ -63,8 +63,17 @@ public class GastoService {
     @Autowired
     private ClienteRepository clienteRepository;
     
+    /** Igual que antes: el gasto queda con la fecha de hoy. */
     public Gasto registrarGasto(Long usuarioId, Long categoriaId, Long subcategoriaId, String producto,
             Integer cantidad, BigDecimal valorUnitario, String notas, String cedula, String nombrePersona) {
+        return registrarGasto(usuarioId, categoriaId, subcategoriaId, producto, cantidad, valorUnitario,
+                notas, cedula, nombrePersona, null);
+    }
+
+    /** Si fecha es null se usa hoy; si no, el gasto queda con esa fecha (la hora sigue siendo la real). */
+    public Gasto registrarGasto(Long usuarioId, Long categoriaId, Long subcategoriaId, String producto,
+            Integer cantidad, BigDecimal valorUnitario, String notas, String cedula, String nombrePersona,
+            LocalDate fecha) {
 
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -76,7 +85,7 @@ public class GastoService {
                 .orElseThrow(() -> new RuntimeException("Subcategoría no encontrada"));
 
         Gasto gasto = new Gasto();
-        gasto.setFecha(LocalDate.now());
+        gasto.setFecha(fecha != null ? fecha : LocalDate.now());
         gasto.setHora(LocalTime.now());
         gasto.setUsuario(usuario);
         gasto.setCategoria(categoria);
@@ -139,6 +148,20 @@ public class GastoService {
         return unicos.values().stream().sorted(String.CASE_INSENSITIVE_ORDER).collect(Collectors.toList());
     }
 
+
+    
+    /** Todos los productos de gastos activos, sin repetir (sin importar mayúsculas, tildes ni espacios), en orden alfabético. */
+    public List<String> listarProductos() {
+        Map<String, String> unicos = new LinkedHashMap<>();
+        for (String p : gastoRepository.productosActivos()) {
+            String c = ProductoNormalizador.clave(p);
+            if (!c.isEmpty()) {
+                unicos.putIfAbsent(c, p);
+            }
+        }
+        return unicos.values().stream().sorted(String.CASE_INSENSITIVE_ORDER).collect(Collectors.toList());
+    }
+    
     public List<Map<String, Object>> obtenerTopProductos(int limite) {
         List<Object[]> resultados = gastoRepository.topProductos();
         return resultados.stream().limit(limite).map(obj -> {
@@ -260,6 +283,27 @@ public class GastoService {
             log.debug("Edición sin cambios en el gasto id {}", id);
         }
 
+        return guardado;
+    }
+    
+    /** Cambia solo la fecha de un gasto y lo deja anotado en el control de cambios. */
+    @org.springframework.transaction.annotation.Transactional
+    public Gasto actualizarFecha(Long id, LocalDate nuevaFecha) {
+        if (nuevaFecha == null) {
+            throw new IllegalArgumentException("Escribe una fecha válida.");
+        }
+        Gasto gasto = gastoRepository.findById(id).orElseThrow(() -> new RuntimeException("Gasto no encontrado"));
+        LocalDate anterior = gasto.getFecha();
+        if (Objects.equals(anterior, nuevaFecha)) {
+            return gasto;
+        }
+        String etiqueta = etiqueta(gasto);
+        gasto.setFecha(nuevaFecha);
+        Gasto guardado = gastoRepository.save(gasto);
+        auditoriaService.registrarCambioGasto("EDITAR_GASTO",
+                "Edición del " + etiqueta + ": fecha " + anterior + FLECHA + nuevaFecha);
+        log.info("Fecha de gasto editada");
+        log.debug("Fecha de gasto editada: id {}", id);
         return guardado;
     }
 

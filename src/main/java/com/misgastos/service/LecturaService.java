@@ -286,9 +286,7 @@ public Lectura editar(Long id, LocalDate fecha, Long in, Long out, Long prem, In
 		l.setContadorPrem(prem);
 		// La denominación solo se corrige si es la única lectura; si hay más, cada una
 		// conserva la suya
-		if (validas.size() == 1) {
-			l.setDenominacion(denominacion);
-		}
+		
 		lecturaRepository.save(l);
 	}
 
@@ -299,6 +297,48 @@ public Lectura editar(Long id, LocalDate fecha, Long in, Long out, Long prem, In
 
 	public void eliminarLecturasDe(Long maquinaId) {
 		lecturaRepository.deleteByMaquinaId(maquinaId);
+	}
+	
+	/** Cambia la denominación de las lecturas válidas de una máquina. desde = null: todo el historial. */
+	public int actualizarDenominacion(Long maquinaId, BigDecimal nueva, LocalDate desde) {
+	    int afectadas = 0;
+	    for (Lectura l : validas(maquinaId)) {
+	        if (desde != null && l.getFecha().isBefore(desde)) continue;
+	        if (l.getDenominacion().compareTo(nueva) != 0) {
+	            l.setDenominacion(nueva);
+	            lecturaRepository.save(l);
+	            afectadas++;
+	        }
+	    }
+	    return afectadas;
+	}
+
+	/** Edita la denominación de una sola lectura del historial. */
+	public Lectura editarDenominacion(Long id, BigDecimal nueva) {
+	    if (nueva == null || nueva.compareTo(BigDecimal.ZERO) <= 0) {
+	        throw new RuntimeException("La denominación debe ser mayor que cero");
+	    }
+	    Lectura l = obtener(id);
+	    if (l.isAnulada()) {
+	        throw new RuntimeException("La lectura está anulada y no se puede editar");
+	    }
+	    BigDecimal antes = l.getDenominacion();
+	    l.setDenominacion(nueva);
+	    lecturaRepository.save(l);
+
+	    // La copia del periodo 3 acompaña a su lectura
+	    List<Lectura> validas = validas(l.getMaquina().getId());
+	    int pos = indiceDe(validas, id);
+	    Lectura sig = pos >= 0 && pos < validas.size() - 1 ? validas.get(pos + 1) : null;
+	    if (l.getPeriodo() == 3 && sig != null && Lectura.COPIA.equals(sig.getTipo())) {
+	        sig.setDenominacion(nueva);
+	        lecturaRepository.save(sig);
+	    }
+
+	    auditoriaService.registrarCambio("EDITAR_DENOMINACION_LECTURA",
+	            "Máquina " + l.getMaquina().getCodigo() + ", periodo " + l.getPeriodo()
+	            + ", fecha " + l.getFecha() + ": " + antes + " → " + nueva);
+	    return l;
 	}
 
 	// ==================== UTILIDADES ====================

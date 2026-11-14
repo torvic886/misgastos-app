@@ -151,6 +151,23 @@ public class ContadoresController {
         lblMaquina.managedProperty().bind(lblMaquina.textProperty().isNotEmpty());
         lblMaquina.visibleProperty().bind(lblMaquina.textProperty().isNotEmpty());
 
+        // Al volver a mostrar la pantalla, recarga máquinas y tabla (por si cambiaron en otra pantalla)
+        tabla.sceneProperty().addListener((obs, anterior, nueva) -> {
+            if (nueva != null) {
+                cargarMaquinas();
+                if (maquinaActual != null) {
+                    maquinaActual = activasPorCodigo.get(maquinaActual.getCodigo());
+                    if (maquinaActual == null) {
+                        limpiarMaquina();
+                    } else {
+                        lblMaquina.setText(maquinaActual.getNombre() + " · " + maquinaActual.getJuego()
+                                + " · Den. " + pesos.format(maquinaActual.getDenominacion().longValue()));
+                    }
+                }
+                refrescarTabla();
+            }
+        });
+        
     }
 
     // ==================== MÁQUINA ====================
@@ -617,6 +634,8 @@ public class ContadoresController {
         TextField tIn = campoNumero(l.getContadorIn());
         TextField tOut = campoNumero(l.getContadorOut());
         TextField tPrem = campoNumero(l.getContadorPrem());
+        TextField tDen = campoNumero(l.getDenominacion().longValue());
+        
         Label lblError = new Label();
         lblError.setStyle("-fx-text-fill: #ef4444;");
         lblError.setWrapText(true);
@@ -627,6 +646,7 @@ public class ContadoresController {
                 new Label("Contador In:"), tIn,
                 new Label("Contador Out:"), tOut,
                 new Label("Contador Prem:"), tPrem,
+                new Label("Denominación:"), tDen,
                 lblError);
         contenido.setPadding(new Insets(10));
         contenido.setPrefWidth(340);
@@ -640,8 +660,15 @@ public class ContadoresController {
         ok.addEventFilter(ActionEvent.ACTION, ev -> {
             try {
                 confirmarFecha(dp);
+                Long den = leerEntero(tDen);
+                if (den == null || den <= 0) {
+                    throw new RuntimeException("La denominación debe ser mayor que cero");
+                }
                 lecturaService.editar(l.getId(), dp.getValue(),
                         leerEntero(tIn), leerEntero(tOut), leerEntero(tPrem), cbPeriodo.getValue());
+                if (l.getDenominacion().compareTo(BigDecimal.valueOf(den)) != 0) {
+                    lecturaService.editarDenominacion(l.getId(), BigDecimal.valueOf(den));
+                }
             } catch (Exception e) {
                 lblError.setText(e.getMessage());
                 ev.consume();
@@ -718,15 +745,15 @@ public class ContadoresController {
         for (TableColumn<FilaHist, String> c : List.of(colDif, colTotal)) {
             celdaCifra(c);
         }
-        for (TableColumn<FilaHist, String> c : List.of(colDen, colMaquina)) {
-            celdaCentrada(c);
-        }
+        celdaCentrada(colMaquina);
+        
         // Doble clic para editar en la misma celda. campo: 0 fecha, 1 In, 2 Out, 3 Prem, 4 periodo
         celdaEditable(colFecha, 0, false);
         celdaEditable(colPeriodo, 4, false);
         celdaEditable(colIn, 1, true);
         celdaEditable(colOut, 2, true);
         celdaEditable(colPrem, 3, true);
+        celdaEditable(colDen, 5, false);
 
         tabla.setRowFactory(tv -> {
             TableRow<FilaHist> fila = new TableRow<>() {
@@ -878,9 +905,10 @@ public class ContadoresController {
                 Lectura l = fila.lectura();
                 String inicial = campo == 0
                         ? l.getFecha().format(formatoFecha)
-                        : campo == 4 ? String.valueOf(l.getPeriodo())
-                        : miles.format(campo == 1 ? l.getContadorIn()
-                                : campo == 2 ? l.getContadorOut() : l.getContadorPrem());
+                                : campo == 4 ? String.valueOf(l.getPeriodo())
+                                        : campo == 5 ? miles.format(l.getDenominacion().longValue())
+                                        : miles.format(campo == 1 ? l.getContadorIn()
+                                                : campo == 2 ? l.getContadorOut() : l.getContadorPrem());
 
                 TextField campoEdicion = new TextField(inicial);
                 if (campo == 4) {
@@ -952,6 +980,17 @@ public class ContadoresController {
     private void guardarCelda(FilaContador fila, int campo, String texto) {
         Lectura l = fila.lectura();
         try {
+            if (campo == 5) {
+                String limpioDen = texto == null ? "" : texto.replaceAll("[^0-9]", "");
+                if (limpioDen.isEmpty() || Long.parseLong(limpioDen) <= 0) {
+                    mostrarEstado("La denominación debe ser mayor que cero", true);
+                    return;
+                }
+                lecturaService.editarDenominacion(l.getId(), new BigDecimal(limpioDen));
+                actualizarPanel();
+                mostrarEstado("Denominación editada", false);
+                return;
+            }
             LocalDate fecha = l.getFecha();
             Long in = l.getContadorIn();
             Long out = l.getContadorOut();

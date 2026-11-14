@@ -7,6 +7,12 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.Node;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.TableCell;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
+import com.misgastos.util.SelectorFecha;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.control.Labeled;
@@ -73,6 +79,10 @@ public class RegistroGastoController {
     @FXML private TextField txtValorTotal;
     @FXML private TextArea txtNotas;
     @FXML private TableView<Gasto> tblUltimosGastos;
+    @FXML private DatePicker dpDesde;
+    @FXML private DatePicker dpHasta;
+    @FXML private CheckBox chkMesAnterior;
+    @FXML private Label lblAvisoMesAnterior;
     @FXML private TableColumn<Gasto, LocalDate> colFecha;
     @FXML private TableColumn<Gasto, String> colCategoria;
     @FXML private TableColumn<Gasto, String> colProducto;
@@ -127,6 +137,7 @@ public class RegistroGastoController {
         configurarFiltros();
         configurarFiltros();
         cargarUltimosGastos();
+        configurarFiltroFechas();
         configurarCopiaPegadoTabla();
         //cargarUltimosGastos();
         configurarValidacionCedula();
@@ -449,7 +460,8 @@ public class RegistroGastoController {
                 new BigDecimal(valorUnitarioLimpio), // ✅ Usar valor limpio
                 txtNotas.getText(),
                 cedula,
-                nombrePersona
+                nombrePersona,
+                fechaParaGuardar()
             );
 
             log.info("Gasto guardado exitosamente");
@@ -565,6 +577,114 @@ public class RegistroGastoController {
         tblUltimosGastos.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
 
         colFecha.setCellValueFactory(data -> new SimpleObjectProperty<>(data.getValue().getFecha()));
+        colFecha.setCellFactory(col -> new TableCell<Gasto, LocalDate>() {
+            private boolean editando = false;
+
+            {
+                setOnMouseClicked(ev -> {
+                    if (ev.getButton() == MouseButton.PRIMARY && ev.getClickCount() == 2
+                            && !isEmpty() && !editando && edicionPermitida.get()) {
+                        iniciarEdicion();
+                    }
+                });
+            }
+
+            @Override
+            protected void updateItem(LocalDate item, boolean empty) {
+                super.updateItem(item, empty);
+                if (!editando) {
+                    setGraphic(null);
+                    setText(empty || item == null ? null : item.toString());
+                }
+            }
+
+            private void iniciarEdicion() {
+                Gasto gasto = getTableRow() == null ? null : getTableRow().getItem();
+                if (gasto == null) {
+                    return;
+                }
+                editando = true;
+                DatePicker dp = new DatePicker(gasto.getFecha());
+                SelectorFecha.configurar(dp);
+                dp.setMaxWidth(Double.MAX_VALUE);
+                setText(null);
+                setGraphic(dp);
+
+                boolean[] terminado = {false};
+                javafx.scene.Scene escena = getScene();
+                java.util.concurrent.atomic.AtomicReference<javafx.event.EventHandler<javafx.scene.input.MouseEvent>> filtroClic =
+                        new java.util.concurrent.atomic.AtomicReference<>();
+
+                Runnable cerrar = () -> {
+                    if (escena != null && filtroClic.get() != null) {
+                        escena.removeEventFilter(javafx.scene.input.MouseEvent.MOUSE_PRESSED, filtroClic.get());
+                    }
+                    editando = false;
+                    setGraphic(null);
+                    setText(getItem() == null ? null : getItem().toString());
+                };
+                Runnable guardar = () -> {
+                    if (terminado[0]) {
+                        return;
+                    }
+                    terminado[0] = true;
+                    LocalDate leida = null;
+                    try {
+                        leida = dp.getConverter().fromString(dp.getEditor().getText());
+                    } catch (RuntimeException ex) {
+                        log.debug("Fecha escrita no válida; se deja la que tenía");
+                    }
+                    cerrar.run();
+                    final LocalDate nueva = leida;
+                    if (nueva == null || nueva.equals(gasto.getFecha())) {
+                        return;
+                    }
+                    javafx.application.Platform.runLater(() -> {
+                        try {
+                            gastoService.actualizarFecha(gasto.getId(), nueva);
+                        } catch (RuntimeException ex) {
+                            log.error("No se pudo cambiar la fecha del gasto", ex);
+                            mostrarAlerta("Cambiar fecha", ex.getMessage(), Alert.AlertType.ERROR);
+                        }
+                        recargarTablaConservandoFiltros();
+                    });
+                };
+
+                // Un clic en cualquier sitio fuera del selector de fecha cierra y guarda la edición
+                filtroClic.set(ev -> {
+                    Node n = ev.getPickResult().getIntersectedNode();
+                    while (n != null && n != dp) {
+                        n = n.getParent();
+                    }
+                    if (n == null && !dp.isShowing()) {
+                        javafx.application.Platform.runLater(guardar);
+                    }
+                });
+                if (escena != null) {
+                    escena.addEventFilter(javafx.scene.input.MouseEvent.MOUSE_PRESSED, filtroClic.get());
+                }
+
+                dp.getEditor().addEventFilter(KeyEvent.KEY_PRESSED, ke -> {
+                    if (ke.getCode() == KeyCode.ENTER) {
+                        ke.consume();
+                        guardar.run();
+                    } else if (ke.getCode() == KeyCode.ESCAPE) {
+                        ke.consume();
+                        terminado[0] = true;
+                        cerrar.run();
+                    }
+                });
+                dp.getEditor().focusedProperty().addListener((obs, antes, enfocado) -> {
+                    if (!enfocado && !dp.isShowing()) {
+                        guardar.run();
+                    }
+                });
+                javafx.application.Platform.runLater(() -> {
+                    dp.getEditor().requestFocus();
+                    dp.getEditor().selectAll();
+                });
+            }
+        });
         colHora.setCellValueFactory(data -> {
             Object h = data.getValue().getHora();
             String texto = h == null ? "" : String.valueOf(h);
@@ -1194,10 +1314,82 @@ public class RegistroGastoController {
         refrescar[0].run();
         menu.show(anchor, Side.BOTTOM, 0, 0);
     }
+    
+    // ==================== FILTRO DE FECHAS ====================
+    private static final java.time.format.DateTimeFormatter FMT_AVISO =
+        java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+    /** Último día del mes anterior a hoy (hoy 01/11 -> 31/10). */
+    private LocalDate fechaCierreMesAnterior() {
+        return LocalDate.now().withDayOfMonth(1).minusDays(1);
+    }
+
+    /** null = el gasto queda con la fecha de hoy; con la casilla marcada, el último día del mes anterior. */
+    private LocalDate fechaParaGuardar() {
+        return chkMesAnterior.isSelected() ? fechaCierreMesAnterior() : null;
+    }
+
+    private void configurarFiltroFechas() {
+        SelectorFecha.configurar(dpDesde);
+        SelectorFecha.configurar(dpHasta);
+        java.time.YearMonth actual = java.time.YearMonth.now();
+        dpDesde.setValue(actual.atDay(1));
+        dpHasta.setValue(actual.atEndOfMonth());
+        dpDesde.valueProperty().addListener((o, a, b) -> aplicarFiltros());
+        dpHasta.valueProperty().addListener((o, a, b) -> aplicarFiltros());
+
+        lblAvisoMesAnterior.managedProperty().bind(chkMesAnterior.selectedProperty());
+        lblAvisoMesAnterior.visibleProperty().bind(chkMesAnterior.selectedProperty());
+        lblAvisoMesAnterior.setText("Se guardarán con fecha "
+                + fechaCierreMesAnterior().format(FMT_AVISO));
+        chkMesAnterior.selectedProperty().addListener((o, a, marcada) -> {
+            java.time.YearMonth m = marcada ? java.time.YearMonth.now().minusMonths(1)
+                                            : java.time.YearMonth.now();
+            ponerRangoFechas(m.atDay(1), m.atEndOfMonth());
+        });
+        aplicarFiltros();
+    }
+
+    private void ponerRangoFechas(LocalDate desde, LocalDate hasta) {
+        LocalDate actual = dpDesde.getValue();
+        // Orden que nunca deja Desde > Hasta, ni un instante
+        if (actual == null || desde.isAfter(actual)) {
+            dpHasta.setValue(hasta);
+            dpDesde.setValue(desde);
+        } else {
+            dpDesde.setValue(desde);
+            dpHasta.setValue(hasta);
+        }
+    }
+
+    private java.time.YearMonth mesFiltrado() {
+        LocalDate d = dpDesde.getValue() != null ? dpDesde.getValue() : LocalDate.now();
+        return java.time.YearMonth.from(d);
+    }
+
+    @FXML private void handleFechasAnterior() {
+        java.time.YearMonth m = mesFiltrado().minusMonths(1);
+        ponerRangoFechas(m.atDay(1), m.atEndOfMonth());
+    }
+
+    @FXML private void handleFechasEsteMes() {
+        java.time.YearMonth m = java.time.YearMonth.now();
+        ponerRangoFechas(m.atDay(1), m.atEndOfMonth());
+    }
+
+    @FXML private void handleFechasSiguiente() {
+        java.time.YearMonth m = mesFiltrado().plusMonths(1);
+        ponerRangoFechas(m.atDay(1), m.atEndOfMonth());
+    }
 
     private void aplicarFiltros() {
         if (gastosFiltrados == null) return;
+        LocalDate desde = dpDesde == null ? null : dpDesde.getValue();
+        LocalDate hasta = dpHasta == null ? null : dpHasta.getValue();
         gastosFiltrados.setPredicate(g -> {
+            LocalDate fechaGasto = g.getFecha();
+            if (desde != null && fechaGasto != null && fechaGasto.isBefore(desde)) return false;
+            if (hasta != null && fechaGasto != null && fechaGasto.isAfter(hasta)) return false;
             for (Map.Entry<TableColumn<Gasto, ?>, Set<String>> f : seleccionados.entrySet()) {
                 String v = extractores.get(f.getKey()).apply(g);
                 if (!f.getValue().contains(v == null ? "" : v)) return false;

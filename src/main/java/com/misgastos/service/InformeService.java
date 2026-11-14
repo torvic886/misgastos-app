@@ -1460,7 +1460,8 @@ public class InformeService {
         PdfWriter writer = new PdfWriter(rutaArchivo);
         PdfDocument pdf = new PdfDocument(writer);
         Document document = new Document(pdf);
-
+        pdf.setDefaultPageSize(PageSize.LETTER);
+        
         DeviceRgb azulOscuro = new DeviceRgb(30, 58, 138);
 
         // Título con mejor estilo

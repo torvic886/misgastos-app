@@ -185,7 +185,13 @@ public class UsuarioService {
         }
         
         String username = usuario.getUsername();
-        usuarioRepository.delete(usuario);
+        try {
+            usuarioRepository.delete(usuario);
+            usuarioRepository.flush();
+        } catch (org.springframework.dao.DataAccessException e) {
+            throw new RuntimeException("El usuario tiene gastos o movimientos registrados. "
+                    + "Desactívalo en lugar de eliminarlo.");
+        }
         log.info("Usuario eliminado");
         log.debug("Usuario eliminado: id {}, nombre '{}'", id, username);
         

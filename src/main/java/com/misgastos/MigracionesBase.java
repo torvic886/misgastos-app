@@ -79,7 +79,16 @@ public final class MigracionesBase {
             List<String> sentencias = dividir(script);
             log.debug("Migración V{}: {} sentencia(s)", version, sentencias.size());
             for (String sentencia : sentencias) {
-                st.execute(sentencia);
+                try {
+                    st.execute(sentencia);
+                } catch (java.sql.SQLException e) {
+                    String msg = e.getMessage() == null ? "" : e.getMessage();
+                    if (msg.contains("duplicate column name")) {
+                        log.warn("Migración V{}: la columna ya existía, se omite", version);
+                    } else {
+                        throw e;
+                    }
+                }
             }
             registrar(c, version, descripcion(script, version));
             c.commit();

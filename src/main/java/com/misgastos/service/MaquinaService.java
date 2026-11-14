@@ -51,6 +51,18 @@ public class MaquinaService {
         m.setActiva(true);
 
         Maquina guardada = maquinaRepository.save(m);
+
+        // SQLite reutiliza el id de una máquina borrada. Si quedaron lecturas con ese id
+        // (borrado fuera de la app), no se deben mezclar con la máquina nueva.
+        long huerfanas = lecturaService.contarLecturas(guardada.getId());
+        if (huerfanas > 0) {
+            log.warn("No se creó la máquina: hay lecturas huérfanas con el mismo id interno");
+            log.debug("Lecturas huérfanas para el id {}: {}", guardada.getId(), huerfanas);
+            throw new RuntimeException("No se pudo crear la máquina: la base tiene " + huerfanas
+                    + " lectura(s) huérfana(s) con el mismo id interno (quedaron de una máquina "
+                    + "borrada fuera de la aplicación). Hay que limpiarlas antes de crear la máquina.");
+        }
+
         lecturaService.registrarInicial(guardada);
 
         log.info("Máquina creada");
@@ -61,38 +73,56 @@ public class MaquinaService {
     }
 
     public Maquina actualizar(Long id, Long codigo, BigDecimal denominacion, String nombre, String serial,
-                              String juego, Long contadorIn, Long contadorOut, Long contadorPrem) {
-        validarDatos(codigo, denominacion, nombre, serial, juego);
-        Maquina m = obtener(id);
+            String juego, Long contadorIn, Long contadorOut, Long contadorPrem) {
+return actualizar(id, codigo, denominacion, nombre, serial, juego,
+contadorIn, contadorOut, contadorPrem, null);
+}
 
-        Optional<Maquina> otra = maquinaRepository.findByCodigo(codigo);
-        if (otra.isPresent() && !otra.get().getId().equals(id)) {
-            log.warn("No se actualizó la máquina: el código ya existe en otra máquina");
-            log.debug("Código duplicado al actualizar máquina id {}: {}", id, codigo);
-            throw new RuntimeException("Ya existe otra máquina con el código " + codigo);
-        }
+/** denominacionDesde = null: corrige todo el historial; con fecha: solo las lecturas desde esa fecha. */
+public Maquina actualizar(Long id, Long codigo, BigDecimal denominacion, String nombre, String serial,
+            String juego, Long contadorIn, Long contadorOut, Long contadorPrem,
+            LocalDate denominacionDesde) {
+validarDatos(codigo, denominacion, nombre, serial, juego);
+Maquina m = obtener(id);
+BigDecimal denominacionAnterior = m.getDenominacion();
 
-        m.setCodigo(codigo);
-        m.setDenominacion(denominacion);
-        m.setNombre(nombre.trim());
-        m.setSerial(serial.trim());
-        m.setJuego(juego.trim());
+Optional<Maquina> otra = maquinaRepository.findByCodigo(codigo);
+if (otra.isPresent() && !otra.get().getId().equals(id)) {
+log.warn("No se actualizó la máquina: el código ya existe en otra máquina");
+log.debug("Código duplicado al actualizar máquina id {}: {}", id, codigo);
+throw new RuntimeException("Ya existe otra máquina con el código " + codigo);
+}
 
-        validarContadores(contadorIn, contadorOut, contadorPrem);
-        m.setContadorIn(contadorIn);
-        m.setContadorOut(contadorOut);
-        m.setContadorPrem(contadorPrem);
-        // Si ya tiene lecturas, se corrige también la lectura INICIAL para que el historial coincida
-        if (lecturaService.existenLecturas(id)) {
-            lecturaService.corregirInicial(id, denominacion, contadorIn, contadorOut, contadorPrem);
-        }
+m.setCodigo(codigo);
+m.setDenominacion(denominacion);
+m.setNombre(nombre.trim());
+m.setSerial(serial.trim());
+m.setJuego(juego.trim());
 
-        Maquina guardada = maquinaRepository.save(m);
-        log.info("Máquina actualizada");
-        log.debug("Máquina actualizada: id {}, código {}", id, codigo);
-        auditoriaService.registrarCambio("ACTUALIZAR_MAQUINA", "Máquina " + codigo + " actualizada");
-        return guardada;
-    }
+validarContadores(contadorIn, contadorOut, contadorPrem);
+m.setContadorIn(contadorIn);
+m.setContadorOut(contadorOut);
+m.setContadorPrem(contadorPrem);
+// Si ya tiene lecturas, se corrige también la lectura INICIAL para que el historial coincida
+if (lecturaService.existenLecturas(id)) {
+lecturaService.corregirInicial(id, denominacion, contadorIn, contadorOut, contadorPrem);
+}
+
+// Si cambió la denominación, se actualizan las lecturas (todas, o desde la fecha elegida)
+if (denominacionAnterior.compareTo(denominacion) != 0) {
+int n = lecturaService.actualizarDenominacion(id, denominacion, denominacionDesde);
+auditoriaService.registrarCambio("CAMBIO_DENOMINACION",
+  "Máquina " + codigo + ": " + denominacionAnterior + " → " + denominacion
+  + (denominacionDesde == null ? " (todo el historial)" : " (desde " + denominacionDesde + ")")
+  + ", lecturas actualizadas: " + n);
+}
+
+Maquina guardada = maquinaRepository.save(m);
+log.info("Máquina actualizada");
+log.debug("Máquina actualizada: id {}, código {}", id, codigo);
+auditoriaService.registrarCambio("ACTUALIZAR_MAQUINA", "Máquina " + codigo + " actualizada");
+return guardada;
+}
 
     public Maquina darDeBaja(Long id, LocalDate fechaBaja, String motivo) {
         Maquina m = obtener(id);

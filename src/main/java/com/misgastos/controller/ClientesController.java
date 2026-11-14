@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.ArrayList;
 import javafx.scene.layout.VBox;
+import javafx.scene.control.Dialog;
 import com.misgastos.service.ClienteExcelService;
 import javafx.beans.property.SimpleObjectProperty;
 import com.misgastos.service.ClienteMovimientoService;
@@ -51,6 +52,16 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ComboBoxBase;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
 
 /**
  * Pantalla Clientes: lista los clientes, permite agregar y editar uno a mano,
@@ -132,16 +143,7 @@ public class ClientesController {
         tablaClientes.setPlaceholder(new Label(
             "Todavía no hay clientes. Usa «Agregar cliente» o «Importar clientes desde Excel»."));
 
-        // Doble clic sobre un cliente abre el formulario de edición
-        tablaClientes.setRowFactory(tv -> {
-            TableRow<Cliente> fila = new TableRow<>();
-            fila.setOnMouseClicked(ev -> {
-                if (ev.getButton() == MouseButton.PRIMARY && ev.getClickCount() == 2 && !fila.isEmpty()) {
-                    abrirFormulario(fila.getItem());
-                }
-            });
-            return fila;
-        });
+        configurarEdicionEnCeldas();
 
         txtBuscar.textProperty().addListener((obs, a, b) -> {
             String t = b == null ? "" : b.trim().toLowerCase();
@@ -543,6 +545,7 @@ public class ClientesController {
         TextField txtCedulaForm = new TextField(editando ? existente.getCedula() : "");
         txtCedulaForm.setPromptText("Solo números");
         txtCedulaForm.setEditable(!editando);
+        txtCedulaForm.setDisable(editando);
         txtCedulaForm.setPrefWidth(280);
 
         TextField txtNombreForm = new TextField(editando ? existente.getNombre() : "");
@@ -645,6 +648,305 @@ public class ClientesController {
         } else {
             log.debug("Formulario de cliente cerrado sin guardar");
         }
+    }
+    
+    // ==================== Edición en la tabla ====================
+
+    private enum TipoCelda { NOMBRE, TELEFONO, ETIQUETA, CUMPLE }
+
+    private void configurarEdicionEnCeldas() {
+        colNombre.setCellFactory(c -> new CeldaEditable(TipoCelda.NOMBRE));
+        colTelefono.setCellFactory(c -> new CeldaEditable(TipoCelda.TELEFONO));
+        colEtiqueta.setCellFactory(c -> new CeldaEditable(TipoCelda.ETIQUETA));
+        colCumple.setCellFactory(c -> new CeldaEditable(TipoCelda.CUMPLE));
+    }
+
+    /** Celda con doble clic y menú de clic derecho «Editar ...». La cédula no se edita. */
+    private final class CeldaEditable extends TableCell<Cliente, String> {
+        private final TipoCelda tipo;
+        private final ContextMenu menu = new ContextMenu();
+        private boolean editando = false;
+
+        CeldaEditable(TipoCelda tipo) {
+            this.tipo = tipo;
+            String columna = switch (tipo) {
+                case NOMBRE -> "nombre";
+                case TELEFONO -> "teléfono";
+                case ETIQUETA -> "etiqueta";
+                case CUMPLE -> "cumpleaños";
+            };
+            MenuItem item = new MenuItem("Editar");
+            item.setOnAction(e -> {
+                Cliente cliente = getTableRow() == null ? null : getTableRow().getItem();
+                if (cliente != null) {
+                    abrirFormulario(cliente);
+                }
+            });
+            menu.getItems().add(item);
+            setOnMouseClicked(ev -> {
+                if (ev.getButton() == MouseButton.PRIMARY && ev.getClickCount() == 2 && !isEmpty()) {
+                    iniciarEdicion();
+                }
+            });
+        }
+
+        @Override
+        protected void updateItem(String item, boolean empty) {
+            super.updateItem(item, empty);
+            setContextMenu(empty ? null : menu);
+            if (!editando) {
+                setGraphic(null);
+                setText(empty ? null : item);
+            }
+        }
+
+        private void iniciarEdicion() {
+            Cliente cliente = getTableRow() == null ? null : getTableRow().getItem();
+            if (cliente == null || editando) {
+                return;
+            }
+            editando = true;
+            boolean[] terminado = {false};
+
+            javafx.scene.control.Control editor;
+            java.util.function.Supplier<Object> leer;
+            if (tipo == TipoCelda.ETIQUETA) {
+                ComboBox<String> cmb = new ComboBox<>();
+                cmb.getItems().addAll("Sin etiqueta", "Tipo 1", "Tipo 2", "Tipo 3");
+                cmb.setValue(cliente.getEtiqueta() == null ? "Sin etiqueta" : cliente.getEtiqueta());
+                cmb.setMaxWidth(Double.MAX_VALUE);
+                editor = cmb;
+                leer = cmb::getValue;
+            } else if (tipo == TipoCelda.CUMPLE) {
+                DatePicker dp = new DatePicker(cliente.getCumpleanos());
+                SelectorFecha.configurar(dp);
+                dp.setMaxWidth(Double.MAX_VALUE);
+                editor = dp;
+                leer = () -> dp.getConverter().fromString(dp.getEditor().getText());
+            } else {
+                String actual = tipo == TipoCelda.NOMBRE ? cliente.getNombre() : cliente.getTelefono();
+                TextField tf = new TextField(actual == null ? "" : actual);
+                editor = tf;
+                leer = tf::getText;
+            }
+            setText(null);
+            setGraphic(editor);
+
+            Runnable cerrar = () -> {
+                editando = false;
+                setGraphic(null);
+                setText(getItem());
+            };
+            Runnable guardar = () -> {
+                if (terminado[0]) {
+                    return;
+                }
+                terminado[0] = true;
+                Object valor = leer.get();
+                cerrar.run();
+                Platform.runLater(() -> aplicarCambio(cliente, tipo, valor));
+            };
+
+            editor.addEventFilter(KeyEvent.KEY_PRESSED, ke -> {
+                if (ke.getCode() == KeyCode.ENTER) {
+                    ke.consume();
+                    guardar.run();
+                } else if (ke.getCode() == KeyCode.ESCAPE) {
+                    ke.consume();
+                    terminado[0] = true;
+                    cerrar.run();
+                }
+            });
+            if (editor instanceof ComboBox<?> cb) {
+                cb.setOnAction(e -> guardar.run());
+            }
+
+            javafx.scene.Node foco = editor instanceof DatePicker d ? d.getEditor() : editor;
+            foco.focusedProperty().addListener((obs, antes, enfocado) -> {
+                if (enfocado) {
+                    return;
+                }
+                if (editor instanceof ComboBoxBase<?> b && b.isShowing()) {
+                    return;
+                }
+                if (tipo == TipoCelda.ETIQUETA) {
+                    if (!terminado[0]) {
+                        terminado[0] = true;
+                        cerrar.run();
+                    }
+                } else {
+                    guardar.run();
+                }
+            });
+            Platform.runLater(() -> {
+                foco.requestFocus();
+                if (editor instanceof TextField t) {
+                    t.selectAll();
+                }
+                if (editor instanceof ComboBox<?> cb) {
+                    cb.show();
+                }
+            });
+        }
+    }
+
+    /** Guarda el cambio de una celda editada en la tabla y recarga la lista. */
+    private void aplicarCambio(Cliente c, TipoCelda tipo, Object valor) {
+        boolean cambioNombre = false;
+        try {
+            cambioNombre = guardarCambio(c, tipo, valor);
+        } catch (IllegalArgumentException ex) {
+            mostrar(Alert.AlertType.WARNING, "Editar cliente", ex.getMessage(), null);
+        } catch (Exception ex) {
+            log.error("No se pudo guardar el cambio del cliente", ex);
+            mostrar(Alert.AlertType.ERROR, "Editar cliente",
+                "No se pudo guardar el cambio. Revisa el registro de errores.", null);
+        }
+        recargarYSeleccionar(c.getCedula(), cambioNombre);
+    }
+
+    /** Valida y guarda un cambio. Lanza IllegalArgumentException con el mensaje para el usuario. */
+    private boolean guardarCambio(Cliente c, TipoCelda tipo, Object valor) {
+        String cedula = c.getCedula();
+        if (tipo == TipoCelda.NOMBRE) {
+            return guardarNombre(c, (String) valor);
+        }
+        if (tipo == TipoCelda.TELEFONO) {
+            String nuevo = valor == null ? "" : ((String) valor).trim();
+            String actual = c.getTelefono() == null ? "" : c.getTelefono();
+            if (!nuevo.equals(actual)) {
+                clienteService.actualizar(cedula, c.getNombre(), nuevo,
+                    c.getEtiqueta(), c.getCumpleanos(), false);
+            }
+        } else if (tipo == TipoCelda.ETIQUETA) {
+            String nueva = "Sin etiqueta".equals(valor) ? null : (String) valor;
+            if (!java.util.Objects.equals(nueva, c.getEtiqueta())) {
+                clienteService.actualizar(cedula, c.getNombre(), c.getTelefono(),
+                    nueva, c.getCumpleanos(), false);
+            }
+        } else {
+            LocalDate nueva = (LocalDate) valor;
+            if (!java.util.Objects.equals(nueva, c.getCumpleanos())) {
+                clienteService.actualizar(cedula, c.getNombre(), c.getTelefono(),
+                    c.getEtiqueta(), nueva, false);
+            }
+        }
+        return false;
+    }
+
+    private void recargarYSeleccionar(String cedula, boolean desplazar) {
+        cargar();
+        for (Cliente x : tablaClientes.getItems()) {
+            if (x.getCedula().equals(cedula)) {
+                tablaClientes.getSelectionModel().clearSelection();
+                tablaClientes.getSelectionModel().select(x);
+                if (desplazar) {
+                    tablaClientes.scrollTo(x);
+                }
+                break;
+            }
+        }
+    }
+
+    /** Modal del clic derecho: edita solo la celda elegida. El error sale dentro del modal. */
+    private void abrirModalEdicion(Cliente c, TipoCelda tipo) {
+        if (c == null) {
+            return;
+        }
+        String columna = switch (tipo) {
+            case NOMBRE -> "nombre";
+            case TELEFONO -> "teléfono";
+            case ETIQUETA -> "etiqueta";
+            case CUMPLE -> "cumpleaños";
+        };
+
+        javafx.scene.control.Control editor;
+        java.util.function.Supplier<Object> leer;
+        if (tipo == TipoCelda.ETIQUETA) {
+            ComboBox<String> cmb = new ComboBox<>();
+            cmb.getItems().addAll("Sin etiqueta", "Tipo 1", "Tipo 2", "Tipo 3");
+            cmb.setValue(c.getEtiqueta() == null ? "Sin etiqueta" : c.getEtiqueta());
+            cmb.setMaxWidth(Double.MAX_VALUE);
+            editor = cmb;
+            leer = cmb::getValue;
+        } else if (tipo == TipoCelda.CUMPLE) {
+            DatePicker dp = new DatePicker(c.getCumpleanos());
+            SelectorFecha.configurar(dp);
+            dp.setMaxWidth(Double.MAX_VALUE);
+            editor = dp;
+            leer = () -> dp.getConverter().fromString(dp.getEditor().getText());
+        } else {
+            String actual = tipo == TipoCelda.NOMBRE ? c.getNombre() : c.getTelefono();
+            TextField tf = new TextField(actual == null ? "" : actual);
+            tf.setPrefWidth(300);
+            editor = tf;
+            leer = tf::getText;
+        }
+
+        Label lblError = new Label();
+        lblError.setStyle("-fx-text-fill: #dc2626;");
+        lblError.setWrapText(true);
+        lblError.setMaxWidth(380);
+
+        javafx.scene.layout.GridPane grid = new javafx.scene.layout.GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new javafx.geometry.Insets(15));
+        grid.add(new Label("Cliente: " + c.getNombre() + "  (cédula " + formatearCedula(c.getCedula()) + ")"),
+            0, 0, 2, 1);
+        grid.add(new Label(columna.substring(0, 1).toUpperCase() + columna.substring(1) + ":"), 0, 1);
+        grid.add(editor, 1, 1);
+        grid.add(lblError, 0, 2, 2, 1);
+
+        Dialog<ButtonType> dialogo = new Dialog<>();
+        dialogo.setTitle("Editar " + columna);
+        dialogo.setHeaderText(null);
+        dialogo.getDialogPane().setContent(grid);
+        dialogo.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        Button btnGuardar = (Button) dialogo.getDialogPane().lookupButton(ButtonType.OK);
+        btnGuardar.setText("Guardar");
+        ((Button) dialogo.getDialogPane().lookupButton(ButtonType.CANCEL)).setText("Cancelar");
+
+        boolean[] cambioNombre = {false};
+        btnGuardar.addEventFilter(ActionEvent.ACTION, ev -> {
+            try {
+                cambioNombre[0] = guardarCambio(c, tipo, leer.get());
+            } catch (IllegalArgumentException ex) {
+                lblError.setText(ex.getMessage());
+                ev.consume();
+            } catch (Exception ex) {
+                log.error("No se pudo guardar el cambio del cliente", ex);
+                lblError.setText("No se pudo guardar el cambio. Revisa el registro de errores.");
+                ev.consume();
+            }
+        });
+
+        Platform.runLater(editor::requestFocus);
+        Optional<ButtonType> resp = dialogo.showAndWait();
+        if (resp.isPresent() && resp.get() == ButtonType.OK) {
+            recargarYSeleccionar(c.getCedula(), cambioNombre[0]);
+        }
+    }
+
+    /** Cambia el nombre; si hay gastos afectados, pide confirmación con la cantidad. */
+    private boolean guardarNombre(Cliente c, String texto) {
+        String nuevo = texto == null ? "" : texto.replaceAll("\\s+", " ").trim();
+        if (nuevo.equals(c.getNombre())) {
+            return false;
+        }
+        int afectados = clienteService.contarGastosPorCorregir(c.getCedula(), nuevo);
+        if (afectados > 0) {
+            Optional<ButtonType> resp = mostrar(Alert.AlertType.CONFIRMATION, "Cambiar nombre",
+                "Nombre actual: " + c.getNombre() + "\nNombre nuevo: " + nuevo + "\n\n"
+                + "También se cambiará en " + afectados
+                + " gasto(s) ya registrado(s) (incluye los de la papelera).\n\n¿Continuar?", null);
+            if (resp.isEmpty() || resp.get() != ButtonType.OK) {
+                return false;
+            }
+        }
+        clienteService.actualizar(c.getCedula(), nuevo, c.getTelefono(),
+            c.getEtiqueta(), c.getCumpleanos(), afectados > 0);
+        return true;
     }
 
     // ==================== Importar desde Excel ====================

@@ -124,6 +124,22 @@ public class ClienteService {
         log.debug("Corrección de nombre en gastos: cédula {}, {} fila(s)", cedula, filas);
         return filas;
     }
+    
+    /**
+     * Cuenta los gastos (incluida la papelera) que cambiarían de nombre si se
+     * pone este nombre a la cédula. Misma condición que corregirNombreEnGastos.
+     */
+    @Transactional(readOnly = true)
+    public int contarGastosPorCorregir(String cedula, String nombreTexto) {
+        String nombre = normalizarNombre(nombreTexto);
+        Number n = (Number) entityManager.createNativeQuery(
+                "SELECT COUNT(*) FROM gastos WHERE TRIM(cedula) = :cedula "
+                + "AND (nombre_persona IS NULL OR nombre_persona <> :nombre)")
+            .setParameter("nombre", nombre)
+            .setParameter("cedula", cedula)
+            .getSingleResult();
+        return n.intValue();
+    }
 
     /** Solo dígitos; quita espacios, puntos y comas como hace el importador. */
     private String normalizarCedula(String texto) {
@@ -184,11 +200,11 @@ public class ClienteService {
         if (t.isEmpty()) {
             return null;
         }
-        if (!t.matches("\\+?\\d+")) {
-            throw new IllegalArgumentException("El teléfono solo puede tener números (y un + al inicio).");
+        if (!t.matches("\\d+")) {
+            throw new IllegalArgumentException("El teléfono solo puede tener números.");
         }
-        if (t.length() > 20) {
-            throw new IllegalArgumentException("El teléfono es demasiado largo (máximo 20 caracteres).");
+        if (t.length() > 15) {
+            throw new IllegalArgumentException("El teléfono no puede tener más de 15 números.");
         }
         return t;
     }

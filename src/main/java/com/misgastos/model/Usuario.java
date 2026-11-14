@@ -2,6 +2,8 @@ package com.misgastos.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import com.misgastos.util.ProductoNormalizador;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "usuarios")

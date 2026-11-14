@@ -2,64 +2,85 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.geometry.Insets?>
+<?import javafx.scene.shape.SVGPath?>
 
-<VBox spacing="12"
-      styleClass="content"
-      xmlns="http://javafx.com/javafx/17"
-      xmlns:fx="http://javafx.com/fxml/1"
+<VBox spacing="12" styleClass="content, gasto-screen"
+      xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.misgastos.controller.CorregirDatosController">
 
-    <padding>
-        <Insets top="20" right="20" bottom="20" left="20"/>
-    </padding>
+    <VBox spacing="10" VBox.vgrow="ALWAYS" styleClass="table-card">
 
-    <VBox spacing="10" VBox.vgrow="ALWAYS" styleClass="table-card" style="-fx-padding: 16;">
-
-        <Label text="Corregir datos"
-               style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-        <Label wrapText="true"
-               text="Corrige de una vez un texto mal escrito en todos los gastos ya registrados (también los de la papelera). Selecciona uno o varios valores de la lista y escribe cómo debe quedar."
-               style="-fx-text-fill: #64748b;"/>
-
-        <HBox spacing="10" alignment="CENTER_LEFT">
-            <Label text="Campo a corregir" style="-fx-font-weight: bold; -fx-text-fill: #1e293b;"
-                   minWidth="-Infinity"/>
-            <ComboBox fx:id="cmbCampo" prefWidth="220"/>
-            <TextField fx:id="txtBuscar" promptText="Buscar en la lista" prefWidth="260" minWidth="140"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Label fx:id="lblResumen" text="" minWidth="-Infinity"
-                   style="-fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+        <!-- Encabezado: título a la izquierda, contador a la derecha -->
+        <HBox spacing="10" alignment="CENTER_LEFT" styleClass="panel-header">
+            <Label styleClass="icon-circle">
+                <graphic>
+                    <SVGPath styleClass="icon-white"
+                             content="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                </graphic>
+            </Label>
+            <VBox spacing="2" HBox.hgrow="ALWAYS">
+                <Label text="Corregir datos" styleClass="panel-title" />
+                <Label wrapText="true"
+                       text="Corrige de una vez un texto mal escrito en todos los gastos ya registrados (también los de la papelera). Selecciona uno o varios valores de la lista y escribe cómo debe quedar."
+                       styleClass="panel-subtitle" />
+            </VBox>
+            <Label fx:id="lblResumen" text="" minWidth="-Infinity" styleClass="total-label" />
         </HBox>
 
-        <HBox spacing="16" VBox.vgrow="ALWAYS">
+        <!-- Campo y búsqueda -->
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Label text="Campo a corregir" styleClass="form-label" minWidth="-Infinity" />
+            <ComboBox fx:id="cmbCampo" prefWidth="220" />
+            <TextField fx:id="txtBuscar" promptText="Buscar en la lista"
+                       prefWidth="260" minWidth="140" styleClass="search-field" />
+        </HBox>
 
-            <TableView fx:id="tablaValores" HBox.hgrow="ALWAYS" style="-fx-fixed-cell-size: 34px;">
+        <HBox spacing="12" VBox.vgrow="ALWAYS">
+
+            <!-- Lista: el valor toma el ancho sobrante, Gastos queda fija -->
+            <TableView fx:id="tablaValores" HBox.hgrow="ALWAYS"
+                       style="-fx-fixed-cell-size: 34px;">
                 <columnResizePolicy>
-                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
                 </columnResizePolicy>
                 <columns>
-                    <TableColumn fx:id="colValor" text="Como está escrito ahora" prefWidth="420" minWidth="200"/>
-                    <TableColumn fx:id="colCantidad" text="Gastos" prefWidth="90" minWidth="70"/>
+                    <TableColumn fx:id="colValor" text="Como está escrito ahora"
+                                 prefWidth="420" minWidth="200" />
+                    <TableColumn fx:id="colCantidad" text="Gastos"
+                                 prefWidth="90" minWidth="90" maxWidth="90" />
+                	                    <TableColumn fx:id="colTotal" text="Total"
+                                 prefWidth="130" minWidth="130" maxWidth="130" />
                 </columns>
             </TableView>
 
-            <VBox spacing="10" prefWidth="330" minWidth="330" maxWidth="330">
-                <Label text="Cómo debe quedar" style="-fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-                <TextField fx:id="txtCorrecto" promptText="Texto correcto"/>
+            <!-- Panel de corrección -->
+            <VBox spacing="10" prefWidth="330" minWidth="330" maxWidth="330"
+                  styleClass="form-card">
+                <Label text="Cómo debe quedar" styleClass="form-label" />
+                <TextField fx:id="txtCorrecto" promptText="Texto correcto"
+                           styleClass="search-field" />
                 <CheckBox fx:id="chkClientes" wrapText="true"
-                          text="Actualizar también la lista de Clientes con esa cédula"/>
-                <Label fx:id="lblAviso" wrapText="true" text=""
-                       style="-fx-text-fill: #64748b;"/>
+                          text="Actualizar también la lista de Clientes con esa cédula" />
+                <Label fx:id="lblAviso" wrapText="true" text="" styleClass="panel-subtitle" />
                 <HBox spacing="10">
-                    <Button fx:id="btnAplicar" text="Aplicar corrección" styleClass="primary-button"
-                            onAction="#handleAplicar" minWidth="-Infinity"/>
-                    <Button text="Limpiar" styleClass="secondary-button"
-                            onAction="#handleLimpiar" minWidth="-Infinity"/>
+                    <Button fx:id="btnAplicar" text="Aplicar corrección"
+                            onAction="#handleAplicar" minWidth="-Infinity"
+                            styleClass="toolbar-button, toolbar-blue">
+                        <graphic>
+                            <SVGPath styleClass="toolbar-icon"
+                                     content="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                        </graphic>
+                    </Button>
+                    <Button text="Limpiar" onAction="#handleLimpiar" minWidth="-Infinity"
+                            styleClass="toolbar-button, toolbar-neutral">
+                        <graphic>
+                            <SVGPath styleClass="toolbar-icon"
+                                     content="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
+                        </graphic>
+                    </Button>
                 </HBox>
             </VBox>
 
         </HBox>
-
     </VBox>
 </VBox>

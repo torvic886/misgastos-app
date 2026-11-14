@@ -31,6 +31,9 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import java.text.NumberFormat;
+import java.util.Locale;
+import javafx.beans.property.SimpleDoubleProperty;
 
 /**
  * Pantalla "Corregir datos": lista los valores distintos de un campo de los
@@ -49,6 +52,7 @@ public class CorregirDatosController {
     @FXML private TableView<ValorConteo> tablaValores;
     @FXML private TableColumn<ValorConteo, String> colValor;
     @FXML private TableColumn<ValorConteo, Number> colCantidad;
+    @FXML private TableColumn<ValorConteo, Number> colTotal;
     @FXML private TextField txtCorrecto;
     @FXML private CheckBox chkClientes;
     @FXML private Label lblAviso;
@@ -70,6 +74,18 @@ public class CorregirDatosController {
         colCantidad.setCellValueFactory(c -> new SimpleLongProperty(c.getValue().cantidad()));
         colCantidad.setStyle("-fx-alignment: CENTER-RIGHT;");
 
+        NumberFormat peso = NumberFormat.getCurrencyInstance(new Locale("es", "CO"));
+        peso.setMaximumFractionDigits(0);
+        colTotal.setCellValueFactory(c -> new SimpleDoubleProperty(c.getValue().total()));
+        colTotal.setStyle("-fx-alignment: CENTER-RIGHT;");
+        colTotal.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(Number valor, boolean vacio) {
+                super.updateItem(valor, vacio);
+                setText(vacio || valor == null ? null : peso.format(valor.doubleValue()));
+            }
+        });
+        
         // Marca los valores con espacios de más, que a simple vista no se notan
         colValor.setCellFactory(col -> new TableCell<>() {
             @Override
@@ -157,8 +173,12 @@ public class CorregirDatosController {
         }
         long afectados = servicio.contarAfectados(campo(), valores, nuevo);
         StringBuilder sb = new StringBuilder();
-        sb.append("Se cambiarán ").append(afectados).append(" gasto(s) a «")
-          .append(nuevo.replaceAll("\\s+", " ").trim()).append("».");
+        if (afectados == 0 && campo() != Campo.NOMBRE_PERSONA) {
+            sb.append("Sin cambios: ya está escrito así.");
+        } else {
+            sb.append("Se cambiarán ").append(afectados).append(" gasto(s) a «")
+              .append(nuevo.replaceAll("\\s+", " ").trim()).append("».");
+        }
         if (campo() == Campo.NOMBRE_PERSONA) {
             int cedulas = servicio.contarCedulas(valores);
             sb.append("\nCédulas distintas afectadas: ").append(cedulas).append(".");
