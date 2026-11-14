@@ -19,7 +19,9 @@ import org.springframework.stereotype.Component;
 
 import com.misgastos.model.Billetero;
 import com.misgastos.service.BilleteroService;
+import com.misgastos.util.CopiarTabla;
 import com.misgastos.util.SelectorFecha;
+import javafx.scene.control.SelectionMode;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
@@ -139,7 +141,11 @@ public class GestionBilleterosController {
             }
         });
         
+        tablaBilleteros.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        CopiarTabla.habilitar(tablaBilleteros, fila -> true, colAcciones);
+        
         // Columna Acciones
+        
         colAcciones.setCellFactory(column -> new TableCell<Billetero, Void>() {
             private final Button btnEditar = new Button("✏ Editar");
             private final Button btnEliminar = new Button("🗑");

@@ -4,6 +4,7 @@ import com.misgastos.model.Lectura;
 import com.misgastos.model.Maquina;
 import com.misgastos.service.LecturaService;
 import com.misgastos.service.MaquinaService;
+import com.misgastos.util.CopiarTabla;
 import com.misgastos.util.SelectorFecha;
 import com.misgastos.service.MaquinaImportService;
 import javafx.stage.FileChooser;
@@ -483,6 +484,9 @@ public class GestionMaquinasController {
         tablaActivas.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         tablaBajas.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
+        CopiarTabla.habilitar(tablaActivas);
+        CopiarTabla.habilitar(tablaBajas);
+        
         tablaActivas.setRowFactory(tv -> {
             TableRow<Maquina> fila = new TableRow<>();
             MenuItem editar = new MenuItem("Editar");

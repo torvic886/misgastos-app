@@ -1,6 +1,7 @@
 package com.misgastos.controller;
 
 import com.misgastos.service.ReporteBilleteroService;
+import com.misgastos.util.CopiarTabla;
 import com.misgastos.util.SelectorFecha;
 
 import javafx.beans.property.SimpleStringProperty;
@@ -17,6 +18,7 @@ import java.io.File;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import javafx.scene.control.SelectionMode;
 import java.util.List;
 import java.util.Locale;
 import lombok.extern.slf4j.Slf4j;
@@ -77,6 +79,8 @@ public class ReportesBilleterosController {
     }
 
     private void configurarTabla() {
+        tblVistaPrevia.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        CopiarTabla.habilitar(tblVistaPrevia);
         colPeriodo.setCellValueFactory(new PropertyValueFactory<>("periodo"));
         colBilletero.setCellValueFactory(new PropertyValueFactory<>("billetero"));
         colPremios.setCellValueFactory(new PropertyValueFactory<>("premios"));

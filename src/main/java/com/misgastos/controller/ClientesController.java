@@ -14,6 +14,8 @@ import com.misgastos.service.ClienteExcelService;
 import javafx.beans.property.SimpleObjectProperty;
 import com.misgastos.service.ClienteMovimientoService;
 import javafx.scene.control.DatePicker;
+
+import com.misgastos.util.CopiarTabla;
 import com.misgastos.util.SelectorFecha;
 
 import org.slf4j.Logger;
@@ -110,6 +112,7 @@ public class ClientesController {
     @FXML
     public void initialize() {
         tablaClientes.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        CopiarTabla.habilitar(tablaClientes);
         colCedula.setCellValueFactory(c -> new SimpleStringProperty(formatearCedula(c.getValue().getCedula())));
         colNombre.setCellValueFactory(c -> new SimpleStringProperty(tituloNombre(c.getValue().getNombre())));
 
