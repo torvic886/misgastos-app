@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.util.Locale;
 import lombok.extern.slf4j.Slf4j;
@@ -50,25 +49,35 @@ public class ModalBilleteroController {
     
     @FXML
     public void initialize() {
-    	log.debug("Inicializando modal de billetero");
-        
+        log.debug("Inicializando modal de billetero");
+
+        configurarFechaPorDefecto();
+        configurarFormatosEnTiempoReal();
+        configurarCalculoDiferencia();
+    }
+    
+    private void configurarFechaPorDefecto() {
         // Configurar fecha por defecto
         SelectorFecha.configurar(dpFecha);
         dpFecha.setValue(LocalDate.now());
-        
+    }
+
+    private void configurarFormatosEnTiempoReal() {
         // Configurar formato en tiempo real para Billetero
         configurarFormatoTiempoReal(txtBilletero, true);
-        
+
         // Configurar formato en tiempo real para Premios
         configurarFormatoTiempoReal(txtPremios, false);
-        
+    }
+
+    private void configurarCalculoDiferencia() {
         // Calcular diferencia automáticamente
         txtBilletero.textProperty().addListener((obs, old, nuevo) -> {
             if (!isFormattingBilletero) {
                 calcularDiferencia();
             }
         });
-        
+
         txtPremios.textProperty().addListener((obs, old, nuevo) -> {
             if (!isFormattingPremios) {
                 calcularDiferencia();

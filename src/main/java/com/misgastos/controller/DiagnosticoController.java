@@ -107,6 +107,16 @@ public class DiagnosticoController {
 
     @FXML
     public void initialize() {
+        configurarFiltros();
+
+        configurarTabla();
+        mostrarDetalle(null);
+        recargarArchivos();
+        consultar(0, true);
+        cargarVistaArchivo();
+    }
+    
+    private void configurarFiltros() {
         cmbNivel.getItems().setAll(TODOS_NIVELES, "ERROR", "WARN", "INFO", "DEBUG");
         cmbNivel.setValue(TODOS_NIVELES);
         SelectorFecha.configurar(dpHasta);
@@ -114,12 +124,6 @@ public class DiagnosticoController {
         dpHasta.setValue(LocalDate.now());
         dpDesde.setValue(LocalDate.now().minusDays(7));
         lblCarpeta.setText(lector.carpeta().toString());
-
-        configurarTabla();
-        mostrarDetalle(null);
-        recargarArchivos();
-        consultar(0, true);
-        cargarVistaArchivo();
     }
 
     private void configurarTabla() {

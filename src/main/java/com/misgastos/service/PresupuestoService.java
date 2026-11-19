@@ -156,14 +156,7 @@ public class PresupuestoService {
     private Map<Long, BigDecimal> gastadoPorCategoria(LocalDate referencia) {
         LocalDate inicio = referencia.withDayOfMonth(1);
         LocalDate fin = referencia.with(TemporalAdjusters.lastDayOfMonth());
-        Map<Long, BigDecimal> mapa = new HashMap<>();
-        for (Gasto g : gastoService.listarPorPeriodo(inicio, fin)) {
-            if (g.getCategoria() == null || g.getValorTotal() == null) {
-                continue;
-            }
-            mapa.merge(g.getCategoria().getId(), g.getValorTotal(), BigDecimal::add);
-        }
-        return mapa;
+        return gastoService.gastadoPorCategoriaEnPeriodo(inicio, fin);
     }
 
     private String dinero(BigDecimal v) {

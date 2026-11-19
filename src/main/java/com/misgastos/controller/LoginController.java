@@ -6,9 +6,11 @@ import com.misgastos.service.UsuarioService;
 import com.misgastos.service.SesionActual;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.scene.layout.Pane;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.layout.Region;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -83,6 +85,7 @@ public class LoginController implements Initializable {
     private List<String> sugerencias = new ArrayList<>();
     private int indiceSugerencia = 0;
     private boolean eligiendoUsuario = false;
+    private Label lblAvisoLicencia;
     
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -378,10 +381,18 @@ public class LoginController implements Initializable {
         LicenciaService.Resultado r = licenciaService.evaluar();
 
         if (r.estado() == LicenciaService.Estado.LICENCIADA) {
+            if (r.diasRestantes() <= 9999) {
+                String texto = r.diasRestantes() == 0
+                    ? "Tu licencia vence hoy."
+                    : "Tu licencia vence en " + r.diasRestantes() + " día(s).";
+                log.info("Aviso de licencia por vencer en el login ({} día(s))", r.diasRestantes());
+                mostrarAvisoLicencia(texto + " Comunícate con tu proveedor para renovarla.");
+            }
             return true;
         }
+        
         if (r.estado() == LicenciaService.Estado.PRUEBA) {
-            if (r.diasRestantes() <= 15) {
+            if (r.diasRestantes() <= 5) {
                 mostrarAlerta("Periodo de prueba",
                     "Te quedan " + r.diasRestantes() + " día(s) de prueba.",
                     Alert.AlertType.INFORMATION);
@@ -389,6 +400,34 @@ public class LoginController implements Initializable {
             return true;
         }
         return mostrarActivacion(r.motivo());
+    }
+    
+    
+
+    private void mostrarAvisoLicencia(String texto) {
+        if (lblAvisoLicencia == null) {
+            lblAvisoLicencia = new Label();
+            lblAvisoLicencia.setWrapText(true);
+            lblAvisoLicencia.setMaxWidth(Double.MAX_VALUE);
+            lblAvisoLicencia.setMinHeight(Region.USE_PREF_SIZE); // permite varias líneas sin cortar
+            lblAvisoLicencia.setAlignment(Pos.CENTER);
+            lblAvisoLicencia.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
+            lblAvisoLicencia.setStyle(
+                "-fx-background-color: #d32f2f; -fx-text-fill: white; -fx-font-size: 12.5px; "
+                + "-fx-font-weight: bold; -fx-padding: 10 12; -fx-background-radius: 6;");
+            Parent padre = btnLogin.getParent();
+            if (padre instanceof Pane p) {
+                p.getChildren().add(p.getChildren().indexOf(btnLogin) + 1, lblAvisoLicencia);
+                // El card tiene alto fijo: se agranda para que la franja no apriete el footer
+                if (p.getParent() instanceof Region card) {
+                    card.setPrefHeight(card.getPrefHeight() + 90);
+                    card.setMaxHeight(card.getMaxHeight() + 90);
+                }
+            } else {
+                log.warn("No se pudo mostrar el aviso de licencia: el botón de login no está en un contenedor compatible");
+            }
+        }
+        lblAvisoLicencia.setText(texto);
     }
 
     private boolean mostrarActivacion(String motivo) {

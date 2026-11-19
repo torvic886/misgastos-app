@@ -16,7 +16,6 @@ import javafx.geometry.Pos;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.SVGPath;
-import com.misgastos.MisGastosApplication;
 import com.misgastos.service.SesionRecordadaService;
 import com.misgastos.service.UsuarioService;
 import com.misgastos.model.Usuario;
@@ -104,15 +103,27 @@ public class DashboardController {
 
     @FXML
     public void initialize() {
-        // El controlador es un singleton: se borran los permisos de la sesión anterior
-        permisos = EnumSet.noneOf(Ventana.class);
-        permisosListos = false;
-        permisosPersonalizados = false;
+        reiniciarPermisosDeSesion();
 
         log.debug("Dashboard inicializado");
         cargarVista("/fxml/inicio.fxml");
         configurarGrupoSistema();
 
+        configurarModoCompacto();
+
+        if (btnInicio != null) {
+            establecerBotonActivo(btnInicio);
+        }
+    }
+    
+    private void reiniciarPermisosDeSesion() {
+        // El controlador es un singleton: se borran los permisos de la sesión anterior
+        permisos = EnumSet.noneOf(Ventana.class);
+        permisosListos = false;
+        permisosPersonalizados = false;
+    }
+
+    private void configurarModoCompacto() {
         // Modo compacto (responsive): con ventana angosta se reducen menú y márgenes
         mainBorderPane.sceneProperty().addListener((obs, antes, escena) -> {
             if (escena != null) {
@@ -120,10 +131,6 @@ public class DashboardController {
                 aplicarModoCompacto(escena.getWidth());
             }
         });
-
-        if (btnInicio != null) {
-            establecerBotonActivo(btnInicio);
-        }
     }
 
     public void setUsuario(String username) {
@@ -556,12 +563,27 @@ public class DashboardController {
 
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/registro-gasto.fxml"));
             loader.setControllerFactory(springContext::getBean);
-            Parent vista = loader.load();
+            //Parent vista = loader.load();
 
+//            RegistroGastoController registroCtrl = loader.getController();
+//            registroCtrl.setUsuarioActual(username);
+//            registroCtrl.setEdicionPermitida(esAdministrador());
+
+            long t0 = System.nanoTime();
+            Parent vista = loader.load();
+            log.info("Mis Gastos: FXML {} ms", (System.nanoTime() - t0) / 1_000_000);
+
+            long t1 = System.nanoTime();
             RegistroGastoController registroCtrl = loader.getController();
             registroCtrl.setUsuarioActual(username);
             registroCtrl.setEdicionPermitida(esAdministrador());
-
+            
+            log.info("Mis Gastos: usuario y datos {} ms", (System.nanoTime() - t1) / 1_000_000);
+            
+            long t2 = System.nanoTime();
+            Platform.runLater(() -> log.info("Mis Gastos: primer dibujo (pulso) {} ms",
+                (System.nanoTime() - t2) / 1_000_000));
+            
             // La vista ocupa todo el espacio; los botones quedan encima, en la esquina del encabezado de la tabla
             container.getChildren().addAll(vista, submenu);
             StackPane.setAlignment(submenu, Pos.TOP_RIGHT);

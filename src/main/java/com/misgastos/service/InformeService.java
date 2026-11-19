@@ -1,12 +1,10 @@
 package com.misgastos.service;
 
-import com.itextpdf.io.font.PdfEncodings;
+
 import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.font.PdfFont;
-import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.kernel.pdf.canvas.draw.SolidLine;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
 import com.misgastos.model.Gasto;
@@ -35,11 +33,8 @@ import org.apache.poi.ss.usermodel.HorizontalAlignment;
 
 
 import com.itextpdf.kernel.geom.PageSize;
-import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.element.LineSeparator;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
-import com.itextpdf.layout.properties.UnitValue;
 import com.misgastos.service.diseno.Diseno;
 import com.misgastos.service.diseno.PdfEstilo;
 import com.misgastos.service.diseno.PdfEstilo.Fila;

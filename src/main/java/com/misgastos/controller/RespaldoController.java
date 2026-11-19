@@ -1,6 +1,7 @@
 package com.misgastos.controller;
 
 import com.misgastos.MisGastosLauncher;
+import com.misgastos.licencia.LicenciaService;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -10,7 +11,14 @@ import javafx.stage.FileChooser;
 import javafx.stage.Window;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
+import javafx.event.ActionEvent;
+import javafx.geometry.Insets;
+import javafx.scene.Node;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
 import javax.sql.DataSource;
 import java.io.File;
 import java.io.InputStream;
@@ -37,344 +45,424 @@ import lombok.extern.slf4j.Slf4j;
  * Pantalla "Respaldo de datos": abrir la carpeta de datos, exportar una copia
  * de la base y importar una copia.
  *
- * Importar NO reemplaza la base mientras el programa está abierto (Windows no deja
- * reemplazar un archivo en uso). La copia se deja preparada y MisGastosLauncher la
- * aplica en el siguiente arranque, después de guardar un respaldo de lo actual.
+ * Importar NO reemplaza la base mientras el programa está abierto (Windows no
+ * deja reemplazar un archivo en uso). La copia se deja preparada y
+ * MisGastosLauncher la aplica en el siguiente arranque, después de guardar un
+ * respaldo de lo actual.
  */
 @Slf4j
 @Component
 public class RespaldoController {
 
-    private static final Locale CO = Locale.forLanguageTag("es-CO");
-    private static final DateTimeFormatter FECHA_ARCHIVO = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
-    private static final DateTimeFormatter FECHA_PANTALLA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+	private static final Locale CO = Locale.forLanguageTag("es-CO");
+	private static final DateTimeFormatter FECHA_ARCHIVO = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
+	private static final DateTimeFormatter FECHA_PANTALLA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
-    @FXML private Label lblCarpeta;
-    @FXML private Label lblBase;
-    @FXML private Label lblRespaldos;
-    @FXML private Label lblPendiente;
-    @FXML private Button btnCancelarPendiente;
+	@FXML
+	private Label lblCarpeta;
+	@FXML
+	private Label lblBase;
+	@FXML
+	private Label lblRespaldos;
+	@FXML
+	private Label lblPendiente;
+	@FXML
+	private Label lblLicencia;
+	@FXML
+	private Button btnCancelarPendiente;
 
-    @Autowired
-    private DataSource dataSource;
+	@Autowired
+	private DataSource dataSource;
 
-    // ==================== RUTAS ====================
+	private static final int DIAS_AVISO_LICENCIA = 30;
+	private final LicenciaService licenciaService = new LicenciaService();
 
-    private Path carpetaDatos() {
-        return Paths.get(System.getProperty("user.home"), "MisGastos");
-    }
+	// ==================== RUTAS ====================
 
-    private Path archivoBase() {
-        return carpetaDatos().resolve("misgastos.db");
-    }
+	private Path carpetaDatos() {
+		return Paths.get(System.getProperty("user.home"), "MisGastos");
+	}
 
-    private Path carpetaRespaldos() {
-        return carpetaDatos().resolve("respaldos");
-    }
+	private Path archivoBase() {
+		return carpetaDatos().resolve("misgastos.db");
+	}
 
-    private Path archivoPendiente() {
-        return carpetaDatos().resolve(MisGastosLauncher.ARCHIVO_IMPORTACION);
-    }
+	private Path carpetaRespaldos() {
+		return carpetaDatos().resolve("respaldos");
+	}
 
-    // ==================== PANTALLA ====================
+	private Path archivoPendiente() {
+		return carpetaDatos().resolve(MisGastosLauncher.ARCHIVO_IMPORTACION);
+	}
 
-    @FXML
-    public void initialize() {
-        actualizarResumen();
-    }
+	// ==================== PANTALLA ====================
 
-    private void actualizarResumen() {
-        lblCarpeta.setText(carpetaDatos().toString());
+	@FXML
+	public void initialize() {
+		actualizarResumen();
+		actualizarLicencia();
+	}
 
-        try {
-            double mb = Files.size(archivoBase()) / 1048576.0;
-            lblBase.setText(String.format(CO, "misgastos.db  (%.2f MB)", mb));
-        } catch (Exception e) {
-        	log.warn("No se pudo leer el tamaño de la base de datos: {}", e.getMessage());
-        	lblBase.setText("No se encontró la base de datos");
-        }
+	/**
+	 * Muestra los días que quedan de licencia o de prueba; en naranja si faltan
+	 * pocos.
+	 */
+	private void actualizarLicencia() {
+		try {
+			LicenciaService.Resultado r = licenciaService.evaluar();
+			long dias = r.diasRestantes();
+			String texto;
+			String color = "#475569";
+			if (r.estado() == LicenciaService.Estado.LICENCIADA) {
+				texto = dias == 0 ? "Licencia: vence hoy" : "Licencia: vence en " + dias + " día(s)";
+			} else if (r.estado() == LicenciaService.Estado.PRUEBA) {
+				texto = "Periodo de prueba: te quedan " + dias + " día(s)";
+			} else {
+				texto = "Licencia vencida";
+				color = "#c0392b";
+			}
+			if (r.estado() != LicenciaService.Estado.VENCIDA && dias <= DIAS_AVISO_LICENCIA) {
+				color = "#c2410c";
+			}
+			lblLicencia.setText(texto);
+			lblLicencia.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: " + color + ";");
+		} catch (Exception e) {
+			log.warn("No se pudo leer el estado de la licencia ({})", e.getClass().getSimpleName());
+			lblLicencia.setText("");
+		}
+	}
 
-        List<Path> respaldos = listarRespaldos();
-        if (respaldos.isEmpty()) {
-            lblRespaldos.setText("Todavía no hay copias automáticas.");
-        } else {
-            Path ultimo = respaldos.get(respaldos.size() - 1);
-            String cuando;
-            try {
-                cuando = LocalDateTime
-                        .ofInstant(Instant.ofEpochMilli(Files.getLastModifiedTime(ultimo).toMillis()), ZoneId.systemDefault())
-                        .format(FECHA_PANTALLA);
-            } catch (Exception e) {
-            	log.debug("No se pudo leer la fecha de la última copia automática: {}", e.getMessage());
-            	cuando = ultimo.getFileName().toString();
-            }
-            lblRespaldos.setText(respaldos.size() + " copia(s) automática(s). La última: " + cuando);
-        }
+	/** Permite pegar una clave nueva sin esperar a que la licencia venza. */
+	@FXML
+	public void handleActivarLicencia() {
+		Dialog<ButtonType> dialogo = new Dialog<>();
+		dialogo.setTitle("Activar / renovar licencia");
+		dialogo.setHeaderText("Pega la clave que te entregó tu proveedor.");
+		if (ventana() != null) {
+			dialogo.initOwner(ventana());
+		}
 
-        boolean hayPendiente = Files.exists(archivoPendiente());
-        lblPendiente.setVisible(hayPendiente);
-        lblPendiente.setManaged(hayPendiente);
-        btnCancelarPendiente.setVisible(hayPendiente);
-        btnCancelarPendiente.setManaged(hayPendiente);
-    }
+		TextField txtCodigo = new TextField(licenciaService.codigoEquipo());
+		txtCodigo.setEditable(false);
 
-    private List<Path> listarRespaldos() {
-        Path carpeta = carpetaRespaldos();
-        if (!Files.isDirectory(carpeta)) {
-            return List.of();
-        }
-        try (Stream<Path> archivos = Files.list(carpeta)) {
-            return archivos
-                    .filter(p -> {
-                        String n = p.getFileName().toString();
-                        return n.startsWith("misgastos_") && n.endsWith(".db");
-                    })
-                    .sorted()
-                    .toList();
-        } catch (Exception e) {
-        	log.warn("No se pudo listar la carpeta de respaldos", e);
-            return List.of();
-        }
-    }
+		TextArea txtClave = new TextArea();
+		txtClave.setPromptText("Pega aquí la clave de activación");
+		txtClave.setWrapText(true);
+		txtClave.setPrefRowCount(4);
 
-    // ==================== ABRIR CARPETAS ====================
+		Label lblError = new Label();
+		lblError.setStyle("-fx-text-fill: #c0392b;");
 
-    @FXML
-    public void handleAbrirCarpetaDatos() {
-        abrirCarpeta(carpetaDatos());
-    }
+		VBox caja = new VBox(10, new Label("Código de tu equipo (envíalo para recibir la clave):"), txtCodigo,
+				new Label("Clave de activación:"), txtClave, lblError);
+		caja.setPadding(new Insets(20));
+		caja.setPrefWidth(460);
 
-    @FXML
-    public void handleAbrirCarpetaRespaldos() {
-        abrirCarpeta(carpetaRespaldos());
-    }
+		ButtonType btnActivar = new ButtonType("Activar", ButtonBar.ButtonData.OK_DONE);
+		ButtonType btnCancelar = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
+		dialogo.getDialogPane().getButtonTypes().addAll(btnActivar, btnCancelar);
+		dialogo.getDialogPane().setContent(caja);
+		aplicarEstilos(dialogo);
 
-    private void abrirCarpeta(Path carpeta) {
-        try {
-            Files.createDirectories(carpeta);
-            String os = System.getProperty("os.name", "").toLowerCase();
-            ProcessBuilder pb;
-            if (os.contains("win")) {
-                pb = new ProcessBuilder("explorer.exe", carpeta.toString());
-            } else if (os.contains("mac")) {
-                pb = new ProcessBuilder("open", carpeta.toString());
-            } else {
-                pb = new ProcessBuilder("xdg-open", carpeta.toString());
-            }
-            pb.start();
-        } catch (Exception e) {
-        	log.error("No se pudo abrir la carpeta {}", carpeta, e);
-        	alerta(Alert.AlertType.ERROR, "No se pudo abrir la carpeta",
-                    "Puedes abrirla a mano desde el Explorador de archivos:\n" + carpeta);
-        }
-    }
+		Node okBtn = dialogo.getDialogPane().lookupButton(btnActivar);
+		okBtn.addEventFilter(ActionEvent.ACTION, ev -> {
+			if (!licenciaService.activar(txtClave.getText())) {
+				ev.consume(); // no cierra el diálogo
+				lblError.setText("Clave inválida, vencida o de otro equipo.");
+			}
+		});
 
-    // ==================== EXPORTAR ====================
+		Optional<ButtonType> res = dialogo.showAndWait();
+		if (res.isPresent() && res.get() == btnActivar) {
+			log.info("Licencia activada desde la pantalla de Respaldo");
+			actualizarLicencia();
+			alerta(Alert.AlertType.INFORMATION, "Licencia activada", lblLicencia.getText());
+		}
+	}
 
-    @FXML
-    public void handleExportar() {
-        FileChooser selector = new FileChooser();
-        selector.setTitle("Exportar copia de MisGastos");
-        selector.setInitialFileName("misgastos_" + LocalDateTime.now().format(FECHA_ARCHIVO) + ".db");
-        selector.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("Base de datos MisGastos (*.db)", "*.db"));
+	private void actualizarResumen() {
+		lblCarpeta.setText(carpetaDatos().toString());
 
-        File elegido = selector.showSaveDialog(ventana());
-        if (elegido == null) {
-            return;
-        }
+		try {
+			double mb = Files.size(archivoBase()) / 1048576.0;
+			lblBase.setText(String.format(CO, "misgastos.db  (%.2f MB)", mb));
+		} catch (Exception e) {
+			log.warn("No se pudo leer el tamaño de la base de datos: {}", e.getMessage());
+			lblBase.setText("No se encontró la base de datos");
+		}
 
-        Path destino = elegido.toPath();
-        if (!destino.getFileName().toString().toLowerCase().endsWith(".db")) {
-            destino = destino.resolveSibling(destino.getFileName() + ".db");
-        }
+		List<Path> respaldos = listarRespaldos();
+		if (respaldos.isEmpty()) {
+			lblRespaldos.setText("Todavía no hay copias automáticas.");
+		} else {
+			Path ultimo = respaldos.get(respaldos.size() - 1);
+			String cuando;
+			try {
+				cuando = LocalDateTime.ofInstant(Instant.ofEpochMilli(Files.getLastModifiedTime(ultimo).toMillis()),
+						ZoneId.systemDefault()).format(FECHA_PANTALLA);
+			} catch (Exception e) {
+				log.debug("No se pudo leer la fecha de la última copia automática: {}", e.getMessage());
+				cuando = ultimo.getFileName().toString();
+			}
+			lblRespaldos.setText(respaldos.size() + " copia(s) automática(s). La última: " + cuando);
+		}
 
-        try {
-            if (Files.isSameFile(archivoBase(), destino)) {
-                alerta(Alert.AlertType.WARNING, "Elige otro lugar",
-                        "No puedes exportar encima de la base que el programa está usando.");
-                return;
-            }
-        } catch (Exception ignorada) {
-            // el destino aún no existe: es lo normal
-        }
+		boolean hayPendiente = Files.exists(archivoPendiente());
+		lblPendiente.setVisible(hayPendiente);
+		lblPendiente.setManaged(hayPendiente);
+		btnCancelarPendiente.setVisible(hayPendiente);
+		btnCancelarPendiente.setManaged(hayPendiente);
+	}
 
-        try {
-            Files.deleteIfExists(destino);
-            copiarBaseConsistente(destino);
-            log.info("Copia exportada: {}", destino);
-            alerta(Alert.AlertType.INFORMATION, "Copia exportada",
-                    "La copia quedó guardada en:\n" + destino
-                            + "\n\nPuedes llevarla a otro computador o guardarla como respaldo.");
-        } catch (Exception e) {
-        	log.error("No se pudo exportar la copia de la base de datos", e);
-            alerta(Alert.AlertType.ERROR, "No se pudo exportar", "Motivo: " + e.getMessage());
-        }
-    }
+	private List<Path> listarRespaldos() {
+		Path carpeta = carpetaRespaldos();
+		if (!Files.isDirectory(carpeta)) {
+			return List.of();
+		}
+		try (Stream<Path> archivos = Files.list(carpeta)) {
+			return archivos.filter(p -> {
+				String n = p.getFileName().toString();
+				return n.startsWith("misgastos_") && n.endsWith(".db");
+			}).sorted().toList();
+		} catch (Exception e) {
+			log.warn("No se pudo listar la carpeta de respaldos", e);
+			return List.of();
+		}
+	}
 
-    /**
-     * Copia la base mientras el programa está abierto. VACUUM INTO genera una copia
-     * completa y consistente aunque haya datos recién guardados. Si no estuviera
-     * disponible, se copia el archivo directamente.
-     */
-    private void copiarBaseConsistente(Path destino) throws Exception {
-        try (Connection c = dataSource.getConnection(); Statement st = c.createStatement()) {
-            st.execute("VACUUM INTO '" + destino.toString().replace("'", "''") + "'");
-        } catch (Exception e) {
-        	log.warn("VACUUM INTO no disponible, se copia el archivo: {}", e.getMessage());
-            Files.copy(archivoBase(), destino, StandardCopyOption.REPLACE_EXISTING);
-        }
-    }
+	// ==================== ABRIR CARPETAS ====================
 
-    // ==================== IMPORTAR ====================
+	@FXML
+	public void handleAbrirCarpetaDatos() {
+		abrirCarpeta(carpetaDatos());
+	}
 
-    @FXML
-    public void handleImportar() {
-        FileChooser selector = new FileChooser();
-        selector.setTitle("Elige la copia que quieres importar");
-        selector.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("Base de datos MisGastos (*.db)", "*.db"));
-        if (Files.isDirectory(carpetaRespaldos())) {
-            selector.setInitialDirectory(carpetaRespaldos().toFile());
-        }
+	@FXML
+	public void handleAbrirCarpetaRespaldos() {
+		abrirCarpeta(carpetaRespaldos());
+	}
 
-        File elegido = selector.showOpenDialog(ventana());
-        if (elegido == null) {
-            return;
-        }
-        Path origen = elegido.toPath();
+	private void abrirCarpeta(Path carpeta) {
+		try {
+			Files.createDirectories(carpeta);
+			String os = System.getProperty("os.name", "").toLowerCase();
+			ProcessBuilder pb;
+			if (os.contains("win")) {
+				pb = new ProcessBuilder("explorer.exe", carpeta.toString());
+			} else if (os.contains("mac")) {
+				pb = new ProcessBuilder("open", carpeta.toString());
+			} else {
+				pb = new ProcessBuilder("xdg-open", carpeta.toString());
+			}
+			pb.start();
+		} catch (Exception e) {
+			log.error("No se pudo abrir la carpeta {}", carpeta, e);
+			alerta(Alert.AlertType.ERROR, "No se pudo abrir la carpeta",
+					"Puedes abrirla a mano desde el Explorador de archivos:\n" + carpeta);
+		}
+	}
 
-        try {
-            if (Files.isSameFile(origen, archivoBase())) {
-                alerta(Alert.AlertType.WARNING, "Ese es el archivo actual",
-                        "Elige una copia guardada en otro lugar (por ejemplo, una de la carpeta de respaldos).");
-                return;
-            }
-        } catch (Exception ignorada) {
-            // seguimos
-        }
+	// ==================== EXPORTAR ====================
 
-        Path preparado = archivoPendiente();
-        try {
-            Files.copy(origen, preparado, StandardCopyOption.REPLACE_EXISTING);
+	@FXML
+	public void handleExportar() {
+		FileChooser selector = new FileChooser();
+		selector.setTitle("Exportar copia de MisGastos");
+		selector.setInitialFileName("misgastos_" + LocalDateTime.now().format(FECHA_ARCHIVO) + ".db");
+		selector.getExtensionFilters().add(new FileChooser.ExtensionFilter("Base de datos MisGastos (*.db)", "*.db"));
 
-            String problema = validarBase(preparado);
-            if (problema != null) {
-                Files.deleteIfExists(preparado);
-                log.warn("Importación rechazada, el archivo no sirve: {}", problema);
-                alerta(Alert.AlertType.ERROR, "Esa copia no sirve", problema);
-                actualizarResumen();
-                return;
-            }
+		File elegido = selector.showSaveDialog(ventana());
+		if (elegido == null) {
+			return;
+		}
 
-            Alert confirmar = new Alert(Alert.AlertType.CONFIRMATION);
-            confirmar.setTitle("Importar copia");
-            confirmar.setHeaderText("Se reemplazarán TODOS los datos actuales");
-            confirmar.setContentText(
-                    "Los datos de este archivo sustituirán a los que tienes ahora.\n\n"
-                  + "• El cambio se aplica la próxima vez que abras el programa.\n"
-                  + "• Antes de aplicarlo se guarda una copia de lo actual en la carpeta de respaldos.\n"
-                  + "• Si registras gastos antes de cerrar, quedarán en esa copia, no en los datos nuevos.\n\n"
-                  + "¿Quieres continuar?");
-            aplicarEstilos(confirmar);
-            ButtonType si = new ButtonType("Sí, importar", javafx.scene.control.ButtonBar.ButtonData.OK_DONE);
-            ButtonType no = new ButtonType("Cancelar", javafx.scene.control.ButtonBar.ButtonData.CANCEL_CLOSE);
-            confirmar.getButtonTypes().setAll(si, no);
+		Path destino = elegido.toPath();
+		if (!destino.getFileName().toString().toLowerCase().endsWith(".db")) {
+			destino = destino.resolveSibling(destino.getFileName() + ".db");
+		}
 
-            Optional<ButtonType> respuesta = confirmar.showAndWait();
-            if (respuesta.isEmpty() || respuesta.get() != si) {
-                Files.deleteIfExists(preparado);
-                log.info("Importación cancelada por el usuario");
-                actualizarResumen();
-                return;
-            }
+		try {
+			if (Files.isSameFile(archivoBase(), destino)) {
+				alerta(Alert.AlertType.WARNING, "Elige otro lugar",
+						"No puedes exportar encima de la base que el programa está usando.");
+				return;
+			}
+		} catch (Exception ignorada) {
+			// el destino aún no existe: es lo normal
+		}
 
-            actualizarResumen();
-            log.info("Importación preparada desde {}. Se aplicará al reiniciar el programa", origen);
-            alerta(Alert.AlertType.INFORMATION, "Copia lista para aplicar",
-                    "Cierra el programa y vuelve a abrirlo. Al iniciar se cargarán los datos de la copia importada.");
-        } catch (Exception e) {
-        	log.error("No se pudo importar la copia de la base de datos", e);
-            try {
-                Files.deleteIfExists(preparado);
-            } catch (Exception ignorada) {
-                // nada más que hacer
-            }
-            alerta(Alert.AlertType.ERROR, "No se pudo importar", "Motivo: " + e.getMessage());
-            actualizarResumen();
-        }
-    }
+		try {
+			Files.deleteIfExists(destino);
+			copiarBaseConsistente(destino);
+			log.info("Copia exportada: {}", destino);
+			alerta(Alert.AlertType.INFORMATION, "Copia exportada", "La copia quedó guardada en:\n" + destino
+					+ "\n\nPuedes llevarla a otro computador o guardarla como respaldo.");
+		} catch (Exception e) {
+			log.error("No se pudo exportar la copia de la base de datos", e);
+			alerta(Alert.AlertType.ERROR, "No se pudo exportar", "Motivo: " + e.getMessage());
+		}
+	}
 
-    @FXML
-    public void handleCancelarPendiente() {
-        try {
-            Files.deleteIfExists(archivoPendiente());
-            log.info("Importación pendiente cancelada");
-        } catch (Exception e) {
-        	log.error("No se pudo cancelar la importación pendiente", e);
-        	alerta(Alert.AlertType.ERROR, "No se pudo cancelar", "Motivo: " + e.getMessage());
-        }
-        actualizarResumen();
-    }
+	/**
+	 * Copia la base mientras el programa está abierto. VACUUM INTO genera una copia
+	 * completa y consistente aunque haya datos recién guardados. Si no estuviera
+	 * disponible, se copia el archivo directamente.
+	 */
+	private void copiarBaseConsistente(Path destino) throws Exception {
+		try (Connection c = dataSource.getConnection(); Statement st = c.createStatement()) {
+			st.execute("VACUUM INTO '" + destino.toString().replace("'", "''") + "'");
+		} catch (Exception e) {
+			log.warn("VACUUM INTO no disponible, se copia el archivo: {}", e.getMessage());
+			Files.copy(archivoBase(), destino, StandardCopyOption.REPLACE_EXISTING);
+		}
+	}
 
-    /**
-     * Revisa que el archivo sea una base de MisGastos sana.
-     * Devuelve null si está bien, o el motivo en palabras sencillas si no.
-     */
-    private String validarBase(Path archivo) {
-        try (InputStream in = Files.newInputStream(archivo)) {
-            byte[] cabecera = in.readNBytes(16);
-            byte[] esperada = "SQLite format 3\0".getBytes(java.nio.charset.StandardCharsets.ISO_8859_1);
-            if (!Arrays.equals(cabecera, esperada)) {
-                return "El archivo no es una base de datos de MisGastos.";
-            }
-        } catch (Exception e) {
-        	log.warn("No se pudo leer el archivo de la copia a importar", e);
-        	return "No se pudo leer el archivo: " + e.getMessage();
-        }
+	// ==================== IMPORTAR ====================
 
-        String url = "jdbc:sqlite:" + archivo.toString().replace('\\', '/');
-        try (Connection c = DriverManager.getConnection(url); Statement st = c.createStatement()) {
-            try (ResultSet rs = st.executeQuery("PRAGMA quick_check")) {
-                if (!rs.next() || !"ok".equalsIgnoreCase(rs.getString(1))) {
-                    return "El archivo está dañado, no se puede importar.";
-                }
-            }
-            try (ResultSet rs = st.executeQuery(
-                    "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'usuarios'")) {
-                if (!rs.next() || rs.getInt(1) == 0) {
-                    return "El archivo es una base de datos, pero no es de MisGastos.";
-                }
-            }
-        } catch (Exception e) {
-        	log.warn("No se pudo revisar la copia a importar", e);
-        	return "No se pudo revisar el archivo: " + e.getMessage();
-        }
-        return null;
-    }
+	@FXML
+	public void handleImportar() {
+		FileChooser selector = new FileChooser();
+		selector.setTitle("Elige la copia que quieres importar");
+		selector.getExtensionFilters().add(new FileChooser.ExtensionFilter("Base de datos MisGastos (*.db)", "*.db"));
+		if (Files.isDirectory(carpetaRespaldos())) {
+			selector.setInitialDirectory(carpetaRespaldos().toFile());
+		}
 
-    // ==================== AUXILIARES ====================
+		File elegido = selector.showOpenDialog(ventana());
+		if (elegido == null) {
+			return;
+		}
+		Path origen = elegido.toPath();
 
-    private Window ventana() {
-        return lblCarpeta.getScene() == null ? null : lblCarpeta.getScene().getWindow();
-    }
+		try {
+			if (Files.isSameFile(origen, archivoBase())) {
+				alerta(Alert.AlertType.WARNING, "Ese es el archivo actual",
+						"Elige una copia guardada en otro lugar (por ejemplo, una de la carpeta de respaldos).");
+				return;
+			}
+		} catch (Exception ignorada) {
+			// seguimos
+		}
 
-    private void alerta(Alert.AlertType tipo, String titulo, String mensaje) {
-        Alert a = new Alert(tipo);
-        a.setTitle(titulo);
-        a.setHeaderText(null);
-        a.setContentText(mensaje);
-        aplicarEstilos(a);
-        a.showAndWait();
-    }
+		Path preparado = archivoPendiente();
+		try {
+			Files.copy(origen, preparado, StandardCopyOption.REPLACE_EXISTING);
 
-    private void aplicarEstilos(Alert a) {
-        try {
-            a.getDialogPane().getStylesheets().add(
-                    getClass().getResource("/css/styles.css").toExternalForm());
-        } catch (Exception ignorada) {
-            // sin estilos, el diálogo funciona igual
-        	log.debug("No se pudieron aplicar los estilos al diálogo");
-        }
-    }
+			String problema = validarBase(preparado);
+			if (problema != null) {
+				Files.deleteIfExists(preparado);
+				log.warn("Importación rechazada, el archivo no sirve: {}", problema);
+				alerta(Alert.AlertType.ERROR, "Esa copia no sirve", problema);
+				actualizarResumen();
+				return;
+			}
+
+			Alert confirmar = new Alert(Alert.AlertType.CONFIRMATION);
+			confirmar.setTitle("Importar copia");
+			confirmar.setHeaderText("Se reemplazarán TODOS los datos actuales");
+			confirmar.setContentText("Los datos de este archivo sustituirán a los que tienes ahora.\n\n"
+					+ "• El cambio se aplica la próxima vez que abras el programa.\n"
+					+ "• Antes de aplicarlo se guarda una copia de lo actual en la carpeta de respaldos.\n"
+					+ "• Si registras gastos antes de cerrar, quedarán en esa copia, no en los datos nuevos.\n\n"
+					+ "¿Quieres continuar?");
+			aplicarEstilos(confirmar);
+			ButtonType si = new ButtonType("Sí, importar", javafx.scene.control.ButtonBar.ButtonData.OK_DONE);
+			ButtonType no = new ButtonType("Cancelar", javafx.scene.control.ButtonBar.ButtonData.CANCEL_CLOSE);
+			confirmar.getButtonTypes().setAll(si, no);
+
+			Optional<ButtonType> respuesta = confirmar.showAndWait();
+			if (respuesta.isEmpty() || respuesta.get() != si) {
+				Files.deleteIfExists(preparado);
+				log.info("Importación cancelada por el usuario");
+				actualizarResumen();
+				return;
+			}
+
+			actualizarResumen();
+			log.info("Importación preparada desde {}. Se aplicará al reiniciar el programa", origen);
+			alerta(Alert.AlertType.INFORMATION, "Copia lista para aplicar",
+					"Cierra el programa y vuelve a abrirlo. Al iniciar se cargarán los datos de la copia importada.");
+		} catch (Exception e) {
+			log.error("No se pudo importar la copia de la base de datos", e);
+			try {
+				Files.deleteIfExists(preparado);
+			} catch (Exception ignorada) {
+				// nada más que hacer
+			}
+			alerta(Alert.AlertType.ERROR, "No se pudo importar", "Motivo: " + e.getMessage());
+			actualizarResumen();
+		}
+	}
+
+	@FXML
+	public void handleCancelarPendiente() {
+		try {
+			Files.deleteIfExists(archivoPendiente());
+			log.info("Importación pendiente cancelada");
+		} catch (Exception e) {
+			log.error("No se pudo cancelar la importación pendiente", e);
+			alerta(Alert.AlertType.ERROR, "No se pudo cancelar", "Motivo: " + e.getMessage());
+		}
+		actualizarResumen();
+	}
+
+	/**
+	 * Revisa que el archivo sea una base de MisGastos sana. Devuelve null si está
+	 * bien, o el motivo en palabras sencillas si no.
+	 */
+	private String validarBase(Path archivo) {
+		try (InputStream in = Files.newInputStream(archivo)) {
+			byte[] cabecera = in.readNBytes(16);
+			byte[] esperada = "SQLite format 3\0".getBytes(java.nio.charset.StandardCharsets.ISO_8859_1);
+			if (!Arrays.equals(cabecera, esperada)) {
+				return "El archivo no es una base de datos de MisGastos.";
+			}
+		} catch (Exception e) {
+			log.warn("No se pudo leer el archivo de la copia a importar", e);
+			return "No se pudo leer el archivo: " + e.getMessage();
+		}
+
+		String url = "jdbc:sqlite:" + archivo.toString().replace('\\', '/');
+		try (Connection c = DriverManager.getConnection(url); Statement st = c.createStatement()) {
+			try (ResultSet rs = st.executeQuery("PRAGMA quick_check")) {
+				if (!rs.next() || !"ok".equalsIgnoreCase(rs.getString(1))) {
+					return "El archivo está dañado, no se puede importar.";
+				}
+			}
+			try (ResultSet rs = st
+					.executeQuery("SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'usuarios'")) {
+				if (!rs.next() || rs.getInt(1) == 0) {
+					return "El archivo es una base de datos, pero no es de MisGastos.";
+				}
+			}
+		} catch (Exception e) {
+			log.warn("No se pudo revisar la copia a importar", e);
+			return "No se pudo revisar el archivo: " + e.getMessage();
+		}
+		return null;
+	}
+
+	// ==================== AUXILIARES ====================
+
+	private Window ventana() {
+		return lblCarpeta.getScene() == null ? null : lblCarpeta.getScene().getWindow();
+	}
+
+	private void alerta(Alert.AlertType tipo, String titulo, String mensaje) {
+		Alert a = new Alert(tipo);
+		a.setTitle(titulo);
+		a.setHeaderText(null);
+		a.setContentText(mensaje);
+		aplicarEstilos(a);
+		a.showAndWait();
+	}
+
+	private void aplicarEstilos(javafx.scene.control.Dialog<?> a) {
+		try {
+			a.getDialogPane().getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
+		} catch (Exception ignorada) {
+			// sin estilos, el diálogo funciona igual
+			log.debug("No se pudieron aplicar los estilos al diálogo");
+		}
+	}
 }

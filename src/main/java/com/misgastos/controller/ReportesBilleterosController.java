@@ -59,6 +59,12 @@ public class ReportesBilleterosController {
     public void initialize() {
         log.debug("Inicializando reportes de billeteros");
 
+        configurarFechasPorDefecto();
+        configurarTabla();
+        limpiarTotales();
+    }
+    
+    private void configurarFechasPorDefecto() {
         // Configurar fechas por defecto
         LocalDate hoy = LocalDate.now();
         LocalDate inicioAnio = hoy.withDayOfYear(1);
@@ -67,15 +73,12 @@ public class ReportesBilleterosController {
         SelectorFecha.configurar(dpMensualFin);
         SelectorFecha.configurar(dpDiarioInicio);
         SelectorFecha.configurar(dpDiarioFin);
-        
+
         dpMensualInicio.setValue(inicioAnio);
         dpMensualFin.setValue(hoy);
 
         dpDiarioInicio.setValue(hoy.withDayOfMonth(1));
         dpDiarioFin.setValue(hoy);
-
-        configurarTabla();
-        limpiarTotales();
     }
 
     private void configurarTabla() {

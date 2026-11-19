@@ -3,9 +3,6 @@ package com.misgastos.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.init.DataSourceInitializer;
-import org.springframework.jdbc.datasource.init.DatabasePopulator;
-import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
-import org.springframework.core.io.ClassPathResource;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.sql.DataSource;
@@ -17,7 +14,7 @@ import java.sql.SQLException;
 public class SQLiteConfig {
     
     @Bean
-    public DataSourceInitializer dataSourceInitializer(DataSource dataSource) {
+    DataSourceInitializer dataSourceInitializer(DataSource dataSource) {
         return new DataSourceInitializer() {
             {
                 setDataSource(dataSource);

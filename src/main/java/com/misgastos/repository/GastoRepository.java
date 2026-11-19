@@ -143,5 +143,14 @@ public interface GastoRepository extends JpaRepository<Gasto, Long> {
 	List<String> productosPorFrecuencia();
 
 	List<Gasto> findByProductoInOrderByFechaDescHoraDesc(Collection<String> productos);
+	
+	@Query("SELECT g.fecha, SUM(g.valorTotal) FROM Gasto g WHERE g.fecha BETWEEN :inicio AND :fin GROUP BY g.fecha")
+	List<Object[]> sumarPorDia(@Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
+
+	@Query("SELECT g.categoria.id, SUM(g.valorTotal) FROM Gasto g WHERE g.fecha BETWEEN :inicio AND :fin GROUP BY g.categoria.id")
+	List<Object[]> sumarPorCategoriaEnPeriodo(@Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
+
+	@Query("SELECT g.producto, SUM(g.valorTotal) FROM Gasto g GROUP BY g.producto ORDER BY SUM(g.valorTotal) DESC")
+	List<Object[]> topProductosLimitado(Pageable pageable);
 
 }

@@ -72,8 +72,14 @@ public class LecturaService {
 					+ "Si la máquina se reinició, registra un reinicio.");
 		}
 
+		if (ant != null && !reinicio && !intermedia && fecha.equals(ant.getFecha()) && in.equals(ant.getContadorIn())
+				&& out.equals(ant.getContadorOut()) && prem.equals(ant.getContadorPrem())) {
+			throw new RuntimeException("Esta lectura es igual a la anterior (misma fecha y contadores). "
+					+ "Si es un daño o un reinicio, márcalo como tal.");
+		}
+
 		int periodo = ant != null ? (intermedia ? ant.getPeriodo() : ant.getPeriodo() % 3 + 1)
-		        : (periodoInicial != null ? periodoInicial : 1);
+				: (periodoInicial != null ? periodoInicial : 1);
 		if (periodo < 1 || periodo > 3) {
 			throw new RuntimeException("El periodo debe ser 1, 2 o 3");
 		}
@@ -103,81 +109,97 @@ public class LecturaService {
 
 	// ==================== EDITAR Y ANULAR ====================
 
-    public Lectura editar(Long id, LocalDate fecha, Long in, Long out, Long prem) {
-        return editar(id, fecha, in, out, prem, null);
-}
+	public Lectura editar(Long id, LocalDate fecha, Long in, Long out, Long prem) {
+		return editar(id, fecha, in, out, prem, null);
+	}
 
-public Lectura editar(Long id, LocalDate fecha, Long in, Long out, Long prem, Integer nuevoPeriodo) {
-        Lectura l = obtener(id);
-        if (l.isAnulada()) {
-                throw new RuntimeException("La lectura está anulada y no se puede editar");
-        }
-        validar(fecha, in, out, prem);
+	public Lectura editar(Long id, LocalDate fecha, Long in, Long out, Long prem, Integer nuevoPeriodo) {
+		Lectura l = obtener(id);
+		if (l.isAnulada()) {
+			throw new RuntimeException("La lectura está anulada y no se puede editar");
+		}
+		validar(fecha, in, out, prem);
 
-        int periodoAntes = l.getPeriodo();
-        int periodoNuevo = nuevoPeriodo != null ? nuevoPeriodo : periodoAntes;
-        if (periodoNuevo < 1 || periodoNuevo > 3) {
-                throw new RuntimeException("El periodo debe ser 1, 2 o 3");
-        }
-        if (periodoNuevo != periodoAntes && Lectura.COPIA.equals(l.getTipo())) {
-                throw new RuntimeException("La fila base (copia) no admite cambio de periodo");
-        }
+		int periodoAntes = l.getPeriodo();
+		int periodoNuevo = nuevoPeriodo != null ? nuevoPeriodo : periodoAntes;
+		if (periodoNuevo < 1 || periodoNuevo > 3) {
+			throw new RuntimeException("El periodo debe ser 1, 2 o 3");
+		}
+		if (periodoNuevo != periodoAntes && Lectura.COPIA.equals(l.getTipo())) {
+			throw new RuntimeException("La fila base (copia) no admite cambio de periodo");
+		}
 
-        List<Lectura> validas = validas(l.getMaquina().getId());
-        int pos = indiceDe(validas, id);
-        Lectura previa = pos > 0 ? validas.get(pos - 1) : null;
-        Lectura sig = pos >= 0 && pos < validas.size() - 1 ? validas.get(pos + 1) : null;
+		List<Lectura> validas = validas(l.getMaquina().getId());
+		int pos = indiceDe(validas, id);
+		Lectura previa = pos > 0 ? validas.get(pos - 1) : null;
+		Lectura sig = pos >= 0 && pos < validas.size() - 1 ? validas.get(pos + 1) : null;
 
-        // La copia del periodo 3 acompaña a su lectura: se edita junto con ella
-        Lectura copia = (periodoAntes == 3 && sig != null && Lectura.COPIA.equals(sig.getTipo())) ? sig : null;
-        Lectura despues = copia != null ? (pos + 2 < validas.size() ? validas.get(pos + 2) : null) : sig;
+		// La copia del periodo 3 acompaña a su lectura: se edita junto con ella
+		Lectura copia = (periodoAntes == 3 && sig != null && Lectura.COPIA.equals(sig.getTipo())) ? sig : null;
+		Lectura despues = copia != null ? (pos + 2 < validas.size() ? validas.get(pos + 2) : null) : sig;
 
-        if (previa != null && fecha.isBefore(previa.getFecha())) {
-                throw new RuntimeException(
-                                "La fecha no puede ser anterior a la lectura previa (" + previa.getFecha() + ")");
-        }
-        if (despues != null && fecha.isAfter(despues.getFecha())) {
-                throw new RuntimeException(
-                                "La fecha no puede ser posterior a la lectura siguiente (" + despues.getFecha() + ")");
-        }
-
-        String antes = descripcion(l);
-        l.setFecha(fecha);
-        l.setContadorIn(in);
-        l.setContadorOut(out);
-        l.setContadorPrem(prem);
-        l.setPeriodo(periodoNuevo);
-        if (Lectura.COPIA.equals(l.getTipo())) {
-                l.setTipo(Lectura.NORMAL);
-        }
-        lecturaRepository.save(l);
-
-        if (copia != null) {
-                if (periodoNuevo == 3) {
-                        copia.setFecha(fecha);
-                        copia.setContadorIn(in);
-                        copia.setContadorOut(out);
-                        copia.setContadorPrem(prem);
-                        lecturaRepository.save(copia);
-                } else {
-                        marcarAnulada(copia, "Copia de la lectura cuyo periodo cambió de 3 a " + periodoNuevo);
+		if (previa != null && fecha.isBefore(previa.getFecha())) {
+			throw new RuntimeException(
+					"La fecha no puede ser anterior a la lectura previa (" + previa.getFecha() + ")");
+		}
+		if (despues != null && fecha.isAfter(despues.getFecha())) {
+			throw new RuntimeException(
+					"La fecha no puede ser posterior a la lectura siguiente (" + despues.getFecha() + ")");
+		}
+		
+        // Los contadores no pueden quedar menores que los de la lectura previa, ni mayores que los de
+        // la siguiente. El REINICIO queda fuera: sus ceros son a propósito.
+        if (!Lectura.REINICIO.equals(l.getTipo())) {
+                if (previa != null && (in < previa.getContadorIn() || out < previa.getContadorOut()
+                                || prem < previa.getContadorPrem())) {
+                        throw new RuntimeException("Un contador queda menor que el de la lectura previa ("
+                                        + previa.getFecha() + "). Si la máquina se reinició, registra un reinicio.");
                 }
-        } else if (periodoNuevo == 3 && periodoAntes != 3) {
-                Lectura nuevaCopia = nueva(l.getMaquina(), fecha, in, out, prem);
-                nuevaCopia.setDenominacion(l.getDenominacion());
-                nuevaCopia.setPeriodo(1);
-                nuevaCopia.setTipo(Lectura.COPIA);
-                lecturaRepository.save(nuevaCopia);
+                if (despues != null && !Lectura.REINICIO.equals(despues.getTipo())
+                                && (in > despues.getContadorIn() || out > despues.getContadorOut()
+                                                || prem > despues.getContadorPrem())) {
+                        throw new RuntimeException("Un contador queda mayor que el de la lectura siguente ("
+                                        + despues.getFecha() + "). Corrige primero la lectura siguiente.");
+                }
         }
 
-        String cambioPeriodo = periodoAntes != periodoNuevo
-                        ? " [periodo " + periodoAntes + " → " + periodoNuevo + "]" : "";
-        log.info("Lectura editada");
-        log.debug("Lectura editada: id {}", id);
-        auditoriaService.registrarCambio("EDITAR_LECTURA", "Máquina " + l.getMaquina().getCodigo() + ", periodo "
-                        + l.getPeriodo() + ": " + antes + " → " + descripcion(l) + cambioPeriodo);
-        return l;
-}
+		String antes = descripcion(l);
+		l.setFecha(fecha);
+		l.setContadorIn(in);
+		l.setContadorOut(out);
+		l.setContadorPrem(prem);
+		l.setPeriodo(periodoNuevo);
+		if (Lectura.COPIA.equals(l.getTipo())) {
+			l.setTipo(Lectura.NORMAL);
+		}
+		lecturaRepository.save(l);
+
+		if (copia != null) {
+			if (periodoNuevo == 3) {
+				copia.setFecha(fecha);
+				copia.setContadorIn(in);
+				copia.setContadorOut(out);
+				copia.setContadorPrem(prem);
+				lecturaRepository.save(copia);
+			} else {
+				marcarAnulada(copia, "Copia de la lectura cuyo periodo cambió de 3 a " + periodoNuevo);
+			}
+		} else if (periodoNuevo == 3 && periodoAntes != 3) {
+			Lectura nuevaCopia = nueva(l.getMaquina(), fecha, in, out, prem);
+			nuevaCopia.setDenominacion(l.getDenominacion());
+			nuevaCopia.setPeriodo(1);
+			nuevaCopia.setTipo(Lectura.COPIA);
+			lecturaRepository.save(nuevaCopia);
+		}
+
+		String cambioPeriodo = periodoAntes != periodoNuevo ? " [periodo " + periodoAntes + " → " + periodoNuevo + "]"
+				: "";
+		log.info("Lectura editada");
+		log.debug("Lectura editada: id {}", id);
+		auditoriaService.registrarCambio("EDITAR_LECTURA", "Máquina " + l.getMaquina().getCodigo() + ", periodo "
+				+ l.getPeriodo() + ": " + antes + " → " + descripcion(l) + cambioPeriodo);
+		return l;
+	}
 
 	public void anular(Long id, String motivo) {
 		if (motivo == null || motivo.isBlank()) {
@@ -286,7 +308,7 @@ public Lectura editar(Long id, LocalDate fecha, Long in, Long out, Long prem, In
 		l.setContadorPrem(prem);
 		// La denominación solo se corrige si es la única lectura; si hay más, cada una
 		// conserva la suya
-		
+
 		lecturaRepository.save(l);
 	}
 
@@ -298,47 +320,50 @@ public Lectura editar(Long id, LocalDate fecha, Long in, Long out, Long prem, In
 	public void eliminarLecturasDe(Long maquinaId) {
 		lecturaRepository.deleteByMaquinaId(maquinaId);
 	}
-	
-	/** Cambia la denominación de las lecturas válidas de una máquina. desde = null: todo el historial. */
+
+	/**
+	 * Cambia la denominación de las lecturas válidas de una máquina. desde = null:
+	 * todo el historial.
+	 */
 	public int actualizarDenominacion(Long maquinaId, BigDecimal nueva, LocalDate desde) {
-	    int afectadas = 0;
-	    for (Lectura l : validas(maquinaId)) {
-	        if (desde != null && l.getFecha().isBefore(desde)) continue;
-	        if (l.getDenominacion().compareTo(nueva) != 0) {
-	            l.setDenominacion(nueva);
-	            lecturaRepository.save(l);
-	            afectadas++;
-	        }
-	    }
-	    return afectadas;
+		int afectadas = 0;
+		for (Lectura l : validas(maquinaId)) {
+			if (desde != null && l.getFecha().isBefore(desde))
+				continue;
+			if (l.getDenominacion().compareTo(nueva) != 0) {
+				l.setDenominacion(nueva);
+				lecturaRepository.save(l);
+				afectadas++;
+			}
+		}
+		return afectadas;
 	}
 
 	/** Edita la denominación de una sola lectura del historial. */
 	public Lectura editarDenominacion(Long id, BigDecimal nueva) {
-	    if (nueva == null || nueva.compareTo(BigDecimal.ZERO) <= 0) {
-	        throw new RuntimeException("La denominación debe ser mayor que cero");
-	    }
-	    Lectura l = obtener(id);
-	    if (l.isAnulada()) {
-	        throw new RuntimeException("La lectura está anulada y no se puede editar");
-	    }
-	    BigDecimal antes = l.getDenominacion();
-	    l.setDenominacion(nueva);
-	    lecturaRepository.save(l);
+		if (nueva == null || nueva.compareTo(BigDecimal.ZERO) <= 0) {
+			throw new RuntimeException("La denominación debe ser mayor que cero");
+		}
+		Lectura l = obtener(id);
+		if (l.isAnulada()) {
+			throw new RuntimeException("La lectura está anulada y no se puede editar");
+		}
+		BigDecimal antes = l.getDenominacion();
+		l.setDenominacion(nueva);
+		lecturaRepository.save(l);
 
-	    // La copia del periodo 3 acompaña a su lectura
-	    List<Lectura> validas = validas(l.getMaquina().getId());
-	    int pos = indiceDe(validas, id);
-	    Lectura sig = pos >= 0 && pos < validas.size() - 1 ? validas.get(pos + 1) : null;
-	    if (l.getPeriodo() == 3 && sig != null && Lectura.COPIA.equals(sig.getTipo())) {
-	        sig.setDenominacion(nueva);
-	        lecturaRepository.save(sig);
-	    }
+		// La copia del periodo 3 acompaña a su lectura
+		List<Lectura> validas = validas(l.getMaquina().getId());
+		int pos = indiceDe(validas, id);
+		Lectura sig = pos >= 0 && pos < validas.size() - 1 ? validas.get(pos + 1) : null;
+		if (l.getPeriodo() == 3 && sig != null && Lectura.COPIA.equals(sig.getTipo())) {
+			sig.setDenominacion(nueva);
+			lecturaRepository.save(sig);
+		}
 
-	    auditoriaService.registrarCambio("EDITAR_DENOMINACION_LECTURA",
-	            "Máquina " + l.getMaquina().getCodigo() + ", periodo " + l.getPeriodo()
-	            + ", fecha " + l.getFecha() + ": " + antes + " → " + nueva);
-	    return l;
+		auditoriaService.registrarCambio("EDITAR_DENOMINACION_LECTURA", "Máquina " + l.getMaquina().getCodigo()
+				+ ", periodo " + l.getPeriodo() + ", fecha " + l.getFecha() + ": " + antes + " → " + nueva);
+		return l;
 	}
 
 	// ==================== UTILIDADES ====================
@@ -360,11 +385,11 @@ public Lectura editar(Long id, LocalDate fecha, Long in, Long out, Long prem, In
 		List<Lectura> validas = validas(maquinaId);
 		return validas.isEmpty() ? null : validas.get(validas.size() - 1);
 	}
-	
-    @Transactional(readOnly = true)
-    public Lectura ultimaLectura(Long maquinaId) {
-        return ultimaValida(maquinaId);
-    }
+
+	@Transactional(readOnly = true)
+	public Lectura ultimaLectura(Long maquinaId) {
+		return ultimaValida(maquinaId);
+	}
 
 	private int indiceDe(List<Lectura> lista, Long id) {
 		for (int i = 0; i < lista.size(); i++) {
@@ -389,30 +414,33 @@ public Lectura editar(Long id, LocalDate fecha, Long in, Long out, Long prem, In
 		l.setDenominacion(m.getDenominacion());
 		return l;
 	}
-	
-    /** Lectura inicial de una máquina recién creada: fecha de alta, sus contadores y periodo según el día. */
-    public Lectura registrarInicial(Maquina m) {
-        LocalDate fecha = m.getFechaAlta();
-        int dia = fecha.getDayOfMonth();
-        int periodo = dia <= 8 ? 1 : dia <= 23 ? 2 : 3;
 
-        Lectura l = nueva(m, fecha, m.getContadorIn(), m.getContadorOut(), m.getContadorPrem());
-        l.setPeriodo(periodo);
-        l.setTipo(Lectura.INICIAL);
-        lecturaRepository.save(l);
+	/**
+	 * Lectura inicial de una máquina recién creada: fecha de alta, sus contadores y
+	 * periodo según el día.
+	 */
+	public Lectura registrarInicial(Maquina m) {
+		LocalDate fecha = m.getFechaAlta();
+		int dia = fecha.getDayOfMonth();
+		int periodo = dia <= 8 ? 1 : dia <= 23 ? 2 : 3;
 
-        if (periodo == 3) {
-            Lectura copia = nueva(m, fecha, m.getContadorIn(), m.getContadorOut(), m.getContadorPrem());
-            copia.setPeriodo(1);
-            copia.setTipo(Lectura.COPIA);
-            lecturaRepository.save(copia);
-        }
+		Lectura l = nueva(m, fecha, m.getContadorIn(), m.getContadorOut(), m.getContadorPrem());
+		l.setPeriodo(periodo);
+		l.setTipo(Lectura.INICIAL);
+		lecturaRepository.save(l);
 
-        log.debug("Lectura inicial: máquina {}, periodo {}", m.getCodigo(), periodo);
-        auditoriaService.registrarCambio("REGISTRAR_LECTURA",
-                "Máquina " + m.getCodigo() + ", periodo " + periodo + " (INICIAL), fecha " + fecha);
-        return l;
-    }
+		if (periodo == 3) {
+			Lectura copia = nueva(m, fecha, m.getContadorIn(), m.getContadorOut(), m.getContadorPrem());
+			copia.setPeriodo(1);
+			copia.setTipo(Lectura.COPIA);
+			lecturaRepository.save(copia);
+		}
+
+		log.debug("Lectura inicial: máquina {}, periodo {}", m.getCodigo(), periodo);
+		auditoriaService.registrarCambio("REGISTRAR_LECTURA",
+				"Máquina " + m.getCodigo() + ", periodo " + periodo + " (INICIAL), fecha " + fecha);
+		return l;
+	}
 
 	private void marcarAnulada(Lectura l, String motivo) {
 		l.setAnulada(true);

@@ -130,16 +130,32 @@ public class ConsultaTotalesController {
 
     @FXML
     public void initialize() {
+        configurarFormatosMoneda();
+        configurarEspera();
+        configurarCombosPeriodoYAgrupar();
+
+        cargarListasDeFiltros();
+        configurarTablas();
+        configurarListeners();
+
+        consultaInicial();
+    }
+    
+    private void configurarFormatosMoneda() {
         monedaEntera = NumberFormat.getCurrencyInstance(CO);
         monedaEntera.setMaximumFractionDigits(0);
         monedaDecimal = NumberFormat.getCurrencyInstance(CO);
         monedaDecimal.setMinimumFractionDigits(2);
         monedaDecimal.setMaximumFractionDigits(2);
+    }
 
+    private void configurarEspera() {
         // Espera corta para no consultar en cada tecla mientras se escribe
         espera = new PauseTransition(Duration.millis(250));
         espera.setOnFinished(e -> javafx.application.Platform.runLater(this::consultar));
+    }
 
+    private void configurarCombosPeriodoYAgrupar() {
         cmbPeriodo.getItems().setAll(PERIODO_HOY, PERIODO_SEMANA, PERIODO_MES, PERIODO_ANIO,
                 PERIODO_TODO, PERIODO_PERSONALIZADO);
 
@@ -150,11 +166,9 @@ public class ConsultaTotalesController {
                 ConsultaTotalesService.AGRUPAR_MES,
                 ConsultaTotalesService.AGRUPAR_USUARIO);
         cmbAgrupar.setValue(ConsultaTotalesService.AGRUPAR_AUTOMATICO);
+    }
 
-        cargarListasDeFiltros();
-        configurarTablas();
-        configurarListeners();
-
+    private void consultaInicial() {
         cmbPeriodo.setValue(PERIODO_MES);
         consultar();
         espera.stop(); // la consulta inicial ya se hizo

@@ -5,15 +5,12 @@ import com.misgastos.model.Gasto;
 import com.misgastos.model.Subcategoria;
 import com.misgastos.service.CategoriaService;
 import com.misgastos.service.GastoService;
-import javafx.application.Platform;
-import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

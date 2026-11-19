@@ -11,7 +11,7 @@ import com.misgastos.repository.SubcategoriaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.misgastos.repository.SubcategoriaRepository;
+//import com.misgastos.repository.SubcategoriaRepository;
 import com.misgastos.model.Cliente;
 import com.misgastos.repository.ClienteRepository;
 
@@ -34,6 +34,7 @@ import com.misgastos.util.ProductoNormalizador;
 import java.util.LinkedHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
 
 
 @Service
@@ -163,7 +164,7 @@ public class GastoService {
     }
     
     public List<Map<String, Object>> obtenerTopProductos(int limite) {
-        List<Object[]> resultados = gastoRepository.topProductos();
+    	List<Object[]> resultados = gastoRepository.topProductosLimitado(PageRequest.of(0, limite));
         return resultados.stream().limit(limite).map(obj -> {
             Map<String, Object> item = new HashMap<>();
             item.put("producto", obj[0]);
@@ -461,5 +462,21 @@ public class GastoService {
             }
         }
         return limpio;
+    }
+    
+    public Map<LocalDate, BigDecimal> totalesPorDia(LocalDate inicio, LocalDate fin) {
+        Map<LocalDate, BigDecimal> mapa = new HashMap<>();
+        for (Object[] o : gastoRepository.sumarPorDia(inicio, fin)) {
+            mapa.put((LocalDate) o[0], (BigDecimal) o[1]);
+        }
+        return mapa;
+    }
+
+    public Map<Long, BigDecimal> gastadoPorCategoriaEnPeriodo(LocalDate inicio, LocalDate fin) {
+        Map<Long, BigDecimal> mapa = new HashMap<>();
+        for (Object[] o : gastoRepository.sumarPorCategoriaEnPeriodo(inicio, fin)) {
+            mapa.put((Long) o[0], (BigDecimal) o[1]);
+        }
+        return mapa;
     }
 }

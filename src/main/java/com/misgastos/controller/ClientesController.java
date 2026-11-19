@@ -43,27 +43,26 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.Dialog;
+//import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableRow;
+//import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.ComboBoxBase;
 import javafx.scene.control.ContextMenu;
-import javafx.scene.control.DatePicker;
+//import javafx.scene.control.DatePicker;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableCell;
-import javafx.scene.control.TextField;
+//import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseButton;
+//import javafx.scene.input.MouseButton;
 
 /**
  * Pantalla Clientes: lista los clientes, permite agregar y editar uno a mano,
@@ -111,19 +110,34 @@ public class ClientesController {
 
     @FXML
     public void initialize() {
+        configurarSeleccionYCopia();
+        configurarColumnasDatos();
+        configurarOrdenYItems();
+        configurarEdicionEnCeldas();
+        configurarBusqueda();
+        configurarColumnasConteos();
+        configurarFiltroFechas();
+        cargar();
+    }
+    
+    private void configurarSeleccionYCopia() {
         tablaClientes.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         CopiarTabla.habilitar(tablaClientes);
+    }
+
+    private void configurarColumnasDatos() {
         colCedula.setCellValueFactory(c -> new SimpleStringProperty(formatearCedula(c.getValue().getCedula())));
         colNombre.setCellValueFactory(c -> new SimpleStringProperty(tituloNombre(c.getValue().getNombre())));
-
         colTelefono.setCellValueFactory(c -> new SimpleStringProperty(
                 c.getValue().getTelefono() == null ? "" : c.getValue().getTelefono()));
-            colEtiqueta.setCellValueFactory(c -> new SimpleStringProperty(
+        colEtiqueta.setCellValueFactory(c -> new SimpleStringProperty(
                 c.getValue().getEtiqueta() == null ? "" : c.getValue().getEtiqueta()));
-            colCumple.setCellValueFactory(c -> new SimpleStringProperty(
+        colCumple.setCellValueFactory(c -> new SimpleStringProperty(
                 c.getValue().getCumpleanos() == null ? ""
                     : c.getValue().getCumpleanos().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"))));
-        
+    }
+
+    private void configurarOrdenYItems() {
         filtrados = new FilteredList<>(maestro, c -> true);
         SortedList<Cliente> ordenados = new SortedList<>(filtrados);
         // Orden por defecto: nombre. El selector cambia el criterio.
@@ -145,9 +159,9 @@ public class ClientesController {
         tablaClientes.setItems(ordenados);
         tablaClientes.setPlaceholder(new Label(
             "Todavía no hay clientes. Usa «Agregar cliente» o «Importar clientes desde Excel»."));
+    }
 
-        configurarEdicionEnCeldas();
-
+    private void configurarBusqueda() {
         txtBuscar.textProperty().addListener((obs, a, b) -> {
             String t = b == null ? "" : b.trim().toLowerCase();
             filtrados.setPredicate(c -> t.isEmpty()
@@ -155,24 +169,26 @@ public class ClientesController {
                 || c.getNombre().toLowerCase().contains(t));
             actualizarResumen();
         });
-        
+    }
+
+    private void configurarColumnasConteos() {
         colBonos.setCellValueFactory(c -> new SimpleObjectProperty<>(
                 conteos.getOrDefault(c.getValue().getCedula().trim(), SIN_MOVIMIENTO).bonos()));
-            colParqueaderos.setCellValueFactory(c -> new SimpleObjectProperty<>(
+        colParqueaderos.setCellValueFactory(c -> new SimpleObjectProperty<>(
                 conteos.getOrDefault(c.getValue().getCedula().trim(), SIN_MOVIMIENTO).parqueaderos()));
-            colBingos.setCellValueFactory(c -> new SimpleObjectProperty<>(
+        colBingos.setCellValueFactory(c -> new SimpleObjectProperty<>(
                 conteos.getOrDefault(c.getValue().getCedula().trim(), SIN_MOVIMIENTO).bingos()));
+    }
 
-            LocalDate hoy = LocalDate.now();
-            dpDesde.setValue(hoy.withDayOfMonth(1));
-            dpHasta.setValue(hoy.withDayOfMonth(hoy.lengthOfMonth()));
-            SelectorFecha.configurar(dpDesde);
-            SelectorFecha.configurar(dpHasta);
-            dpDesde.valueProperty().addListener((obs, a, n) -> recalcularConteos());
-            dpHasta.valueProperty().addListener((obs, a, n) -> recalcularConteos());
-            recalcularConteos();
-
-        cargar();
+    private void configurarFiltroFechas() {
+        LocalDate hoy = LocalDate.now();
+        dpDesde.setValue(hoy.withDayOfMonth(1));
+        dpHasta.setValue(hoy.withDayOfMonth(hoy.lengthOfMonth()));
+        SelectorFecha.configurar(dpDesde);
+        SelectorFecha.configurar(dpHasta);
+        dpDesde.valueProperty().addListener((obs, a, n) -> recalcularConteos());
+        dpHasta.valueProperty().addListener((obs, a, n) -> recalcularConteos());
+        recalcularConteos();
     }
     
     /** 41911884 -> 41.911.884 (solo visual; lo guardado no cambia). */

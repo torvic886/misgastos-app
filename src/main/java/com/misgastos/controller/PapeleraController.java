@@ -53,7 +53,12 @@ public class PapeleraController {
     @FXML
     public void initialize() {
         tablaPapelera.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-
+        configurarColumnas();
+        tablaPapelera.setPlaceholder(new Label("La papelera está vacía"));
+        cargar();
+    }
+    
+    private void configurarColumnas() {
         colEliminado.setCellValueFactory(c -> texto(c.getValue().getFechaEliminacion() == null
             ? "" : c.getValue().getFechaEliminacion().format(FECHA_HORA)));
         colFecha.setCellValueFactory(c -> texto(Diseno.fecha(c.getValue().getFecha())));
@@ -67,9 +72,6 @@ public class PapeleraController {
         colNombre.setCellValueFactory(c -> texto(c.getValue().getNombrePersona()));
         colCantidad.setCellValueFactory(c -> texto(String.valueOf(c.getValue().getCantidad())));
         colTotal.setCellValueFactory(c -> texto(Diseno.moneda(c.getValue().getValorTotal())));
-
-        tablaPapelera.setPlaceholder(new Label("La papelera está vacía"));
-        cargar();
     }
 
     private SimpleStringProperty texto(String valor) {

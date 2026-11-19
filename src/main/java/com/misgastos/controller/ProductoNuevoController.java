@@ -40,12 +40,20 @@ public class ProductoNuevoController {
 
     @FXML
     public void initialize() {
-
+        cargarCategorias();
+        configurarNuevaCategoria();
+        configurarNuevaSubcategoria();
+        configurarCargaDeSubcategorias();
+    }
+    
+    private void cargarCategorias() {
         // Cargar categorías existentes
         cmbCategoria.getItems().setAll(
             categoriaService.listarCategorias()
         );
+    }
 
+    private void configurarNuevaCategoria() {
         // Nueva categoría → Combo editable
         chkNuevaCategoria.selectedProperty().addListener((obs, oldVal, nuevo) -> {
             cmbCategoria.setEditable(nuevo);
@@ -53,7 +61,9 @@ public class ProductoNuevoController {
                 cmbCategoria.getSelectionModel().clearSelection();
             }
         });
+    }
 
+    private void configurarNuevaSubcategoria() {
         // Nueva subcategoría → Combo editable
         chkNuevaSubcategoria.selectedProperty().addListener((obs, oldVal, nuevo) -> {
             cmbSubcategoria.setEditable(nuevo);
@@ -61,7 +71,9 @@ public class ProductoNuevoController {
                 cmbSubcategoria.getSelectionModel().clearSelection();
             }
         });
+    }
 
+    private void configurarCargaDeSubcategorias() {
         // Al seleccionar categoría → cargar subcategorías
         cmbCategoria.setOnAction(e -> {
             Categoria categoria = cmbCategoria.getValue();

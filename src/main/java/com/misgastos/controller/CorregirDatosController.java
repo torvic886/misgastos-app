@@ -66,14 +66,30 @@ public class CorregirDatosController {
 
     @FXML
     public void initialize() {
+        configurarSelectorCampo();
+        configurarColumnasBasicas();
+        configurarColumnaTotal();
+        configurarColumnaValorConAviso();
+        configurarOrdenYItems();
+        configurarBusqueda();
+        configurarCambioDeCampo();
+        configurarListenersSeleccion();
+        cargar();
+    }
+    
+    private void configurarSelectorCampo() {
         cmbCampo.setItems(FXCollections.observableArrayList(Campo.values()));
         cmbCampo.getSelectionModel().select(Campo.PRODUCTO);
+    }
 
+    private void configurarColumnasBasicas() {
         tablaValores.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         colValor.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().valor()));
         colCantidad.setCellValueFactory(c -> new SimpleLongProperty(c.getValue().cantidad()));
         colCantidad.setStyle("-fx-alignment: CENTER-RIGHT;");
+    }
 
+    private void configurarColumnaTotal() {
         NumberFormat peso = NumberFormat.getCurrencyInstance(new Locale("es", "CO"));
         peso.setMaximumFractionDigits(0);
         colTotal.setCellValueFactory(c -> new SimpleDoubleProperty(c.getValue().total()));
@@ -85,7 +101,9 @@ public class CorregirDatosController {
                 setText(vacio || valor == null ? null : peso.format(valor.doubleValue()));
             }
         });
-        
+    }
+
+    private void configurarColumnaValorConAviso() {
         // Marca los valores con espacios de más, que a simple vista no se notan
         colValor.setCellFactory(col -> new TableCell<>() {
             @Override
@@ -100,29 +118,35 @@ public class CorregirDatosController {
                 }
             }
         });
+    }
 
+    private void configurarOrdenYItems() {
         filtrados = new FilteredList<>(maestro, v -> true);
         SortedList<ValorConteo> ordenados = new SortedList<>(filtrados);
         ordenados.comparatorProperty().bind(tablaValores.comparatorProperty());
         tablaValores.setItems(ordenados);
         tablaValores.setPlaceholder(new Label("No hay valores para mostrar."));
+    }
 
+    private void configurarBusqueda() {
         txtBuscar.textProperty().addListener((obs, a, b) -> {
             String t = b == null ? "" : b.trim().toLowerCase();
             filtrados.setPredicate(v -> t.isEmpty() || v.valor().toLowerCase().contains(t));
             actualizarResumen();
         });
+    }
 
+    private void configurarCambioDeCampo() {
         cmbCampo.valueProperty().addListener((obs, a, b) -> {
             log.debug("Campo a corregir: {}", b);
             cargar();
         });
+    }
 
+    private void configurarListenersSeleccion() {
         tablaValores.getSelectionModel().getSelectedItems().addListener(
             (javafx.collections.ListChangeListener<ValorConteo>) c -> alCambiarSeleccion());
         txtCorrecto.textProperty().addListener((obs, a, b) -> actualizarAviso());
-
-        cargar();
     }
 
     private Campo campo() {

@@ -80,6 +80,8 @@ public class InicioController {
     @FXML private NumberAxis ejeY;
     @FXML private NumberAxis ejeTendencia;
     @FXML private Label lblTotalCentro;
+    private Map<LocalDate, BigDecimal> totalesDia = Map.of();
+    private Map<String, BigDecimal> categorias = Map.of();
 
     @Autowired
     private GastoService gastoService;
@@ -89,6 +91,20 @@ public class InicioController {
 
     @FXML
     public void initialize() {
+        configurarFormatoEjes();
+        consultarDatos();
+
+        cargarIndicadores();
+        cargarTopProductos();
+        cargarCategoriasResumen(categorias);
+        cargarGraficoUltimosDias();
+        cargarGraficoCategorias(categorias);
+        cargarTendenciaMensual();
+        cargarPresupuestos();
+    }
+    
+    /** Los ejes de los gráficos muestran pesos colombianos. */
+    private void configurarFormatoEjes() {
         StringConverter<Number> conversorPesos = new StringConverter<>() {
             @Override public String toString(Number n) {
                 return formatearMonto(BigDecimal.valueOf(n.doubleValue()));
@@ -97,14 +113,15 @@ public class InicioController {
         };
         ejeY.setTickLabelFormatter(conversorPesos);
         ejeTendencia.setTickLabelFormatter(conversorPesos);
+    }
 
-        cargarIndicadores();
-        cargarTopProductos();
-        cargarCategoriasResumen();
-        cargarGraficoUltimosDias();
-        cargarGraficoCategorias();
-        cargarTendenciaMensual();
-        cargarPresupuestos();
+    /** Las consultas de Inicio: los totales por día y las categorías se piden una sola vez. */
+    private void consultarDatos() {
+        LocalDate hoy = LocalDate.now();
+        totalesDia = gastoService.totalesPorDia(
+                hoy.minusYears(1).withDayOfYear(1),
+                hoy.with(TemporalAdjusters.lastDayOfYear()).plusDays(7));
+        categorias = gastoService.obtenerGastosPorCategoria();
     }
 
     /** Lo llama el Dashboard al cargar Inicio: decide qué botones se ven y qué hacen. */
@@ -137,32 +154,32 @@ public class InicioController {
     private void cargarIndicadores() {
         LocalDate hoy = LocalDate.now();
 
-        BigDecimal totalHoy = gastoService.calcularTotalPorPeriodo(hoy, hoy);
+        BigDecimal totalHoy = total(hoy, hoy);
         lblTotalHoy.setText(formatearMonto(totalHoy));
         LocalDate ayer = hoy.minusDays(1);
         actualizarCambio(lblCambioHoy, hboxCambioHoy, totalHoy,
-                gastoService.calcularTotalPorPeriodo(ayer, ayer));
+                total(ayer, ayer));
 
         LocalDate inicioSemana = hoy.with(TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY));
         LocalDate finSemana = hoy.with(TemporalAdjusters.nextOrSame(java.time.DayOfWeek.SUNDAY));
-        BigDecimal totalSemana = gastoService.calcularTotalPorPeriodo(inicioSemana, finSemana);
+        BigDecimal totalSemana = total(inicioSemana, finSemana);
         lblTotalSemana.setText(formatearMonto(totalSemana));
         actualizarCambio(lblCambioSemana, hboxCambioSemana, totalSemana,
-                gastoService.calcularTotalPorPeriodo(inicioSemana.minusWeeks(1), finSemana.minusWeeks(1)));
+                total(inicioSemana.minusWeeks(1), finSemana.minusWeeks(1)));
 
         LocalDate inicioMes = hoy.withDayOfMonth(1);
         LocalDate finMes = hoy.with(TemporalAdjusters.lastDayOfMonth());
-        BigDecimal totalMes = gastoService.calcularTotalPorPeriodo(inicioMes, finMes);
+        BigDecimal totalMes = total(inicioMes, finMes);
         lblTotalMes.setText(formatearMonto(totalMes));
         actualizarCambio(lblCambioMes, hboxCambioMes, totalMes,
-                gastoService.calcularTotalPorPeriodo(inicioMes.minusMonths(1), inicioMes.minusDays(1)));
+                total(inicioMes.minusMonths(1), inicioMes.minusDays(1)));
 
         LocalDate inicioAnio = hoy.withDayOfYear(1);
         LocalDate finAnio = hoy.with(TemporalAdjusters.lastDayOfYear());
-        BigDecimal totalAnio = gastoService.calcularTotalPorPeriodo(inicioAnio, finAnio);
+        BigDecimal totalAnio = total(inicioAnio, finAnio);
         lblTotalAnio.setText(formatearMonto(totalAnio));
         actualizarCambio(lblCambioAnio, hboxCambioAnio, totalAnio,
-                gastoService.calcularTotalPorPeriodo(inicioAnio.minusYears(1), finAnio.minusYears(1)));
+                total(inicioAnio.minusYears(1), finAnio.minusYears(1)));
     }
 
     private void actualizarCambio(Label label, HBox container, BigDecimal actual, BigDecimal anterior) {
@@ -226,8 +243,7 @@ public class InicioController {
         }
     }
 
-    private void cargarCategoriasResumen() {
-        Map<String, BigDecimal> categorias = gastoService.obtenerGastosPorCategoria();
+    private void cargarCategoriasResumen(Map<String, BigDecimal> categorias) {
         vboxCategorias.getChildren().clear();
 
         List<Map.Entry<String, BigDecimal>> ordenadas = categorias.entrySet().stream()
@@ -338,7 +354,7 @@ public class InicioController {
 
         for (int i = 6; i >= 0; i--) {
             LocalDate fecha = hoy.minusDays(i);
-            BigDecimal total = gastoService.calcularTotalPorPeriodo(fecha, fecha);
+            BigDecimal total = total(fecha, fecha);
             String etiqueta = i == 0 ? "Hoy" : fecha.format(formatter);
             series.getData().add(new XYChart.Data<>(etiqueta, total.doubleValue()));
         }
@@ -388,11 +404,10 @@ public class InicioController {
         });
     }
 
-    private void cargarGraficoCategorias() {
+    private void cargarGraficoCategorias(Map<String, BigDecimal> categorias) {
         chartCategorias.getData().clear();
         vboxLeyendaCategorias.getChildren().clear();
-
-        Map<String, BigDecimal> categorias = gastoService.obtenerGastosPorCategoria();
+        
         BigDecimal totalGeneral = categorias.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add);
         lblTotalCentro.setText(formatearMonto(totalGeneral));
 
@@ -450,7 +465,7 @@ public class InicioController {
         double max = 0;
         for (int i = 11; i >= 0; i--) {
             YearMonth ym = actual.minusMonths(i);
-            BigDecimal total = gastoService.calcularTotalPorPeriodo(ym.atDay(1), ym.atEndOfMonth());
+            BigDecimal total = total(ym.atDay(1), ym.atEndOfMonth());
             String etiqueta = ym.format(fmt).replace(".", "") + (i == 0 ? "*" : "");
             serie.getData().add(new XYChart.Data<>(etiqueta, total.doubleValue()));
             max = Math.max(max, total.doubleValue());
@@ -487,5 +502,15 @@ public class InicioController {
         if (monto == null) monto = BigDecimal.ZERO;
         NumberFormat f = NumberFormat.getIntegerInstance(CO);
         return "$ " + f.format(monto);
+    }
+    
+    private BigDecimal total(LocalDate desde, LocalDate hasta) {
+        BigDecimal suma = BigDecimal.ZERO;
+        for (Map.Entry<LocalDate, BigDecimal> e : totalesDia.entrySet()) {
+            if (!e.getKey().isBefore(desde) && !e.getKey().isAfter(hasta)) {
+                suma = suma.add(e.getValue());
+            }
+        }
+        return suma;
     }
 }

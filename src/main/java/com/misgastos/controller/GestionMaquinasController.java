@@ -105,18 +105,24 @@ public class GestionMaquinasController {
     public void initialize() {
         log.debug("Inicializando gestión de máquinas");
 
+        configurarListasFiltradas();
+        configurarTablaActivas();
+        configurarTablaBajas();
+        configurarMenus();
+        configurarBusqueda();
+
+        cargarDatos();
+    }
+    
+    private void configurarListasFiltradas() {
         activasFiltradas = new FilteredList<>(activas, m -> true);
         bajasFiltradas = new FilteredList<>(bajas, m -> true);
         tablaActivas.setItems(activasFiltradas);
         tablaBajas.setItems(bajasFiltradas);
+    }
 
-        configurarTablaActivas();
-        configurarTablaBajas();
-        configurarMenus();
-
+    private void configurarBusqueda() {
         txtBuscar.textProperty().addListener((obs, anterior, nuevo) -> filtrar(nuevo));
-
-        cargarDatos();
     }
 
     // ==================== TABLAS ====================

@@ -66,9 +66,19 @@ public class ModalMaquinaController {
     public void initialize() {
         log.debug("Inicializando modal de máquina");
 
+        configurarFechaAlta();
+        configurarCampoCodigo();
+        configurarCamposNumericos();
+        configurarCalculoDiferencia();
+        configurarEnter();
+    }
+    
+    private void configurarFechaAlta() {
         SelectorFecha.configurar(dpFechaAlta);
         dpFechaAlta.setValue(LocalDate.now());
+    }
 
+    private void configurarCampoCodigo() {
         // Código: solo dígitos (máximo 12)
         txtCodigo.textProperty().addListener((obs, anterior, nuevo) -> {
             if (nuevo == null) return;
@@ -80,18 +90,21 @@ public class ModalMaquinaController {
                 txtCodigo.setText(limpio);
             }
         });
+    }
 
+    private void configurarCamposNumericos() {
         // Denominación y contadores: dígitos con separador de miles
         aplicarFormatoMiles(txtDenominacion, 9);
         aplicarFormatoMiles(txtContadorIn, 15);
         aplicarFormatoMiles(txtContadorOut, 15);
         aplicarFormatoMiles(txtContadorPrem, 15);
-        
+    }
+
+    private void configurarCalculoDiferencia() {
         txtContadorIn.textProperty().addListener((obs, a, n) -> actualizarDiferencia());
         txtContadorOut.textProperty().addListener((obs, a, n) -> actualizarDiferencia());
         txtContadorPrem.textProperty().addListener((obs, a, n) -> actualizarDiferencia());
         actualizarDiferencia();
-        configurarEnter();
     }
 
     /** Deja solo dígitos con separador de miles y limita la cantidad de dígitos. */

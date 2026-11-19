@@ -9,13 +9,11 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.Node;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.TableCell;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import com.misgastos.util.SelectorFecha;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
-import javafx.scene.control.Labeled;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
@@ -95,6 +93,7 @@ public class RegistroGastoController {
     @FXML private TextField txtNombre;
     @FXML private TableColumn<Gasto, String> colHora;
     @FXML private Label lblTotalGastos;
+    @FXML private Label lblDetalleGasto;
     @Autowired private UsuarioService usuarioService;
     @FXML private TableColumn<Gasto, String> colUsuario;
     @FXML private TableColumn<Gasto, String> colBeneficiario;
@@ -125,6 +124,10 @@ public class RegistroGastoController {
     private final Map<TableColumn<Gasto, ?>, Button> botonesFiltro = new HashMap<>();
     private final NumberFormat fmtMoneda = NumberFormat.getCurrencyInstance(new Locale("es", "CO"));
     private Font fuenteCeldaBeneficiario;
+ // Para recargar una sola vez al mover Desde y Hasta juntos, y para saber si el filtro de fechas ya está listo
+    private boolean cambiandoRango = false;
+    private boolean fechasConfiguradas = false;
+    private boolean ajusteAnchoPendiente = false;
 
 
     @FXML
@@ -135,10 +138,11 @@ public class RegistroGastoController {
         configurarTabla();
         configurarMenuContextualTabla();
         configurarFiltros();
-        configurarFiltros();
-        cargarUltimosGastos();
+//        configurarFiltros();
+//        cargarUltimosGastos();
         configurarFiltroFechas();
         configurarCopiaPegadoTabla();
+        configurarDetalleGasto();
         //cargarUltimosGastos();
         configurarValidacionCedula();
         configurarCampoCedula();
@@ -745,7 +749,7 @@ public class RegistroGastoController {
         // y cambiar el número de filas en ese momento puede dejar la tabla sin dibujar.
         Platform.runLater(() -> {
             try {
-                List<Gasto> gastos = gastoService.obtenerUltimosGastosGeneral(100000);
+            	List<Gasto> gastos = consultarGastosDelRango();
 
                 tblUltimosGastos.getSelectionModel().clearSelection();
                 gastosMaestro.setAll(gastos);
@@ -764,12 +768,32 @@ public class RegistroGastoController {
             }
         });
     }
+    
+    /** Pide a la base solo los gastos del rango Desde/Hasta (antes se traían todos y se recortaban en Java). */
+    private List<Gasto> consultarGastosDelRango() {
+        LocalDate desde = dpDesde.getValue();
+        LocalDate hasta = dpHasta.getValue();
+        if (!fechasConfiguradas) {
+            // Arranque: initialize() carga la tabla antes de poner las fechas del filtro
+            java.time.YearMonth mes = java.time.YearMonth.now();
+            desde = mes.atDay(1);
+            hasta = mes.atEndOfMonth();
+        }
+        // Un selector vacío significa "sin límite", igual que antes
+        LocalDate d = desde != null ? desde : LocalDate.of(1900, 1, 1);
+        LocalDate h = hasta != null ? hasta : LocalDate.of(9999, 12, 31);
+        log.debug("Consultando gastos del {} al {}", d, h);
+        long t0 = System.nanoTime();
+        List<Gasto> gastos = gastoService.buscarTodosPorPeriodo(d, h);
+        log.info("Gastos del rango cargados: {} filas en {} ms", gastos.size(), (System.nanoTime() - t0) / 1_000_000);
+        return gastos;
+    }
 
     private void cargarUltimosGastos() {
         log.debug("Cargando últimos gastos para usuario {}", usuarioId);
 
         try {
-                List<Gasto> gastos = gastoService.obtenerUltimosGastosGeneral(100000);
+        	List<Gasto> gastos = consultarGastosDelRango();
 
             log.debug("Total de gastos obtenidos: {}", gastos.size());
 
@@ -1063,24 +1087,6 @@ public class RegistroGastoController {
         log.debug("Formato de moneda configurado");
     }
 
-    // ✅ NUEVO: Contar separadores de miles en una cadena
-    private int contarSeparadores(String texto, int hastaIndex) {
-        if (texto == null || texto.isEmpty()) {
-            return 0;
-        }
-
-        int count = 0;
-        int limite = Math.min(hastaIndex, texto.length());
-
-        for (int i = 0; i < limite; i++) {
-            char c = texto.charAt(i);
-            if (c == '.' || c == ',') {
-                count++;
-            }
-        }
-
-        return count;
-    }
     
     /** Sugiere clientes mientras se escribe la cédula; al escoger uno se llenan cédula y nombre. */
     private void configurarCedulaAutocomplete() {
@@ -1204,6 +1210,44 @@ public class RegistroGastoController {
             .reduce(BigDecimal.ZERO, BigDecimal::add);
         lblTotalGastos.setText(
             NumberFormat.getCurrencyInstance(new Locale("es", "CO")).format(suma));
+    }
+    
+    // ==================== DETALLE DEL GASTO SELECCIONADO ====================
+
+    /** Al seleccionar un gasto se muestra su resumen en la barra de total. */
+    private void configurarDetalleGasto() {
+        tblUltimosGastos.getSelectionModel().getSelectedCells()
+            .addListener((javafx.collections.ListChangeListener<TablePosition>) c -> actualizarDetalleGasto());
+        actualizarDetalleGasto();
+    }
+
+    private void actualizarDetalleGasto() {
+        if (lblDetalleGasto == null) {
+            return;
+        }
+        ObservableList<Gasto> items = tblUltimosGastos.getItems();
+        Set<Integer> filas = new HashSet<>();
+        for (TablePosition pos : tblUltimosGastos.getSelectionModel().getSelectedCells()) {
+            filas.add(pos.getRow());
+        }
+        // Solo se muestra cuando hay exactamente un gasto seleccionado
+        if (items == null || filas.size() != 1) {
+            lblDetalleGasto.setText("");
+            return;
+        }
+        int fila = filas.iterator().next();
+        if (fila < 0 || fila >= items.size()) {
+            lblDetalleGasto.setText("");
+            return;
+        }
+        Gasto g = items.get(fila);
+        String fecha = g.getFecha() == null ? "" : g.getFecha().toString();
+        String categoria = g.getCategoria() == null ? "" : g.getCategoria().getNombre();
+        String total = g.getValorTotal() == null ? "" : fmtMoneda.format(g.getValorTotal());
+        lblDetalleGasto.setText("Fecha: " + fecha + " | " + categoria
+                + " | " + g.getProducto() + " | Cant: " + g.getCantidad()
+                + " | Total: " + total);
+        log.debug("Detalle mostrado del gasto id={}", g.getId());
     }
 
     private void configurarFiltros() {
@@ -1335,8 +1379,8 @@ public class RegistroGastoController {
         java.time.YearMonth actual = java.time.YearMonth.now();
         dpDesde.setValue(actual.atDay(1));
         dpHasta.setValue(actual.atEndOfMonth());
-        dpDesde.valueProperty().addListener((o, a, b) -> aplicarFiltros());
-        dpHasta.valueProperty().addListener((o, a, b) -> aplicarFiltros());
+        dpDesde.valueProperty().addListener((o, a, b) -> alCambiarRango());
+        dpHasta.valueProperty().addListener((o, a, b) -> alCambiarRango());
 
         lblAvisoMesAnterior.managedProperty().bind(chkMesAnterior.selectedProperty());
         lblAvisoMesAnterior.visibleProperty().bind(chkMesAnterior.selectedProperty());
@@ -1347,19 +1391,34 @@ public class RegistroGastoController {
                                             : java.time.YearMonth.now();
             ponerRangoFechas(m.atDay(1), m.atEndOfMonth());
         });
+        fechasConfiguradas = true;
         aplicarFiltros();
+    }
+    
+    /** Al cambiar Desde/Hasta se consulta la base de nuevo; ponerRangoFechas ya recarga por su cuenta. */
+    private void alCambiarRango() {
+        if (cambiandoRango) {
+            return;
+        }
+        cargarUltimosGastos();
     }
 
     private void ponerRangoFechas(LocalDate desde, LocalDate hasta) {
         LocalDate actual = dpDesde.getValue();
-        // Orden que nunca deja Desde > Hasta, ni un instante
-        if (actual == null || desde.isAfter(actual)) {
-            dpHasta.setValue(hasta);
-            dpDesde.setValue(desde);
-        } else {
-            dpDesde.setValue(desde);
-            dpHasta.setValue(hasta);
+        cambiandoRango = true;
+        try {
+            // Orden que nunca deja Desde > Hasta, ni un instante
+            if (actual == null || desde.isAfter(actual)) {
+                dpHasta.setValue(hasta);
+                dpDesde.setValue(desde);
+            } else {
+                dpDesde.setValue(desde);
+                dpHasta.setValue(hasta);
+            }
+        } finally {
+            cambiandoRango = false;
         }
+        cargarUltimosGastos();
     }
 
     private java.time.YearMonth mesFiltrado() {
@@ -1399,16 +1458,28 @@ public class RegistroGastoController {
         botonesFiltro.forEach((c, b) ->
             b.setStyle(seleccionados.containsKey(c) ? ESTILO_FILTRO_ACTIVO : ESTILO_FILTRO_NORMAL));
         actualizarTotal();
+        actualizarDetalleGasto();
         actualizarColumnaBeneficiario();
         Platform.runLater(() -> {
             tblUltimosGastos.scrollToColumnIndex(0);
-            tblUltimosGastos.scrollToColumnIndex(0);
+//            tblUltimosGastos.scrollToColumnIndex(0);
             tblUltimosGastos.scrollTo(0);
+            programarAjusteAnchoBeneficiario();
+        });
+    }
+    
+    /** Junta varias peticiones de ajuste en una sola ejecución. */
+    private void programarAjusteAnchoBeneficiario() {
+        if (ajusteAnchoPendiente) {
+            return;
+        }
+        ajusteAnchoPendiente = true;
+        Platform.runLater(() -> {
+            ajusteAnchoPendiente = false;
             ajustarAnchoBeneficiario();
         });
     }
     
-    /** Ajusta el ancho de Beneficiario al nombre más largo que se está mostrando. */
     /** Ajusta el ancho de Beneficiario al nombre más largo que se está mostrando. */
     private void ajustarAnchoBeneficiario() {
         if (gastosFiltrados == null) {
@@ -1445,7 +1516,7 @@ public class RegistroGastoController {
     private void recordarFuenteBeneficiario(Font fuente) {
         if (fuente != null && !fuente.equals(fuenteCeldaBeneficiario)) {
             fuenteCeldaBeneficiario = fuente;
-            Platform.runLater(this::ajustarAnchoBeneficiario);
+            programarAjusteAnchoBeneficiario();
         }
     }
 

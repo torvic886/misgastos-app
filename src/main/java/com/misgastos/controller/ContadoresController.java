@@ -17,7 +17,6 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -148,63 +147,83 @@ public class ContadoresController {
 		pesos = new DecimalFormat("$ #,##0;-$ #,##0", s);
 	}
 
-	@FXML
-	public void initialize() {
-		log.debug("Inicializando pantalla de contadores");
-		dpFecha.setValue(LocalDate.now());
-		cmbPeriodo.getItems().addAll(1, 2, 3);
-		cmbPeriodo.setDisable(true);
-		dpFecha.valueProperty().addListener((obs, a, n) -> sugerirPeriodo());
+    @FXML
+    public void initialize() {
+        log.debug("Inicializando pantalla de contadores");
+        configurarFechaYPeriodo();
+        configurarCamposNumericos();
 
-		soloDigitos(txtCodigo, 12);
-		aplicarFormatoMiles(txtIn, 15);
-		aplicarFormatoMiles(txtOut, 15);
-		aplicarFormatoMiles(txtPrem, 15);
+        configurarTabla();
+        configurarEnter();
+        cargarMaquinas();
 
-		configurarTabla();
-		configurarEnter();
-		cargarMaquinas();
+        configurarBusquedaYEnfoqueInicial();
+        configurarFiltroFechas();
+        configurarEtiquetaMaquina();
+        configurarRecargaAlMostrar();
+    }
+    
+    private void configurarFechaYPeriodo() {
+        dpFecha.setValue(LocalDate.now());
+        cmbPeriodo.getItems().addAll(1, 2, 3);
+        cmbPeriodo.setDisable(true);
+        dpFecha.valueProperty().addListener((obs, a, n) -> sugerirPeriodo());
+    }
 
-		txtCodigo.focusedProperty().addListener((obs, antes, enfocado) -> {
-			if (!enfocado) {
-				buscarMaquina();
-			}
-		});
+    private void configurarCamposNumericos() {
+        soloDigitos(txtCodigo, 12);
+        aplicarFormatoMiles(txtIn, 15);
+        aplicarFormatoMiles(txtOut, 15);
+        aplicarFormatoMiles(txtPrem, 15);
+    }
 
-		Platform.runLater(() -> txtCodigo.requestFocus());
+    private void configurarBusquedaYEnfoqueInicial() {
+        txtCodigo.focusedProperty().addListener((obs, antes, enfocado) -> {
+            if (!enfocado) {
+                buscarMaquina();
+            }
+        });
 
-		LocalDate hoy = LocalDate.now();
-		dpDesde.setValue(hoy.withDayOfMonth(1));
-		dpHasta.setValue(hoy.withDayOfMonth(hoy.lengthOfMonth()));
-		dpDesde.valueProperty().addListener((obs, a, n) -> refrescarTabla());
-		dpHasta.valueProperty().addListener((obs, a, n) -> refrescarTabla());
-		SelectorFecha.configurar(dpFecha);
-		SelectorFecha.configurar(dpDesde);
-		SelectorFecha.configurar(dpHasta);
-		refrescarTabla();
-		// La línea del nombre de la máquina solo ocupa espacio cuando tiene texto
-		lblMaquina.managedProperty().bind(lblMaquina.textProperty().isNotEmpty());
-		lblMaquina.visibleProperty().bind(lblMaquina.textProperty().isNotEmpty());
+        Platform.runLater(() -> txtCodigo.requestFocus());
+    }
 
-		// Al volver a mostrar la pantalla, recarga máquinas y tabla (por si cambiaron
-		// en otra pantalla)
-		tabla.sceneProperty().addListener((obs, anterior, nueva) -> {
-			if (nueva != null) {
-				cargarMaquinas();
-				if (maquinaActual != null) {
-					maquinaActual = activasPorCodigo.get(maquinaActual.getCodigo());
-					if (maquinaActual == null) {
-						limpiarMaquina();
-					} else {
-						lblMaquina.setText(maquinaActual.getNombre() + " · " + maquinaActual.getJuego() + " · Den. "
-								+ pesos.format(maquinaActual.getDenominacion().longValue()));
-					}
-				}
-				refrescarTabla();
-			}
-		});
+    private void configurarFiltroFechas() {
+        LocalDate base = mesDeTrabajo();
+        dpDesde.setValue(base.withDayOfMonth(1));
+        dpHasta.setValue(base.withDayOfMonth(base.lengthOfMonth()));
+        dpDesde.valueProperty().addListener((obs, a, n) -> refrescarTabla());
+        dpHasta.valueProperty().addListener((obs, a, n) -> refrescarTabla());
+        SelectorFecha.configurar(dpFecha);
+        SelectorFecha.configurar(dpDesde);
+        SelectorFecha.configurar(dpHasta);
+        refrescarTabla();
+    }
 
-	}
+    private void configurarEtiquetaMaquina() {
+        // La línea del nombre de la máquina solo ocupa espacio cuando tiene texto
+        lblMaquina.managedProperty().bind(lblMaquina.textProperty().isNotEmpty());
+        lblMaquina.visibleProperty().bind(lblMaquina.textProperty().isNotEmpty());
+    }
+
+    private void configurarRecargaAlMostrar() {
+        // Al volver a mostrar la pantalla, recarga máquinas y tabla (por si cambiaron
+        // en otra pantalla)
+        tabla.sceneProperty().addListener((obs, anterior, nueva) -> {
+            if (nueva != null) {
+                cargarMaquinas();
+                if (maquinaActual != null) {
+                    maquinaActual = activasPorCodigo.get(maquinaActual.getCodigo());
+                    if (maquinaActual == null) {
+                        limpiarMaquina();
+                    } else {
+                        lblMaquina.setText(maquinaActual.getNombre() + " · " + maquinaActual.getJuego() + " · Den. "
+                                + pesos.format(maquinaActual.getDenominacion().longValue()));
+                    }
+                }
+                refrescarTabla();
+            }
+        });
+    }
 
 	// ==================== MÁQUINA ====================
 
@@ -240,7 +259,35 @@ public class ContadoresController {
 		lblMaquina.setText(
 				m.getNombre() + " · " + m.getJuego() + " · Den. " + pesos.format(m.getDenominacion().longValue()));
 		actualizarPanel();
+		saltarAUltimaLectura(m);
 	}
+	
+    /** Mes de la lectura más reciente de todas las máquinas, sin pasar de hoy; si no hay, el de hoy. */
+    private LocalDate mesDeTrabajo() {
+            LocalDate hoy = LocalDate.now();
+            LocalDate mejor = null;
+            for (FilaContador f : lecturaService.filas(null, null, null)) {
+                    LocalDate d = f.lectura().getFecha();
+                    if (!d.isAfter(hoy) && (mejor == null || d.isAfter(mejor))) {
+                            mejor = d;
+                    }
+            }
+            return mejor != null ? mejor : hoy;
+    }
+
+    /** Si la última lectura de la máquina cae fuera del rango visible, el rango pasa a su mes. */
+    private void saltarAUltimaLectura(Maquina m) {
+            List<FilaContador> propias = lecturaService.filas(m.getId(), null, null);
+            if (propias.isEmpty()) {
+                    return;
+            }
+            LocalDate f = propias.get(propias.size() - 1).lectura().getFecha();
+            LocalDate desde = dpDesde.getValue();
+            LocalDate hasta = dpHasta.getValue();
+            if (desde == null || hasta == null || f.isBefore(desde) || f.isAfter(hasta)) {
+                    ponerRango(f.withDayOfMonth(1), f.withDayOfMonth(f.lengthOfMonth()));
+            }
+    }
 
 	private boolean actualizarPanel() {
 		boolean sinLecturas = false;
@@ -555,6 +602,18 @@ public class ContadoresController {
 				}
 			}
 		}
+		
+        // Aviso de misma fecha: la máquina ya tiene una lectura válida ese día
+        if (!chkIntermedia.isSelected() && !chkReinicio.isSelected()) {
+                LocalDate fechaNueva = dpFecha.getValue();
+                boolean yaHay = lecturaService.filas(maquinaActual.getId(), null, null).stream()
+                                .map(f -> f.lectura())
+                                .anyMatch(l -> !Lectura.COPIA.equals(l.getTipo())
+                                                && l.getFecha().equals(fechaNueva));
+                if (yaHay && !confirmarMismaFecha(fechaNueva)) {
+                        return;
+                }
+        }
 
 		boolean reinicio = chkReinicio.isSelected();
 		try {
@@ -635,6 +694,21 @@ public class ContadoresController {
 		}
 		return r.get() == dano;
 	}
+	
+    /** true = guardar de todos modos; false = cancelar. */
+    private boolean confirmarMismaFecha(LocalDate fecha) {
+            ButtonType guardar = new ButtonType("Guardar de todos modos", ButtonBar.ButtonData.YES);
+            Alert a = new Alert(Alert.AlertType.CONFIRMATION,
+                            "Esta máquina ya tiene una lectura el " + fecha.format(formatoFecha)
+                                            + ". Si es un daño o un reinicio, cancela y márcalo como tal.",
+                            guardar, ButtonType.CANCEL);
+            a.setTitle("Lectura en la misma fecha");
+            a.setHeaderText("Ya hay una lectura de esta máquina en esa fecha. ¿Guardar otra?");
+            a.setGraphic(null);
+            a.getDialogPane().getStylesheets().add(css());
+            Optional<ButtonType> r = a.showAndWait();
+            return r.isPresent() && r.get() == guardar;
+    }
 
 	/**
 	 * Pregunta con qué fecha guardar una lectura del periodo 3 hecha los primeros

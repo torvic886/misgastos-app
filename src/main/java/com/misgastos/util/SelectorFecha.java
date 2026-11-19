@@ -2,12 +2,9 @@ package com.misgastos.util;
 
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.TextFormatter;
-import javafx.scene.control.Tooltip;
 import javafx.util.StringConverter;
-import javafx.scene.control.SelectionMode;
 
 import java.time.LocalDate;
-import com.misgastos.util.CopiarTabla;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.format.ResolverStyle;

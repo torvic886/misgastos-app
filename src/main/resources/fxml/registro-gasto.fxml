@@ -227,7 +227,9 @@
 			<SVGPath styleClass="icon-green"
 				content="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
 			<Label text="Total de gastos" styleClass="total-label" />
-			<Region HBox.hgrow="ALWAYS" />
+			<Label fx:id="lblDetalleGasto" wrapText="true"
+				maxWidth="Infinity" minWidth="0" HBox.hgrow="ALWAYS"
+				style="-fx-text-fill: #475569; -fx-font-size: 11px; -fx-padding: 0 0 0 10;" />
 			<Label fx:id="lblTotalGastos" text="COP 0.00"
 				styleClass="total-value" />
 		</HBox>

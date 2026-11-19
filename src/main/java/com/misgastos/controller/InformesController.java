@@ -95,21 +95,23 @@ public class InformesController {
 
 	private String informeActual = "";
 
-	@FXML
-	public void initialize() {
-		configurarTiposInforme();
-		configurarFechasPorDefecto();
-		cargarCategorias();
-		configurarSugerenciasProducto();
-		configurarListeners();
-		configurarFiltrosClientes(); // NUEVO
+    @FXML
+    public void initialize() {
+        configurarTiposInforme();
+        configurarFechasPorDefecto();
+        cargarCategorias();
+        configurarSugerenciasProducto();
+        configurarListeners();
+        configurarFiltrosClientes(); // NUEVO
+        mostrarMensajeInicial();
 
-		txtPreview
-				.setText("📊 Selecciona el tipo de informe, configura las fechas y presiona 'Generar Vista Previa'\n\n"
-						+ "El informe aparecerá aquí antes de exportarlo a PDF o Excel.");
-
-		log.debug("Módulo de informes cargado");
-	}
+        log.debug("Módulo de informes cargado");
+    }
+    
+    private void mostrarMensajeInicial() {
+        txtPreview.setText("📊 Selecciona el tipo de informe, configura las fechas y presiona 'Generar Vista Previa'\n\n"
+                + "El informe aparecerá aquí antes de exportarlo a PDF o Excel.");
+    }
 
 	private void configurarTiposInforme() {
 		cmbTipoInforme.getItems().addAll("📊 Informe General Mensual", "👥 Consolidado por cliente",
