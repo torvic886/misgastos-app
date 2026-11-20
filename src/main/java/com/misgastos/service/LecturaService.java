@@ -441,6 +441,49 @@ public class LecturaService {
 				"Máquina " + m.getCodigo() + ", periodo " + periodo + " (INICIAL), fecha " + fecha);
 		return l;
 	}
+	
+    /**
+     * Mueve la lectura INICIAL (y su copia) a una nueva fecha de alta, recalculando el periodo.
+     * Solo si la máquina no tiene más lecturas que la inicial y su copia.
+     */
+    public void moverInicial(Maquina m, LocalDate nuevaFecha) {
+            List<Lectura> validas = validas(m.getId());
+            if (validas.isEmpty() || !Lectura.INICIAL.equals(validas.get(0).getTipo())) {
+                    throw new RuntimeException("La máquina " + m.getCodigo() + " no tiene lectura inicial");
+            }
+            Lectura ini = validas.get(0);
+            Lectura copia = (validas.size() > 1 && Lectura.COPIA.equals(validas.get(1).getTipo()))
+                            ? validas.get(1) : null;
+            int posteriores = validas.size() - 1 - (copia != null ? 1 : 0);
+            if (posteriores > 0) {
+                    throw new RuntimeException("La máquina " + m.getCodigo() + " ya tiene " + posteriores
+                                    + " lectura(s) después de la inicial; no se puede mover su fecha de alta");
+            }
+
+            int dia = nuevaFecha.getDayOfMonth();
+            int periodo = dia <= 8 ? 1 : dia <= 23 ? 2 : 3;
+
+            ini.setFecha(nuevaFecha);
+            ini.setPeriodo(periodo);
+            lecturaRepository.save(ini);
+
+            if (periodo == 3) {
+                    if (copia != null) {
+                            copia.setFecha(nuevaFecha);
+                            lecturaRepository.save(copia);
+                    } else {
+                            Lectura nueva = nueva(m, nuevaFecha, ini.getContadorIn(), ini.getContadorOut(),
+                                            ini.getContadorPrem());
+                            nueva.setDenominacion(ini.getDenominacion());
+                            nueva.setPeriodo(1);
+                            nueva.setTipo(Lectura.COPIA);
+                            lecturaRepository.save(nueva);
+                    }
+            } else if (copia != null) {
+                    marcarAnulada(copia, "Copia de la lectura inicial: la fecha de alta cambió y ya no es periodo 3");
+            }
+            log.debug("Lectura inicial movida: máquina {}, fecha {}, periodo {}", m.getCodigo(), nuevaFecha, periodo);
+    }
 
 	private void marcarAnulada(Lectura l, String motivo) {
 		l.setAnulada(true);

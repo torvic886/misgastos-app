@@ -223,8 +223,10 @@ public class MisGastosApplication extends Application {
         stage.setTitle("ExpenseFlow - Login");
         stage.setScene(scene);
 
-        stage.setMinWidth(500);
-        stage.setMinHeight(700);
+//        stage.setMinWidth(500);
+//        stage.setMinHeight(700);
+        stage.setMinWidth(Math.min(500, screenBounds.getWidth()));
+        stage.setMinHeight(Math.min(700, screenBounds.getHeight()));
 
         // Asegurar que NO esté maximizado al inicio
         stage.setMaximized(false);

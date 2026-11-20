@@ -781,6 +781,9 @@ public class DashboardController {
             // Primero desmaximizar, LUEGO cambiar escena y tamaño
             stage.setMaximized(false);
 
+            stage.setMinWidth(Math.min(500, screenBounds.getWidth()));
+            stage.setMinHeight(Math.min(700, screenBounds.getHeight()));
+            
             // Cambiar escena
             stage.setTitle("ExpenseFlow - Login");
             stage.setScene(scene);

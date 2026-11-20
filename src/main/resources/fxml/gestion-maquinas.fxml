@@ -41,6 +41,9 @@
 					content="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z" />
 			</graphic>
 		</Button>
+		<Button text="Cambiar fecha de alta"
+			styleClass="toolbar-button, toolbar-neutral"
+			onAction="#handleCambiarFecha" />
 		<Button text="Actualizar"
 			styleClass="toolbar-button, toolbar-neutral"
 			onAction="#handleRefresh">

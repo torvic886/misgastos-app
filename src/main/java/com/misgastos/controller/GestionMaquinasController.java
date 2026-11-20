@@ -107,6 +107,7 @@ public class GestionMaquinasController {
 
         configurarListasFiltradas();
         configurarTablaActivas();
+        tablaActivas.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         configurarTablaBajas();
         configurarMenus();
         configurarBusqueda();
@@ -345,6 +346,70 @@ public class GestionMaquinasController {
             fin.getDialogPane().setExpanded(true);
         }
         fin.showAndWait();
+    }
+    
+    @FXML
+    private void handleCambiarFecha() {
+        List<Maquina> seleccion = new java.util.ArrayList<>(tablaActivas.getSelectionModel().getSelectedItems());
+
+        Dialog<ButtonType> dialogo = new Dialog<>();
+        dialogo.setTitle("Cambiar fecha de alta");
+        dialogo.setHeaderText("Mueve la fecha de alta y su lectura inicial");
+
+        ToggleGroup grupo = new ToggleGroup();
+        RadioButton rbSeleccion = new RadioButton("Solo las seleccionadas (" + seleccion.size() + ")");
+        RadioButton rbTodas = new RadioButton("Todas las activas (" + activas.size() + ")");
+        rbSeleccion.setToggleGroup(grupo);
+        rbTodas.setToggleGroup(grupo);
+        if (seleccion.isEmpty()) {
+            rbSeleccion.setDisable(true);
+            rbTodas.setSelected(true);
+        } else {
+            rbSeleccion.setSelected(true);
+        }
+
+        DatePicker dpFecha = new DatePicker(LocalDate.now());
+        SelectorFecha.configurar(dpFecha);
+        HBox filaFecha = new HBox(8, new Label("Nueva fecha de alta:"), dpFecha);
+        filaFecha.setAlignment(Pos.CENTER_LEFT);
+
+        VBox contenido = new VBox(12, rbSeleccion, rbTodas, filaFecha);
+        contenido.setPadding(new Insets(10));
+        dialogo.getDialogPane().setContent(contenido);
+        dialogo.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        if (dialogo.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) {
+            return;
+        }
+        LocalDate fecha = dpFecha.getValue();
+        if (fecha == null) {
+            mostrarError("Fecha de alta", "Elige una fecha.");
+            return;
+        }
+
+        List<Maquina> destino = rbTodas.isSelected() ? new java.util.ArrayList<>(activas) : seleccion;
+        Alert confirmar = new Alert(Alert.AlertType.CONFIRMATION,
+                "Se cambiará la fecha de alta de " + destino.size() + " máquina(s) a "
+                + fecha.format(dateFormatter) + ".\n\nTambién se moverá su lectura inicial.\n¿Continuar?",
+                ButtonType.YES, ButtonType.NO);
+        confirmar.setHeaderText(null);
+        if (confirmar.showAndWait().orElse(ButtonType.NO) != ButtonType.YES) {
+            return;
+        }
+
+        try {
+            List<Long> ids = destino.stream().map(Maquina::getId).toList();
+            int cambiadas = maquinaService.cambiarFechaAlta(ids, fecha);
+            log.info("Fecha de alta cambiada desde la pantalla: {} máquina(s)", cambiadas);
+            Alert listo = new Alert(Alert.AlertType.INFORMATION,
+                    "Fecha de alta cambiada en " + cambiadas + " máquina(s).");
+            listo.setHeaderText(null);
+            listo.showAndWait();
+            cargarDatos();
+        } catch (Exception e) {
+            log.error("No se pudo cambiar la fecha de alta", e);
+            mostrarError("No se pudo cambiar la fecha", e.getMessage());
+        }
     }
 
     private void handleDarDeBaja(Maquina maquina) {

@@ -162,6 +162,35 @@ return guardada;
         auditoriaService.registrarCambio("REACTIVAR_MAQUINA", "Máquina " + m.getCodigo() + " reactivada");
         return guardada;
     }
+    
+    /** Cambia la fecha de alta de varias máquinas y mueve su lectura inicial. Todo o nada. */
+    public int cambiarFechaAlta(List<Long> ids, LocalDate nuevaFecha) {
+        if (nuevaFecha == null) {
+            throw new RuntimeException("La fecha de alta es obligatoria");
+        }
+        if (nuevaFecha.isAfter(LocalDate.now())) {
+            throw new RuntimeException("La fecha de alta no puede ser futura");
+        }
+        int cambiadas = 0;
+        for (Long id : ids) {
+            Maquina m = obtener(id);
+            if (!m.isActiva()) {
+                throw new RuntimeException("La máquina " + m.getCodigo() + " está de baja");
+            }
+            LocalDate anterior = m.getFechaAlta();
+            if (nuevaFecha.equals(anterior)) {
+                continue;
+            }
+            lecturaService.moverInicial(m, nuevaFecha);
+            m.setFechaAlta(nuevaFecha);
+            maquinaRepository.save(m);
+            auditoriaService.registrarCambio("CAMBIAR_FECHA_ALTA",
+                    "Máquina " + m.getCodigo() + ": " + anterior + " → " + nuevaFecha);
+            cambiadas++;
+        }
+        log.info("Fecha de alta cambiada en {} máquina(s)", cambiadas);
+        return cambiadas;
+    }
 
     /** Borra para siempre una máquina de baja, junto con sus lecturas. */
     public void eliminarDefinitivamente(Long id) {
