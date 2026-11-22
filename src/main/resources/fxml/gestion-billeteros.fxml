@@ -4,13 +4,15 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.SVGPath?>
 
-<VBox spacing="12" style="-fx-padding: 0;" styleClass="content, gasto-screen"
-	xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+<VBox spacing="12" style="-fx-padding: 0;"
+	styleClass="content, gasto-screen" xmlns="http://javafx.com/javafx/17"
+	xmlns:fx="http://javafx.com/fxml/1"
 	fx:controller="com.misgastos.controller.GestionBilleterosController">
 
 	<!-- ============ ENCABEZADO ============ -->
 	<HBox spacing="10" alignment="CENTER_LEFT" styleClass="table-card">
-		<HBox spacing="10" alignment="CENTER_LEFT" styleClass="panel-header">
+		<HBox spacing="10" alignment="CENTER_LEFT"
+			styleClass="panel-header">
 			<Label styleClass="icon-circle">
 				<graphic>
 					<SVGPath styleClass="icon-white"
@@ -24,6 +26,14 @@
 			</VBox>
 		</HBox>
 		<Region HBox.hgrow="ALWAYS" />
+		<Button fx:id="btnImportarExcel" text="Importar Excel"
+			styleClass="toolbar-button, toolbar-neutral" minWidth="-Infinity"
+			onAction="#handleImportarExcel">
+			<graphic>
+				<SVGPath styleClass="toolbar-icon"
+					content="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z" />
+			</graphic>
+		</Button>
 		<Button fx:id="btnNuevo" text="Nuevo"
 			styleClass="toolbar-button, toolbar-blue" onAction="#handleNuevo">
 			<graphic>
@@ -42,37 +52,59 @@
 	</HBox>
 
 	<!-- ============ FILTROS ============ -->
-	<HBox spacing="10" alignment="CENTER_LEFT"
-		styleClass="table-card, filter-bar">
-		<Label text="Buscar:" styleClass="field-caption" />
-		<TextField fx:id="txtBuscar" promptText="Buscar en la tabla..."
-			prefWidth="230" styleClass="search-field" />
+	<VBox spacing="8" styleClass="table-card, filter-bar">
 
-		<Separator orientation="VERTICAL" prefHeight="20" />
+		<HBox spacing="10" alignment="CENTER_LEFT">
+			<Label text="Buscar:" styleClass="field-caption"
+				minWidth="-Infinity" />
+			<TextField fx:id="txtBuscar"
+				promptText="Buscar en la tabla..." prefWidth="230" minWidth="120"
+				styleClass="search-field" HBox.hgrow="SOMETIMES" />
 
-		<Label text="Desde:" styleClass="field-caption" />
-		<DatePicker fx:id="dpFechaDesde" promptText="Fecha inicio"
-			prefWidth="140" styleClass="date-picker" />
+			<Separator orientation="VERTICAL" prefHeight="20" />
 
-		<Label text="Hasta:" styleClass="field-caption" />
-		<DatePicker fx:id="dpFechaHasta" promptText="Fecha fin"
-			prefWidth="140" styleClass="date-picker" />
+			<Label text="Desde:" styleClass="field-caption"
+				minWidth="-Infinity" />
+			<DatePicker fx:id="dpFechaDesde" promptText="Fecha inicio"
+				prefWidth="160" minWidth="-Infinity" styleClass="date-picker" />
 
-		<Button text="Buscar" styleClass="toolbar-button, toolbar-blue"
-			onAction="#handleBuscar">
-			<graphic>
-				<SVGPath styleClass="toolbar-icon"
-					content="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
-			</graphic>
-		</Button>
-		<Button text="Limpiar" styleClass="toolbar-button, toolbar-neutral"
-			onAction="#handleLimpiarFiltros">
-			<graphic>
-				<SVGPath styleClass="toolbar-icon"
-					content="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-			</graphic>
-		</Button>
-	</HBox>
+			<Label text="Hasta:" styleClass="field-caption"
+				minWidth="-Infinity" />
+			<DatePicker fx:id="dpFechaHasta" promptText="Fecha fin"
+				prefWidth="160" minWidth="-Infinity" styleClass="date-picker" />
+
+			<Button text="Buscar"
+				styleClass="toolbar-button, toolbar-blue" minWidth="-Infinity"
+				onAction="#handleBuscar">
+				<graphic>
+					<SVGPath styleClass="toolbar-icon"
+						content="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+				</graphic>
+			</Button>
+			<Button text="Limpiar"
+				styleClass="toolbar-button, toolbar-neutral" minWidth="-Infinity"
+				onAction="#handleLimpiarFiltros">
+				<graphic>
+					<SVGPath styleClass="toolbar-icon"
+						content="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+				</graphic>
+			</Button>
+		</HBox>
+
+		<HBox spacing="10" alignment="CENTER_RIGHT">
+			<Label text="Ir al mes:" styleClass="field-caption"
+				minWidth="-Infinity" />
+			<Button text="◂ Anterior"
+				styleClass="toolbar-button, toolbar-neutral" minWidth="-Infinity"
+				onAction="#handleMesAnterior" />
+			<Button text="Este mes"
+				styleClass="toolbar-button, toolbar-neutral" minWidth="-Infinity"
+				onAction="#handleEsteMes" />
+			<Button text="Siguiente ▸"
+				styleClass="toolbar-button, toolbar-neutral" minWidth="-Infinity"
+				onAction="#handleMesSiguiente" />
+		</HBox>
+	</VBox>
 
 	<!-- ============ TABLA ============ -->
 	<VBox spacing="10" VBox.vgrow="ALWAYS" styleClass="table-card">
@@ -83,14 +115,18 @@
 				<TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
 			</columnResizePolicy>
 			<columns>
-				<TableColumn fx:id="colFecha" text="Fecha" prefWidth="130"
-					style="-fx-alignment: CENTER;" />
+				<TableColumn fx:id="colFecha" text="Fecha"
+					prefWidth="130" style="-fx-alignment: CENTER;" />
 				<TableColumn fx:id="colBilletero" text="Billetero"
 					prefWidth="180" style="-fx-alignment: CENTER_RIGHT;" />
 				<TableColumn fx:id="colPremios" text="Premios"
 					prefWidth="180" style="-fx-alignment: CENTER_RIGHT;" />
 				<TableColumn fx:id="colDiferencia" text="Diferencia"
 					prefWidth="180" style="-fx-alignment: CENTER_RIGHT;" />
+				<TableColumn fx:id="colAcumulada" text="Dif. acumulada"
+					prefWidth="180" style="-fx-alignment: CENTER_RIGHT;" />
+				<TableColumn fx:id="colPromedio" text="Promedio día"
+					prefWidth="160" style="-fx-alignment: CENTER_RIGHT;" />
 				<TableColumn fx:id="colAcciones" text="Acciones"
 					prefWidth="120" style="-fx-alignment: CENTER;" />
 			</columns>
@@ -119,7 +155,8 @@
 	</VBox>
 
 	<!-- ============ RESUMEN GENERAL ============ -->
-	<HBox spacing="12" alignment="CENTER_LEFT" styleClass="table-card, resumen-card">
+	<HBox spacing="12" alignment="CENTER_LEFT"
+		styleClass="table-card, resumen-card">
 		<VBox spacing="2" styleClass="res-tile, res-blue">
 			<Label text="Total Billetero" styleClass="res-caption" />
 			<Label fx:id="lblTotalBilletero" text="0"

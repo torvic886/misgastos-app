@@ -47,12 +47,23 @@
 				style="-fx-font-size: 12px; -fx-text-fill: #475569;" />
 			<Label fx:id="lblRespaldos" wrapText="true"
 				style="-fx-font-size: 12px; -fx-text-fill: #475569;" />
-			<HBox spacing="10">
+			<HBox spacing="10" alignment="CENTER_LEFT">
 				<Button text="📂 Abrir carpeta de datos"
 					onAction="#handleAbrirCarpetaDatos" styleClass="secondary-button" />
 				<Button text="🗂 Abrir carpeta de respaldos"
 					onAction="#handleAbrirCarpetaRespaldos"
 					style="-fx-background-color: #e2e8f0; -fx-text-fill: #334155; -fx-font-weight: bold; -fx-background-radius: 6; -fx-padding: 8 16; -fx-cursor: hand;" />
+				<Region HBox.hgrow="ALWAYS" />
+				<Label text="Contadores:"
+					style="-fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #475569;" />
+				<Button text="📥 Importar Excel"
+					onAction="#handleImportarContadores" styleClass="primary-button"
+					minWidth="160" prefWidth="160" minHeight="34" prefHeight="34"
+					style="-fx-font-size: 13px;" />
+				<Button text="🗑 Borrar lecturas"
+					onAction="#handleBorrarLecturas" minWidth="160" prefWidth="160"
+					minHeight="34" prefHeight="34"
+					style="-fx-background-color: #fee2e2; -fx-text-fill: #b91c1c; -fx-font-weight: bold; -fx-font-size: 13px; -fx-background-radius: 6; -fx-cursor: hand;" />
 			</HBox>
 			<Label
 				text="Cada día, la primera vez que abres el programa, se guarda una copia automática (se conservan las últimas 30). Antes de aplicar una importación también se guarda una copia aparte de tus datos actuales."

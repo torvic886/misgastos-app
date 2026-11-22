@@ -14,6 +14,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.math.RoundingMode;
+import java.time.YearMonth;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Set;
 
 @Service
 @Transactional
@@ -97,4 +104,41 @@ public class BilleteroService {
         
         return totales;
     }
+    
+    /** Diferencia acumulada del mes y promedio por día de un registro. */
+    public record Acumulado(BigDecimal diferenciaAcumulada, BigDecimal promedioDia) {
+    }
+
+    /**
+     * Para cada registro de los meses que aparecen en la lista calcula la diferencia acumulada
+     * desde el día 1 de su mes y el promedio (acumulada / día del mes, truncado como en el Excel).
+     * Usa el mes completo aunque la lista esté filtrada. No guarda nada en la base.
+     */
+    @Transactional(readOnly = true)
+    public Map<Long, Acumulado> calcularAcumulados(Collection<Billetero> mostrados) {
+        Set<YearMonth> meses = new HashSet<>();
+        for (Billetero b : mostrados) {
+            meses.add(YearMonth.from(b.getFecha()));
+        }
+
+        Map<Long, Acumulado> resultado = new HashMap<>();
+        for (YearMonth mes : meses) {
+            List<Billetero> delMes = new ArrayList<>(
+                    billeteroRepository.findByFechaBetweenOrderByFechaDesc(mes.atDay(1), mes.atEndOfMonth()));
+            delMes.sort(Comparator.comparing(Billetero::getFecha).thenComparing(Billetero::getId));
+
+            BigDecimal acumulado = BigDecimal.ZERO;
+            for (Billetero b : delMes) {
+                if (b.getDiferencia() != null) {
+                    acumulado = acumulado.add(b.getDiferencia());
+                }
+                BigDecimal promedio = acumulado.divide(
+                        BigDecimal.valueOf(b.getFecha().getDayOfMonth()), 0, RoundingMode.DOWN);
+                resultado.put(b.getId(), new Acumulado(acumulado, promedio));
+            }
+            log.debug("Billeteros: acumulados calculados para {} ({} registros)", mes, delMes.size());
+        }
+        return resultado;
+    }
+    
 }

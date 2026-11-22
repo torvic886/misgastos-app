@@ -9,6 +9,7 @@ import com.misgastos.util.SelectorFecha;
 import com.misgastos.service.MaquinaImportService;
 import javafx.stage.FileChooser;
 import java.io.File;
+import javafx.scene.control.TabPane;
 import javafx.geometry.Pos;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.binding.Bindings;
@@ -71,6 +72,7 @@ public class GestionMaquinasController {
     @FXML private TableColumn<Maquina, String> colActIn;
     @FXML private TableColumn<Maquina, String> colActOut;
     @FXML private TableColumn<Maquina, String> colActPrem;
+    @FXML private TabPane tabPane;
     
     @Autowired
     private MaquinaService maquinaService;

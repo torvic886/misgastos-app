@@ -10,6 +10,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.ss.usermodel.IgnoredErrorType;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -206,6 +207,10 @@ public class HojaExcel {
 
         hoja.setDisplayGridlines(false);
 
+        // Sin el aviso verde de "número guardado como texto" (códigos, seriales, cédulas)
+        hoja.addIgnoredErrors(new CellRangeAddress(0, Math.max(fila - 1, 0), 0, columnas - 1),
+                IgnoredErrorType.NUMBER_STORED_AS_TEXT);
+        
         if (congelar && filaEncabezado >= 0) {
             hoja.createFreezePane(columnasCongeladas, filaEncabezado + 1);
         }

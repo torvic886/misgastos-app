@@ -592,15 +592,6 @@ public class ReporteBilleteroService {
         return cell;
     }
     
-    private Cell crearCeldaPDF(String texto, DeviceRgb backgroundColor, TextAlignment alineacion) {
-        Cell cell = new Cell()
-            .add(new Paragraph(texto).setFontSize(7))
-            .setBackgroundColor(backgroundColor)
-            .setTextAlignment(alineacion)
-            .setPadding(4);
-        return cell;
-    }
-    
     // ==================== ESTILOS EXCEL ====================
     
     private XSSFCellStyle crearEstiloTitulo(XSSFWorkbook workbook) {

@@ -10,7 +10,6 @@ import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -61,7 +60,6 @@ public class BuscarEditarGastosController {
     @Autowired private GastoService gastoService;
     @Autowired private CategoriaService categoriaService;
 
-    private Long usuarioId = 1L;
     private List<Gasto> gastosActuales;
 
     // Formato para peso colombiano sin decimales
@@ -191,6 +189,7 @@ public class BuscarEditarGastosController {
         });
     }
 
+    @SuppressWarnings("unchecked")
     private void copiarCeldaSeleccionada() {
         TablePosition<Gasto, ?> pos = tableGastos.getFocusModel().getFocusedCell();
         if (pos != null) {
@@ -308,38 +307,6 @@ public class BuscarEditarGastosController {
         	filtro.agregar(colTotal, "Total",
         	    g -> g.getValorTotal() == null ? "" : formatoCOP.format(g.getValorTotal()));
         
-    }
-
-    private void agregarColumnaAcciones() {
-        colAcciones.setCellFactory(param -> new TableCell<>() {
-            private final Button btnEditar = new Button("✏ Editar");
-            private final Button btnEliminar = new Button("🗑");
-            private final HBox contenedor = new HBox(5, btnEditar, btnEliminar);
-
-            {
-                btnEditar.getStyleClass().add("secondary-button");
-                btnEditar.setStyle("-fx-font-size: 11px; -fx-padding: 5 10;");
-
-                btnEliminar.getStyleClass().add("danger-button");
-                btnEliminar.setStyle("-fx-font-size: 11px; -fx-padding: 5 10; -fx-background-color: #ef4444; -fx-text-fill: white;");
-
-                btnEditar.setOnAction(event -> {
-                    Gasto gasto = getTableView().getItems().get(getIndex());
-                    abrirDialogoEditar(gasto);
-                });
-
-                btnEliminar.setOnAction(event -> {
-                    Gasto gasto = getTableView().getItems().get(getIndex());
-                    confirmarEliminar(gasto);
-                });
-            }
-
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                setGraphic(empty ? null : contenedor);
-            }
-        });
     }
 
     @FXML

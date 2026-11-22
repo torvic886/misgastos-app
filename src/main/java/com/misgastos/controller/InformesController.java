@@ -12,6 +12,15 @@ import com.misgastos.service.InformeService;
 import com.misgastos.service.diseno.Diseno;
 import com.misgastos.util.SelectorFecha;
 import com.misgastos.service.ContadoresInformeService;
+import com.misgastos.service.InformeGestionService;
+import java.util.ArrayList;
+import java.util.Optional;
+import javafx.geometry.Insets;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.shape.SVGPath;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
@@ -42,6 +51,7 @@ public class InformesController {
 	private static final String CLAVE_CAT_PROD = "categoría y producto";
 	private static final String CLAVE_CONTADORES = "Contadores por rango";
 	private static final String CLAVE_CASINO = "Casino Victory";
+	private static final String CLAVE_GESTION = "Mensual de Gestión";
 
 	@FXML
 	private ComboBox<String> cmbTipoInforme;
@@ -92,35 +102,39 @@ public class InformesController {
 	private ClienteInformeService clienteInformeService; // NUEVO
 	@Autowired
 	private ContadoresInformeService contadoresInformeService;
+	@Autowired
+	private InformeGestionService informeGestionService;
 
 	private String informeActual = "";
 
-    @FXML
-    public void initialize() {
-        configurarTiposInforme();
-        configurarFechasPorDefecto();
-        cargarCategorias();
-        configurarSugerenciasProducto();
-        configurarListeners();
-        configurarFiltrosClientes(); // NUEVO
-        mostrarMensajeInicial();
+	@FXML
+	public void initialize() {
+		configurarTiposInforme();
+		configurarFechasPorDefecto();
+		cargarCategorias();
+		configurarSugerenciasProducto();
+		configurarListeners();
+		configurarFiltrosClientes(); // NUEVO
+		mostrarMensajeInicial();
 
-        log.debug("Módulo de informes cargado");
-    }
-    
-    private void mostrarMensajeInicial() {
-        txtPreview.setText("📊 Selecciona el tipo de informe, configura las fechas y presiona 'Generar Vista Previa'\n\n"
-                + "El informe aparecerá aquí antes de exportarlo a PDF o Excel.");
-    }
+		log.debug("Módulo de informes cargado");
+	}
+
+	private void mostrarMensajeInicial() {
+		txtPreview
+				.setText("📊 Selecciona el tipo de informe, configura las fechas y presiona 'Generar Vista Previa'\n\n"
+						+ "El informe aparecerá aquí antes de exportarlo a PDF o Excel.");
+	}
 
 	private void configurarTiposInforme() {
-		cmbTipoInforme.getItems().addAll("📊 Informe General Mensual", "👥 Consolidado por cliente",
-				"📦 Gastos por categoría y producto", // NUEVO
-				"🎰 Contadores por rango", "🏆 Informe Casino Victory Armenia", "📂 Informe por Categoría",
-				"📦 Informe por Producto", "⚖️ Informe Comparativo", "🎯 Dashboard Ejecutivo",
-				"📋 Desglose por Subcategorías", "📅 Informe Anual");
-		cmbTipoInforme.getSelectionModel().selectFirst();
-	}
+        cmbTipoInforme.getItems().addAll("📊 Informe General Mensual", "👥 Consolidado por cliente",
+                        "📦 Gastos por categoría y producto", // NUEVO
+                        "🎰 Contadores por rango", "🏆 Informe Casino Victory Armenia",
+                        "📈 Informe Mensual de Gestión", "📂 Informe por Categoría",
+                        "📦 Informe por Producto", "⚖️ Informe Comparativo", "🎯 Dashboard Ejecutivo",
+                        "📋 Desglose por Subcategorías", "📅 Informe Anual");
+        cmbTipoInforme.getSelectionModel().selectFirst();
+}
 
 	// NUEVO
 	private void configurarFiltrosClientes() {
@@ -166,6 +180,207 @@ public class InformesController {
 		if (!verProducto && popupProductos != null) {
 			popupProductos.hide();
 		}
+	}
+
+    /** Pregunta los ingresos o gastos extraordinarios del mes. Devuelve null si se cancela. */
+    private List<InformeGestionService.Extra> pedirExtras(int anio, int mes) {
+            List<InformeGestionService.Extra> sugeridos = informeGestionService.sugeridos(anio, mes);
+            String[] efectos = {"Suma a la utilidad", "Resta a la utilidad", "Solo informativo"};
+
+            Dialog<ButtonType> dialogo = new Dialog<>();
+            dialogo.setTitle("Informe Mensual de Gestión");
+            dialogo.setHeaderText(null);
+            dialogo.setGraphic(null);
+            dialogo.setResizable(true);
+            dialogo.getDialogPane().getStylesheets()
+                            .add(getClass().getResource("/css/styles.css").toExternalForm());
+            dialogo.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+            dialogo.getDialogPane().setPrefWidth(760);
+
+            // ---------- Encabezado ----------
+            SVGPath iconoEnc = new SVGPath();
+            iconoEnc.setContent("M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z");
+            iconoEnc.getStyleClass().add("icon-white");
+            Label circulo = new Label();
+            circulo.setGraphic(iconoEnc);
+            circulo.getStyleClass().add("icon-circle");
+
+            Label titulo = new Label("Extraordinarios del mes");
+            titulo.getStyleClass().add("panel-title");
+            Label subtitulo = new Label("Revisa los valores. Déjalos en 0 si no hubo. Usa «Agregar otro» para más filas.");
+            subtitulo.getStyleClass().add("panel-subtitle");
+            VBox textos = new VBox(2, titulo, subtitulo);
+            HBox encabezado = new HBox(10, circulo, textos);
+            encabezado.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+            encabezado.getStyleClass().add("panel-header");
+
+            // ---------- Filas ----------
+            GridPane rejilla = new GridPane();
+            rejilla.setHgap(10);
+            rejilla.setVgap(8);
+            rejilla.setPadding(new Insets(4, 4, 4, 0));
+            String[] titulos = {"Concepto", "Valor", "Efecto"};
+            for (int c = 0; c < 3; c++) {
+                    Label etiqueta = new Label(titulos[c]);
+                    etiqueta.getStyleClass().add("field-caption");
+                    rejilla.add(etiqueta, c, 0);
+            }
+
+            List<TextField> conceptos = new ArrayList<>();
+            List<TextField> valores = new ArrayList<>();
+            List<ComboBox<String>> efectosBox = new ArrayList<>();
+            int[] fila = {1};
+
+            java.util.function.BiConsumer<String, BigDecimal> agregarFila = (concepto, valorInicial) -> {
+                    TextField txtConcepto = new TextField(concepto == null ? "" : concepto);
+                    txtConcepto.setPromptText("Otro extraordinario");
+                    txtConcepto.getStyleClass().add("search-field");
+                    txtConcepto.setPrefWidth(290);
+                    if (concepto != null) {
+                            txtConcepto.setEditable(false); // las filas sugeridas tienen concepto fijo
+                    }
+                    TextField txtValor = new TextField();
+                    txtValor.getStyleClass().add("search-field");
+                    txtValor.setPrefWidth(170);
+                    formatoPesos(txtValor);
+                    txtValor.setText(valorInicial.toBigInteger().toString());
+                    ComboBox<String> efecto = new ComboBox<>();
+                    efecto.getItems().addAll(efectos);
+                    efecto.getSelectionModel().selectFirst();
+                    efecto.setPrefWidth(180);
+
+                    rejilla.add(txtConcepto, 0, fila[0]);
+                    rejilla.add(txtValor, 1, fila[0]);
+                    rejilla.add(efecto, 2, fila[0]);
+
+                    // Solo las filas libres se pueden quitar
+                    if (concepto == null) {
+                            SVGPath cruz = new SVGPath();
+                            cruz.setContent("M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z");
+                            cruz.getStyleClass().add("toolbar-icon");
+                            Button btnQuitar = new Button();
+                            btnQuitar.setGraphic(cruz);
+                            btnQuitar.getStyleClass().addAll("toolbar-button", "toolbar-neutral");
+                            btnQuitar.setOnAction(ev -> {
+                                    rejilla.getChildren().removeAll(txtConcepto, txtValor, efecto, btnQuitar);
+                                    conceptos.remove(txtConcepto);
+                                    valores.remove(txtValor);
+                                    efectosBox.remove(efecto);
+                                    log.debug("Informe de gestión: fila extraordinaria quitada del diálogo");
+                            });
+                            rejilla.add(btnQuitar, 3, fila[0]);
+                    }
+
+                    fila[0]++;
+                    conceptos.add(txtConcepto);
+                    valores.add(txtValor);
+                    efectosBox.add(efecto);
+            };
+
+            for (InformeGestionService.Extra s : sugeridos) {
+                    agregarFila.accept(s.concepto(), s.valor());
+            }
+            agregarFila.accept(null, BigDecimal.ZERO);
+            agregarFila.accept(null, BigDecimal.ZERO);
+
+            ScrollPane scroll = new ScrollPane(rejilla);
+            scroll.setFitToWidth(true);
+            scroll.setPrefViewportHeight(250);
+            scroll.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
+
+            // ---------- Botones (mismo estilo que Buscar y Editar Gastos) ----------
+            SVGPath mas = new SVGPath();
+            mas.setContent("M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z");
+            mas.getStyleClass().add("toolbar-icon");
+            Button btnAgregar = new Button("Agregar otro");
+            btnAgregar.setGraphic(mas);
+            btnAgregar.getStyleClass().addAll("toolbar-button", "toolbar-neutral");
+            btnAgregar.setOnAction(e -> agregarFila.accept(null, BigDecimal.ZERO));
+
+            SVGPath iconoCancelar = new SVGPath();
+            iconoCancelar.setContent("M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z");
+            iconoCancelar.getStyleClass().add("toolbar-icon");
+            Button btnCancelarModal = new Button("Cancelar");
+            btnCancelarModal.setGraphic(iconoCancelar);
+            btnCancelarModal.getStyleClass().addAll("toolbar-button", "toolbar-neutral");
+            btnCancelarModal.setOnAction(e -> dialogo.setResult(ButtonType.CANCEL));
+
+            SVGPath iconoGenerar = new SVGPath();
+            iconoGenerar.setContent("M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z");
+            iconoGenerar.getStyleClass().add("toolbar-icon");
+            Button btnGenerarModal = new Button("Generar Excel");
+            btnGenerarModal.setGraphic(iconoGenerar);
+            btnGenerarModal.getStyleClass().addAll("toolbar-button", "toolbar-blue");
+            btnGenerarModal.setDefaultButton(true);
+            btnGenerarModal.setOnAction(e -> dialogo.setResult(ButtonType.OK));
+
+            Region espacio = new Region();
+            HBox.setHgrow(espacio, Priority.ALWAYS);
+            HBox botones = new HBox(10, btnAgregar, espacio, btnCancelarModal, btnGenerarModal);
+            botones.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
+            VBox tarjeta = new VBox(10, encabezado, scroll, botones);
+            tarjeta.getStyleClass().add("table-card");
+            VBox raiz = new VBox(tarjeta);
+            raiz.getStyleClass().addAll("content", "gasto-screen");
+            VBox.setVgrow(tarjeta, Priority.ALWAYS);
+            dialogo.getDialogPane().setContent(raiz);
+
+            // La barra de botones del diálogo se esconde: se sigue cerrando con la X de la ventana
+            Button okOculto = (Button) dialogo.getDialogPane().lookupButton(ButtonType.OK);
+            Button cancelOculto = (Button) dialogo.getDialogPane().lookupButton(ButtonType.CANCEL);
+            okOculto.setVisible(false);
+            okOculto.setManaged(false);
+            cancelOculto.setVisible(false);
+            cancelOculto.setManaged(false);
+            Node barra = dialogo.getDialogPane().lookup(".button-bar");
+            if (barra != null) {
+                    barra.setVisible(false);
+                    barra.setManaged(false);
+            }
+
+            Optional<ButtonType> respuesta = dialogo.showAndWait();
+            if (respuesta.isEmpty() || respuesta.get() != ButtonType.OK) {
+                    return null;
+            }
+
+            List<InformeGestionService.Extra> resultado = new ArrayList<>();
+            for (int i = 0; i < conceptos.size(); i++) {
+                    BigDecimal valor = leerValorEntero(valores.get(i).getText());
+                    int pos = efectosBox.get(i).getSelectionModel().getSelectedIndex();
+                    InformeGestionService.Tipo tipo = pos == 1 ? InformeGestionService.Tipo.RESTA
+                                    : pos == 2 ? InformeGestionService.Tipo.INFORMATIVO
+                                                    : InformeGestionService.Tipo.SUMA;
+                    TextField txtConcepto = conceptos.get(i);
+                    String concepto = txtConcepto.getText();
+                    if (!txtConcepto.isEditable()) {
+                            resultado.add(new InformeGestionService.Extra(concepto, valor, tipo));
+                    } else if (concepto != null && !concepto.isBlank() && valor.signum() != 0) {
+                            resultado.add(new InformeGestionService.Extra(concepto.trim(), valor, tipo));
+                    }
+            }
+            log.debug("Informe de gestión: {} fila(s) extraordinarias confirmadas", resultado.size());
+            return resultado;
+    }
+
+	/** Muestra lo que se escribe como pesos: $ 1.234.567 */
+	private void formatoPesos(TextField campo) {
+		campo.textProperty().addListener((obs, antes, ahora) -> {
+			String digitos = ahora == null ? "" : ahora.replaceAll("[^0-9]", "");
+			String nuevo = digitos.isEmpty() ? ""
+					: "$ " + NumberFormat.getIntegerInstance(new Locale("es", "CO"))
+							.format(new java.math.BigInteger(digitos));
+			if (!nuevo.equals(ahora)) {
+				campo.setText(nuevo);
+				campo.positionCaret(nuevo.length());
+			}
+		});
+	}
+
+	/** Convierte "1.234.567" o "$ 1234567" en número entero; vacío = 0. */
+	private BigDecimal leerValorEntero(String texto) {
+		String limpio = texto == null ? "" : texto.replaceAll("[^0-9]", "");
+		return limpio.isEmpty() ? BigDecimal.ZERO : new BigDecimal(limpio);
 	}
 
 	private void mostrar(Node nodo, boolean visible) {
@@ -292,7 +507,14 @@ public class InformesController {
 			String informe = "";
 			boolean esClientes = false;
 
-			if (tipoInforme.contains(CLAVE_CONTADORES)) {
+			if (tipoInforme.contains(CLAVE_GESTION)) {
+				esClientes = true; // pone sus propias cifras
+				var r = informeGestionService.resumen(inicio.getYear(), inicio.getMonthValue());
+				informe = informeGestionService.textoVistaPrevia(inicio.getYear(), inicio.getMonthValue(), r);
+				lblTotalGastos.setText(String.valueOf(r.transacciones()));
+				lblMontoTotal.setText(Diseno.moneda(r.gastos()));
+				lblCategorias.setText(String.valueOf(r.categorias()));
+			} else if (tipoInforme.contains(CLAVE_CONTADORES)) {
 				esClientes = true; // ya pone sus propias cifras abajo
 				var r = contadoresInformeService.generarContadores(inicio, fin);
 				informe = contadoresInformeService.textoContadores(inicio, fin);
@@ -427,6 +649,13 @@ public class InformesController {
 		if (!validarFechas())
 			return;
 
+		if (cmbTipoInforme.getValue().contains(CLAVE_GESTION)) {
+			mostrarAlerta("Informe Mensual de Gestión",
+					"Este informe solo se exporta a Excel (4 hojas). Usa el botón Exportar Excel.",
+					Alert.AlertType.INFORMATION);
+			return;
+		}
+
 		try {
 			File archivo = seleccionarArchivo("Exportar Informe - PDF", "pdf");
 			if (archivo != null) {
@@ -490,6 +719,15 @@ public class InformesController {
 		if (!validarFechas())
 			return;
 
+		List<InformeGestionService.Extra> extrasGestion = null;
+		if (cmbTipoInforme.getValue().contains(CLAVE_GESTION)) {
+			extrasGestion = pedirExtras(dpFechaInicio.getValue().getYear(), dpFechaInicio.getValue().getMonthValue());
+			if (extrasGestion == null) {
+				log.debug("Informe de gestión: exportación cancelada en el diálogo de extraordinarios");
+				return;
+			}
+		}
+
 		try {
 			File archivo = seleccionarArchivo("Exportar Informe - Excel", "xlsx");
 			if (archivo != null) {
@@ -503,6 +741,9 @@ public class InformesController {
 					contadoresInformeService.exportarCasinoExcel(inicio, fin, archivo.getAbsolutePath());
 				} else if (tipoInforme.contains(CLAVE_CAT_PROD)) {
 					informeService.exportarCategoriaProductoExcel(inicio, fin, archivo.getAbsolutePath());
+				} else if (tipoInforme.contains(CLAVE_GESTION)) {
+					informeGestionService.exportarExcel(inicio.getYear(), inicio.getMonthValue(), extrasGestion,
+							archivo.getAbsolutePath());
 				} else if (tipoInforme.contains(CLAVE_CLIENTES)) { // NUEVO
 					exportarClientes(true, archivo, inicio, fin);
 				} else if (tipoInforme.contains("General Mensual")) {

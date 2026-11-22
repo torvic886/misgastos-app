@@ -7,7 +7,7 @@ REM ============================================================
 
 set PROYECTO=C:\Users\THINKPAD\Documents\worskspace_sb\misgastos-app
 set JAR=misgastos-app-0.0.1-SNAPSHOT.jar
-set VERSION=1.0.0
+set VERSION=1.1.0
 
 cd /d %PROYECTO%
 

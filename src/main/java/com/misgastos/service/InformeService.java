@@ -1,19 +1,14 @@
 package com.misgastos.service;
 
-
-import com.itextpdf.kernel.colors.DeviceRgb;
+import java.time.temporal.ChronoUnit;
 import com.itextpdf.kernel.font.PdfFont;
-import com.itextpdf.kernel.pdf.PdfDocument;
-import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.Paragraph;
 import com.misgastos.model.Gasto;
+import java.time.Month;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.itextpdf.layout.borders.SolidBorder;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
 
@@ -32,7 +27,6 @@ import com.misgastos.service.diseno.HojaExcel;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 
 
-import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.misgastos.service.diseno.Diseno;
@@ -378,7 +372,7 @@ public class InformeService {
         sb.append("                    COMPARACIÓN DE PERÍODOS\n");
         sb.append("═══════════════════════════════════════════════════════════════════════\n\n");
 
-        long dias = java.time.temporal.ChronoUnit.DAYS.between(inicio, fin);
+        long dias = ChronoUnit.DAYS.between(inicio, fin);
         LocalDate mitad = inicio.plusDays(dias / 2);
 
         List<Gasto> periodo1 = gastoService.listarPorPeriodo(inicio, mitad);
@@ -659,8 +653,8 @@ public class InformeService {
             .orElse(BigDecimal.ONE);
             
         for (Map.Entry<Integer, BigDecimal> entry : gastosPorMes.entrySet()) {
-            String nombreMes = java.time.Month.of(entry.getKey())
-                .getDisplayName(TextStyle.FULL, new Locale("es", "ES"));
+        	String nombreMes = Month.of(entry.getKey())
+        		    .getDisplayName(TextStyle.FULL, new Locale("es", "ES"));
             
             int barras = entry.getValue().multiply(BigDecimal.valueOf(30))
                 .divide(maxMes, 0, RoundingMode.HALF_UP)
@@ -780,37 +774,6 @@ public class InformeService {
 
             pdf.agregar(tabla);
         }
-    }
-
-    // Métodos auxiliares - AGREGA AL FINAL del archivo (antes del último })
-    private void agregarCeldaHeader(com.itextpdf.layout.element.Table table, String texto, DeviceRgb colorFondo, DeviceRgb colorBorde) {
-        com.itextpdf.layout.element.Cell cell = new com.itextpdf.layout.element.Cell();
-        cell.add(new Paragraph(texto).setBold().setFontSize(10).setFontColor(com.itextpdf.kernel.colors.ColorConstants.WHITE));
-        cell.setBackgroundColor(colorFondo);
-        cell.setTextAlignment(com.itextpdf.layout.properties.TextAlignment.CENTER);
-        cell.setBorder(new com.itextpdf.layout.borders.SolidBorder(colorBorde, 1));
-        cell.setPadding(8);
-        table.addCell(cell);
-    }
-
-    private void agregarCeldaDato(com.itextpdf.layout.element.Table table, String texto, DeviceRgb colorFondo, DeviceRgb colorBorde, com.itextpdf.layout.properties.TextAlignment alineacion) {
-        com.itextpdf.layout.element.Cell cell = new com.itextpdf.layout.element.Cell();
-        cell.add(new Paragraph(texto).setFontSize(9));
-        cell.setBackgroundColor(colorFondo);
-        cell.setTextAlignment(alineacion);
-        cell.setBorder(new com.itextpdf.layout.borders.SolidBorder(colorBorde, 1));
-        cell.setPadding(6);
-        table.addCell(cell);
-    }
-
-    private void agregarCeldaTotal(com.itextpdf.layout.element.Table table, String texto, DeviceRgb colorFondo, DeviceRgb colorBorde, com.itextpdf.layout.properties.TextAlignment alineacion) {
-        com.itextpdf.layout.element.Cell cell = new com.itextpdf.layout.element.Cell();
-        cell.add(new Paragraph(texto).setBold().setFontSize(10));
-        cell.setBackgroundColor(colorFondo);
-        cell.setTextAlignment(alineacion);
-        cell.setBorder(new com.itextpdf.layout.borders.SolidBorder(colorBorde, 1));
-        cell.setPadding(8);
-        table.addCell(cell);
     }
     
  //=============================================================   
@@ -1432,70 +1395,55 @@ public class InformeService {
             pdf.agregar(tablaCat);
         }
     }
-
-    // Método auxiliar para headers mejorados
-    private void agregarCeldaHeaderMejorada(Table table, String texto, DeviceRgb colorFondo, DeviceRgb colorTexto) {
-        com.itextpdf.layout.element.Cell cell = new com.itextpdf.layout.element.Cell();
-        cell.add(new Paragraph(texto)
-            .setFontSize(11)
-            .setBold()
-            .setFontColor(colorTexto));
-        cell.setBackgroundColor(colorFondo);
-        cell.setBorder(new SolidBorder(colorFondo, 1));
-        cell.setPadding(5);
-        cell.setTextAlignment(com.itextpdf.layout.properties.TextAlignment.CENTER);
-        cell.setVerticalAlignment(com.itextpdf.layout.properties.VerticalAlignment.MIDDLE);
-        table.addCell(cell);
-    }
     
   //=============================================================      
     
     
-    private void exportarTextoPDF(String contenido, String rutaArchivo, String titulo) throws Exception {
-        PdfWriter writer = new PdfWriter(rutaArchivo);
-        PdfDocument pdf = new PdfDocument(writer);
-        Document document = new Document(pdf);
-        pdf.setDefaultPageSize(PageSize.LETTER);
-        
-        DeviceRgb azulOscuro = new DeviceRgb(30, 58, 138);
-
-        // Título con mejor estilo
-        Paragraph tituloParrafo = new Paragraph(titulo)
-            .setFontSize(18)
-            .setBold()
-            .setTextAlignment(com.itextpdf.layout.properties.TextAlignment.CENTER)
-            .setMarginBottom(8)
-            .setFontColor(azulOscuro);
-        document.add(tituloParrafo);
-
-        // Fecha de generación más pequeña
-        Paragraph fechaGen = new Paragraph("Generado: " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
-            .setFontSize(9)
-            .setTextAlignment(com.itextpdf.layout.properties.TextAlignment.CENTER)
-            .setMarginBottom(25)
-            .setItalic()
-            .setFontColor(new DeviceRgb(107, 114, 128));
-        document.add(fechaGen);
-
-        // Contenido con mejor fuente monoespaciada
-        Paragraph contenidoParrafo = new Paragraph(contenido)
-            .setFontSize(9)
-            .setFixedLeading(14)
-            .setMarginLeft(20)
-            .setMarginRight(20);
-        document.add(contenidoParrafo);
-
-        // Footer mejorado
-        Paragraph footer = new Paragraph("ExpenseFlow - Sistema de Control de Gastos")
-            .setFontSize(8)
-            .setTextAlignment(com.itextpdf.layout.properties.TextAlignment.CENTER)
-            .setMarginTop(30)
-            .setItalic()
-            .setFontColor(new DeviceRgb(107, 114, 128));
-        document.add(footer);
-
-        document.close();
-    }
+//    private void exportarTextoPDF(String contenido, String rutaArchivo, String titulo) throws Exception {
+//        PdfWriter writer = new PdfWriter(rutaArchivo);
+//        PdfDocument pdf = new PdfDocument(writer);
+//        Document document = new Document(pdf);
+//        pdf.setDefaultPageSize(PageSize.LETTER);
+//        
+//        DeviceRgb azulOscuro = new DeviceRgb(30, 58, 138);
+//
+//        // Título con mejor estilo
+//        Paragraph tituloParrafo = new Paragraph(titulo)
+//            .setFontSize(18)
+//            .setBold()
+//            .setTextAlignment(com.itextpdf.layout.properties.TextAlignment.CENTER)
+//            .setMarginBottom(8)
+//            .setFontColor(azulOscuro);
+//        document.add(tituloParrafo);
+//
+//        // Fecha de generación más pequeña
+//        Paragraph fechaGen = new Paragraph("Generado: " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+//            .setFontSize(9)
+//            .setTextAlignment(com.itextpdf.layout.properties.TextAlignment.CENTER)
+//            .setMarginBottom(25)
+//            .setItalic()
+//            .setFontColor(new DeviceRgb(107, 114, 128));
+//        document.add(fechaGen);
+//
+//        // Contenido con mejor fuente monoespaciada
+//        Paragraph contenidoParrafo = new Paragraph(contenido)
+//            .setFontSize(9)
+//            .setFixedLeading(14)
+//            .setMarginLeft(20)
+//            .setMarginRight(20);
+//        document.add(contenidoParrafo);
+//
+//        // Footer mejorado
+//        Paragraph footer = new Paragraph("ExpenseFlow - Sistema de Control de Gastos")
+//            .setFontSize(8)
+//            .setTextAlignment(com.itextpdf.layout.properties.TextAlignment.CENTER)
+//            .setMarginTop(30)
+//            .setItalic()
+//            .setFontColor(new DeviceRgb(107, 114, 128));
+//        document.add(footer);
+//
+//        document.close();
+//    }
 
     // ==================== EXPORTACIÓN EXCEL ====================
 
@@ -1572,109 +1520,6 @@ public class InformeService {
 
         hoja.terminar(true, true);
         estilos.guardar(rutaArchivo);
-    }
-
-    /** Suma el valor de un gasto en la posición del período (mes o día) de su categoría y subcategoría. */
-    private void acumularMatriz(Map<String, Map<String, BigDecimal[]>> datos, Gasto g, int indice, int periodos) {
-        String categoria = g.getCategoria().getNombre();
-        String sub = g.getSubcategoria() != null ? g.getSubcategoria().getNombre() : "Sin subcategoría";
-        BigDecimal[] fila = datos.computeIfAbsent(categoria, k -> new HashMap<>())
-            .computeIfAbsent(sub, k -> {
-                BigDecimal[] valores = new BigDecimal[periodos];
-                java.util.Arrays.fill(valores, BigDecimal.ZERO);
-                return valores;
-            });
-        fila[indice] = fila[indice].add(g.getValorTotal());
-    }
-
-    /**
-     * Escribe la matriz categoría > subcategoría contra períodos (meses o días):
-     * fila de categoría con su total, subcategorías debajo, total por fila y total general, todo con fórmulas.
-     */
-    private void escribirMatrizGastos(HojaExcel hoja, Map<String, Map<String, BigDecimal[]>> datos,
-                                      int periodos, boolean conPorcentaje) {
-        Map<String, BigDecimal> totalPorCategoria = new HashMap<>();
-        for (Map.Entry<String, Map<String, BigDecimal[]>> e : datos.entrySet()) {
-            BigDecimal total = BigDecimal.ZERO;
-            for (BigDecimal[] fila : e.getValue().values()) {
-                total = total.add(sumarArreglo(fila));
-            }
-            totalPorCategoria.put(e.getKey(), total);
-        }
-        List<String> categorias = new ArrayList<>(datos.keySet());
-        categorias.sort((a, b) -> totalPorCategoria.get(b).compareTo(totalPorCategoria.get(a)));
-
-        int colTotal = periodos + 1;
-        int filasEnTabla = 0;
-        for (String categoria : categorias) {
-            filasEnTabla += 1 + datos.get(categoria).size();
-        }
-        int filaTotal = hoja.siguienteFila() + filasEnTabla;
-
-        List<Integer> filasGrupo = new ArrayList<>();
-        for (String categoria : categorias) {
-            Map<String, BigDecimal[]> subs = datos.get(categoria);
-            int filaGrupo = hoja.siguienteFila();
-            int primeraSub = filaGrupo + 1;
-            int ultimaSub = filaGrupo + subs.size();
-            filasGrupo.add(filaGrupo);
-
-            HojaExcel.FilaExcel grupo = hoja.fila(ExcelEstilo.Rol.GRUPO).texto(categoria);
-            for (int c = 1; c <= periodos; c++) {
-                grupo.formulaMoneda("SUM(" + HojaExcel.ref(c, primeraSub) + ":" + HojaExcel.ref(c, ultimaSub) + ")");
-            }
-            grupo.formulaMoneda("SUM(" + HojaExcel.ref(1, filaGrupo) + ":" + HojaExcel.ref(periodos, filaGrupo) + ")");
-            if (conPorcentaje) {
-                grupo.formulaPct(formulaPorcentaje(colTotal, filaGrupo, filaTotal));
-            }
-
-            List<Map.Entry<String, BigDecimal[]>> filasSub = new ArrayList<>(subs.entrySet());
-            filasSub.sort((a, b) -> sumarArreglo(b.getValue()).compareTo(sumarArreglo(a.getValue())));
-            for (Map.Entry<String, BigDecimal[]> entrada : filasSub) {
-                int filaActual = hoja.siguienteFila();
-                HojaExcel.FilaExcel sub = hoja.fila(ExcelEstilo.Rol.DATO).texto("    " + entrada.getKey());
-                for (BigDecimal valor : entrada.getValue()) {
-                    if (valor.signum() == 0) {
-                        sub.vacio();
-                    } else {
-                        sub.moneda(valor);
-                    }
-                }
-                sub.formulaMoneda("SUM(" + HojaExcel.ref(1, filaActual) + ":" + HojaExcel.ref(periodos, filaActual) + ")");
-                if (conPorcentaje) {
-                    sub.formulaPct(formulaPorcentaje(colTotal, filaActual, filaTotal));
-                }
-            }
-        }
-
-        HojaExcel.FilaExcel total = hoja.fila(ExcelEstilo.Rol.TOTAL).texto("Total");
-        for (int c = 1; c <= colTotal; c++) {
-            StringBuilder suma = new StringBuilder();
-            for (int filaGrupo : filasGrupo) {
-                if (suma.length() > 0) {
-                    suma.append("+");
-                }
-                suma.append(HojaExcel.ref(c, filaGrupo));
-            }
-            total.formulaMoneda(suma.toString());
-        }
-        if (conPorcentaje) {
-            total.pct(1.0);
-        }
-    }
-
-    private String formulaPorcentaje(int colTotal, int fila, int filaTotal) {
-        String celda = HojaExcel.ref(colTotal, fila);
-        String granTotal = HojaExcel.ref(colTotal, filaTotal);
-        return "IF(" + granTotal + "=0,0," + celda + "/" + granTotal + ")";
-    }
-
-    private BigDecimal sumarArreglo(BigDecimal[] valores) {
-        BigDecimal total = BigDecimal.ZERO;
-        for (BigDecimal v : valores) {
-            total = total.add(v);
-        }
-        return total;
     }
 
     private BigDecimal sumarGastos(List<Gasto> gastos) {
@@ -2367,7 +2212,7 @@ public class InformeService {
     /** Agrupa categoría > producto (suma por nombre normalizado), ordenado de mayor a menor. */
     private Map<String, Map<String, BigDecimal>> agruparCategoriaProducto(List<Gasto> gastos) {
         log.debug("Agrupando {} gastos por categoría y producto", gastos.size());
-        int sinProducto = 0;
+       
     	Map<String, Map<String, BigDecimal>> porCategoria = new HashMap<>();
         Map<String, Map<String, String>> nombres = new HashMap<>();
 

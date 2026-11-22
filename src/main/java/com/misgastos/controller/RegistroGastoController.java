@@ -1215,12 +1215,14 @@ public class RegistroGastoController {
     // ==================== DETALLE DEL GASTO SELECCIONADO ====================
 
     /** Al seleccionar un gasto se muestra su resumen en la barra de total. */
+    @SuppressWarnings("rawtypes")
     private void configurarDetalleGasto() {
         tblUltimosGastos.getSelectionModel().getSelectedCells()
             .addListener((javafx.collections.ListChangeListener<TablePosition>) c -> actualizarDetalleGasto());
         actualizarDetalleGasto();
     }
 
+    @SuppressWarnings("rawtypes")
     private void actualizarDetalleGasto() {
         if (lblDetalleGasto == null) {
             return;
@@ -1545,6 +1547,7 @@ public class RegistroGastoController {
         
     }
 
+    @SuppressWarnings("rawtypes")
     private void copiarSeleccionAlPortapapeles() {
         StringBuilder clipboardString = new StringBuilder();
 

@@ -2,6 +2,13 @@ package com.misgastos.controller;
 
 import com.misgastos.MisGastosLauncher;
 import com.misgastos.licencia.LicenciaService;
+import com.misgastos.service.ContadoresImportService;
+import com.misgastos.service.LecturasBorradoService;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.ToggleGroup;
+import javafx.collections.FXCollections;
+import javafx.scene.control.ComboBox;
+import java.time.LocalDate;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -73,7 +80,13 @@ public class RespaldoController {
 
 	@Autowired
 	private DataSource dataSource;
+	
+	@Autowired
+    private ContadoresImportService contadoresImportService;
 
+	@Autowired
+    private LecturasBorradoService lecturasBorradoService;
+	
 	private static final int DIAS_AVISO_LICENCIA = 30;
 	private final LicenciaService licenciaService = new LicenciaService();
 
@@ -441,6 +454,335 @@ public class RespaldoController {
 		}
 		return null;
 	}
+	
+    // ==================== IMPORTAR CONTADORES DESDE EXCEL ====================
+
+    private static final String[] MESES = { "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio",
+                    "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre" };
+
+    @FXML
+    public void handleImportarContadores() {
+            FileChooser selector = new FileChooser();
+            selector.setTitle("Elige el Excel de contadores");
+            selector.getExtensionFilters().add(new FileChooser.ExtensionFilter("Excel (*.xlsx, *.xls)", "*.xlsx", "*.xls"));
+            File archivo = selector.showOpenDialog(ventana());
+            if (archivo == null) {
+                    return;
+            }
+
+            int[] anioMes = pedirMesYAnio();
+            if (anioMes == null) {
+                    return;
+            }
+            int anio = anioMes[0];
+            int mes = anioMes[1];
+
+            ContadoresImportService.VistaPrevia vista;
+            try {
+                    vista = contadoresImportService.analizar(archivo, anio, mes);
+            } catch (Exception e) {
+                    log.error("No se pudo leer el Excel de contadores", e);
+                    alerta(Alert.AlertType.ERROR, "No se pudo leer el Excel", e.getMessage());
+                    return;
+            }
+
+            String resumen = textoVista(vista, anio, mes);
+            if (vista.porInsertar().isEmpty()) {
+                    mostrarTexto(Alert.AlertType.INFORMATION, "Importar contadores", "No hay lecturas nuevas para guardar.", resumen);
+                    return;
+            }
+
+            ButtonType si = new ButtonType("Sí, importar", ButtonBar.ButtonData.OK_DONE);
+            ButtonType no = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
+            Optional<ButtonType> respuesta = mostrarTexto(Alert.AlertType.CONFIRMATION, "Importar contadores",
+                            "Esto es lo que se va a importar. Antes se guarda una copia de tus datos actuales.", resumen, si, no);
+            if (respuesta.isEmpty() || respuesta.get() != si) {
+                    log.info("Importación de contadores cancelada por el usuario");
+                    return;
+            }
+
+            Path respaldo = carpetaRespaldos()
+                            .resolve("antes-importar-excel_" + LocalDateTime.now().format(FECHA_ARCHIVO) + ".db");
+            try {
+                    Files.createDirectories(carpetaRespaldos());
+                    copiarBaseConsistente(respaldo);
+                    log.debug("Copia previa a importar contadores: {}", respaldo);
+            } catch (Exception e) {
+                    log.error("No se pudo guardar la copia previa a importar contadores", e);
+                    alerta(Alert.AlertType.ERROR, "No se importó nada",
+                                    "No se pudo guardar la copia de seguridad previa. Motivo: " + e.getMessage());
+                    return;
+            }
+
+            ContadoresImportService.Resultado r = contadoresImportService.aplicar(vista);
+
+            StringBuilder fin = new StringBuilder();
+            fin.append("Lecturas importadas: ").append(r.importadas());
+            if (r.reinicios() > 0) {
+                    fin.append(" (").append(r.reinicios()).append(" como reinicio de contador)");
+            }
+            if (r.denominacionesAjustadas() > 0) {
+                    fin.append("\nLecturas con la denominación del Excel (distinta a la de la máquina): ")
+                                    .append(r.denominacionesAjustadas());
+            }
+            agregarLista(fin, "Errores al guardar", r.errores());
+            fin.append("\n\nCopia guardada antes de importar:\n").append(respaldo);
+            log.info("Importación de contadores terminada desde la pantalla de Respaldo");
+            mostrarTexto(r.errores().isEmpty() ? Alert.AlertType.INFORMATION : Alert.AlertType.WARNING,
+                            "Importar contadores", "Importación terminada. Revisa la pantalla Contadores.", fin.toString());
+    }
+
+    /** Devuelve {año, mes} o null si cancela. */
+    private int[] pedirMesYAnio() {
+            Dialog<ButtonType> dialogo = new Dialog<>();
+            dialogo.setTitle("Importar contadores");
+            dialogo.setHeaderText("¿De qué mes son las lecturas del Excel?");
+            if (ventana() != null) {
+                    dialogo.initOwner(ventana());
+            }
+
+            ComboBox<String> cmbMes = new ComboBox<>(FXCollections.observableArrayList(MESES));
+            LocalDate hoy = LocalDate.now();
+            cmbMes.getSelectionModel().select(hoy.getMonthValue() - 1);
+            TextField txtAnio = new TextField(String.valueOf(hoy.getYear()));
+            Label lblAyuda = new Label("fecha_1 = último día del mes anterior, fecha_2 = día 16, fecha_3 = último día del mes.");
+            lblAyuda.setWrapText(true);
+            Label lblError = new Label();
+            lblError.setStyle("-fx-text-fill: #c0392b;");
+
+            VBox caja = new VBox(10, new Label("Mes:"), cmbMes, new Label("Año:"), txtAnio, lblAyuda, lblError);
+            caja.setPadding(new Insets(20));
+            caja.setPrefWidth(420);
+
+            ButtonType btnOk = new ButtonType("Continuar", ButtonBar.ButtonData.OK_DONE);
+            ButtonType btnCancelar = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
+            dialogo.getDialogPane().getButtonTypes().addAll(btnOk, btnCancelar);
+            dialogo.getDialogPane().setContent(caja);
+            aplicarEstilos(dialogo);
+
+            int[] resultado = new int[2];
+            Node ok = dialogo.getDialogPane().lookupButton(btnOk);
+            ok.addEventFilter(ActionEvent.ACTION, ev -> {
+                    try {
+                            int a = Integer.parseInt(txtAnio.getText().trim());
+                            if (a < 2000 || a > 2100) {
+                                    throw new NumberFormatException();
+                            }
+                            resultado[0] = a;
+                            resultado[1] = cmbMes.getSelectionModel().getSelectedIndex() + 1;
+                    } catch (NumberFormatException ex) {
+                            ev.consume();
+                            lblError.setText("Escribe un año válido (por ejemplo 2026).");
+                    }
+            });
+
+            Optional<ButtonType> res = dialogo.showAndWait();
+            return res.isPresent() && res.get() == btnOk ? resultado : null;
+    }
+
+    private String textoVista(ContadoresImportService.VistaPrevia v, int anio, int mes) {
+            DateTimeFormatter f = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            StringBuilder sb = new StringBuilder();
+            sb.append(MESES[mes - 1]).append(" ").append(anio).append(":\n");
+            for (int p = 1; p <= 3; p++) {
+                    sb.append("  Periodo ").append(p).append(" = ")
+                                    .append(ContadoresImportService.fechaPeriodo(p, anio, mes).format(f)).append("\n");
+            }
+            sb.append("\nLecturas nuevas por guardar: ").append(v.porInsertar().size());
+            if (v.reinicios() > 0) {
+                    sb.append(" (").append(v.reinicios()).append(" como reinicio de contador)");
+            }
+            sb.append("\nYa existen y son iguales (se dejan): ").append(v.iguales());
+            agregarLista(sb, "Máquinas del Excel que NO existen (no se importan)",
+                            v.noEncontradas().stream().map(String::valueOf).toList());
+            agregarLista(sb, "Contador bajo (revisar)", v.bajos());
+            agregarLista(sb, "Ya existen con valores distintos (no se tocan)", v.conflictos());
+            agregarLista(sb, "Otros problemas", v.problemas());
+            return sb.toString();
+    }
+
+    private void agregarLista(StringBuilder sb, String titulo, List<String> items) {
+            if (items.isEmpty()) {
+                    return;
+            }
+            int max = 15;
+            sb.append("\n\n").append(titulo).append(" (").append(items.size()).append("):");
+            for (int i = 0; i < Math.min(max, items.size()); i++) {
+                    sb.append("\n  • ").append(items.get(i));
+            }
+            if (items.size() > max) {
+                    sb.append("\n  … y ").append(items.size() - max).append(" más");
+            }
+    }
+
+    private Optional<ButtonType> mostrarTexto(Alert.AlertType tipo, String titulo, String encabezado, String texto,
+                    ButtonType... botones) {
+            Alert a = new Alert(tipo);
+            a.setTitle(titulo);
+            a.setHeaderText(encabezado);
+            TextArea area = new TextArea(texto);
+            area.setEditable(false);
+            area.setWrapText(true);
+            area.setPrefRowCount(16);
+            area.setPrefColumnCount(60);
+            a.getDialogPane().setContent(area);
+            if (botones.length > 0) {
+                    a.getButtonTypes().setAll(botones);
+            }
+            aplicarEstilos(a);
+            return a.showAndWait();
+    }
+    
+    // ==================== BORRAR LECTURAS DE CONTADORES ====================
+
+    @FXML
+    public void handleBorrarLecturas() {
+            // 1) Qué borrar
+            Dialog<ButtonType> dialogo = new Dialog<>();
+            dialogo.setTitle("Borrar lecturas de contadores");
+            dialogo.setHeaderText("¿Qué lecturas quieres borrar? Las máquinas NO se borran.");
+            if (ventana() != null) {
+                    dialogo.initOwner(ventana());
+            }
+
+            ToggleGroup grupo = new ToggleGroup();
+            RadioButton rbMes = new RadioButton("Un mes");
+            RadioButton rbDesde = new RadioButton("Desde un mes hasta el final");
+            RadioButton rbTodo = new RadioButton("Todo (menos la primera lectura de cada máquina)");
+            rbMes.setToggleGroup(grupo);
+            rbDesde.setToggleGroup(grupo);
+            rbTodo.setToggleGroup(grupo);
+            rbMes.setSelected(true);
+
+            ComboBox<String> cmbMes = new ComboBox<>(FXCollections.observableArrayList(MESES));
+            LocalDate hoy = LocalDate.now();
+            cmbMes.getSelectionModel().select(hoy.getMonthValue() - 1);
+            TextField txtAnio = new TextField(String.valueOf(hoy.getYear()));
+            grupo.selectedToggleProperty().addListener((obs, antes, ahora) -> {
+                    boolean pideMes = ahora != rbTodo;
+                    cmbMes.setDisable(!pideMes);
+                    txtAnio.setDisable(!pideMes);
+            });
+
+            Label lblNota = new Label("La primera lectura de cada máquina (la fila gris del periodo 1) nunca se borra.");
+            lblNota.setWrapText(true);
+            Label lblError = new Label();
+            lblError.setStyle("-fx-text-fill: #c0392b;");
+
+            VBox caja = new VBox(10, rbMes, rbDesde, rbTodo, new Label("Mes:"), cmbMes, new Label("Año:"), txtAnio,
+                            lblNota, lblError);
+            caja.setPadding(new Insets(20));
+            caja.setPrefWidth(440);
+
+            ButtonType btnContinuar = new ButtonType("Continuar", ButtonBar.ButtonData.OK_DONE);
+            ButtonType btnCancelar = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
+            dialogo.getDialogPane().getButtonTypes().addAll(btnContinuar, btnCancelar);
+            dialogo.getDialogPane().setContent(caja);
+            aplicarEstilos(dialogo);
+
+            LecturasBorradoService.Modo[] modo = new LecturasBorradoService.Modo[1];
+            int[] anioMes = new int[2];
+            Node okPaso1 = dialogo.getDialogPane().lookupButton(btnContinuar);
+            okPaso1.addEventFilter(ActionEvent.ACTION, ev -> {
+                    if (grupo.getSelectedToggle() == rbTodo) {
+                            modo[0] = LecturasBorradoService.Modo.TODO;
+                            return;
+                    }
+                    try {
+                            int a = Integer.parseInt(txtAnio.getText().trim());
+                            if (a < 2000 || a > 2100) {
+                                    throw new NumberFormatException();
+                            }
+                            anioMes[0] = a;
+                            anioMes[1] = cmbMes.getSelectionModel().getSelectedIndex() + 1;
+                            modo[0] = grupo.getSelectedToggle() == rbMes ? LecturasBorradoService.Modo.MES
+                                            : LecturasBorradoService.Modo.DESDE_MES;
+                    } catch (NumberFormatException ex) {
+                            ev.consume();
+                            lblError.setText("Escribe un año válido (por ejemplo 2026).");
+                    }
+            });
+
+            Optional<ButtonType> paso1 = dialogo.showAndWait();
+            if (paso1.isEmpty() || paso1.get() != btnContinuar) {
+                    return;
+            }
+
+            // 2) Cuántas se borrarían
+            LecturasBorradoService.Seleccion seleccion = lecturasBorradoService.seleccionar(modo[0], anioMes[0],
+                            anioMes[1]);
+            if (seleccion.ids().isEmpty()) {
+                    alerta(Alert.AlertType.INFORMATION, "Borrar lecturas", "No hay lecturas para borrar con ese criterio.");
+                    return;
+            }
+            String que = switch (modo[0]) {
+                    case MES -> MESES[anioMes[1] - 1] + " " + anioMes[0] + " (solo ese mes)";
+                    case DESDE_MES -> "desde " + MESES[anioMes[1] - 1] + " " + anioMes[0] + " hasta el final";
+                    case TODO -> "todas las fechas";
+            };
+
+            // 3) Confirmar escribiendo BORRAR
+            Dialog<ButtonType> conf = new Dialog<>();
+            conf.setTitle("Confirmar borrado");
+            conf.setHeaderText("Se borrarán " + seleccion.ids().size() + " lectura(s) de " + seleccion.maquinas()
+                            + " máquina(s)");
+            if (ventana() != null) {
+                    conf.initOwner(ventana());
+            }
+            Label detalle = new Label("Rango: " + que + ".\n\nLas máquinas y su primera lectura se conservan.\n"
+                            + "Antes de borrar se guarda una copia de tus datos.\n"
+                            + "Esto no se puede deshacer desde el programa.");
+            detalle.setWrapText(true);
+            TextField txtConfirmar = new TextField();
+            txtConfirmar.setPromptText("Escribe BORRAR");
+            Label lblErrorConf = new Label();
+            lblErrorConf.setStyle("-fx-text-fill: #c0392b;");
+            VBox cajaConf = new VBox(10, detalle, new Label("Para continuar escribe BORRAR:"), txtConfirmar, lblErrorConf);
+            cajaConf.setPadding(new Insets(20));
+            cajaConf.setPrefWidth(440);
+
+            ButtonType btnBorrar = new ButtonType("Borrar", ButtonBar.ButtonData.OK_DONE);
+            ButtonType btnNo = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
+            conf.getDialogPane().getButtonTypes().addAll(btnBorrar, btnNo);
+            conf.getDialogPane().setContent(cajaConf);
+            aplicarEstilos(conf);
+            Node okPaso3 = conf.getDialogPane().lookupButton(btnBorrar);
+            okPaso3.addEventFilter(ActionEvent.ACTION, ev -> {
+                    if (!"BORRAR".equals(txtConfirmar.getText().trim())) {
+                            ev.consume();
+                            lblErrorConf.setText("Escribe la palabra BORRAR en mayúsculas.");
+                    }
+            });
+
+            Optional<ButtonType> paso3 = conf.showAndWait();
+            if (paso3.isEmpty() || paso3.get() != btnBorrar) {
+                    log.info("Borrado de lecturas cancelado por el usuario");
+                    return;
+            }
+
+            // 4) Copia de seguridad y borrado
+            Path respaldo = carpetaRespaldos()
+                            .resolve("antes-borrar-lecturas_" + LocalDateTime.now().format(FECHA_ARCHIVO) + ".db");
+            try {
+                    Files.createDirectories(carpetaRespaldos());
+                    copiarBaseConsistente(respaldo);
+            } catch (Exception e) {
+                    log.error("No se pudo guardar la copia previa a borrar lecturas", e);
+                    alerta(Alert.AlertType.ERROR, "No se borró nada",
+                                    "No se pudo guardar la copia de seguridad previa. Motivo: " + e.getMessage());
+                    return;
+            }
+
+            try {
+                    int borradas = lecturasBorradoService.borrar(seleccion, "Rango: " + que);
+                    alerta(Alert.AlertType.INFORMATION, "Lecturas borradas", "Lecturas borradas: " + borradas
+                                    + "\n\nCopia guardada antes de borrar:\n" + respaldo);
+            } catch (Exception e) {
+                    log.error("No se pudieron borrar las lecturas", e);
+                    alerta(Alert.AlertType.ERROR, "No se pudo borrar", "Motivo: " + e.getMessage()
+                                    + "\n\nLa copia previa quedó en:\n" + respaldo);
+            }
+    }
 
 	// ==================== AUXILIARES ====================
 

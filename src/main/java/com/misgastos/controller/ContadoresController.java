@@ -33,7 +33,6 @@ import java.text.DecimalFormatSymbols;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.time.YearMonth;
 import java.util.LinkedHashMap;
@@ -967,11 +966,6 @@ public class ContadoresController {
 		col.prefWidthProperty().bind(tabla.widthProperty().subtract(20 + fijos).divide(5));
 	}
 
-	private void ancho(TableColumn<FilaHist, String> col, double fraccion, double minimo) {
-		col.setMinWidth(minimo);
-		col.prefWidthProperty().bind(tabla.widthProperty().subtract(22).multiply(fraccion));
-	}
-
 	/**
 	 * Texto de una celda: el valor en lecturas y en la base gris, el título en
 	 * encabezados y vacío en totales y espacios.
@@ -1168,15 +1162,6 @@ public class ContadoresController {
 			log.error("No se pudo editar la lectura {}", l.getId(), e);
 			mostrarEstado(e.getMessage(), true);
 		}
-	}
-
-	private String tipoLegible(String tipo) {
-		return switch (tipo) {
-		case Lectura.INICIAL -> "Inicial";
-		case Lectura.COPIA -> "Copia";
-		case Lectura.REINICIO -> "Reinicio";
-		default -> "Normal";
-		};
 	}
 
 	private String dinero(BigDecimal valor) {
