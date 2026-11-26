@@ -70,6 +70,7 @@ public class DashboardController {
     @FXML private Button btnCorregirDatos;
     @FXML private Button btnToggleMenu;
     @FXML private Button btnMaquinas;
+    @FXML private Button btnTurnos;
     @FXML private Button btnContadores;
     @FXML private Label lblGrupoMaquinas;
     @FXML private Label lblGrupoGastos;
@@ -205,6 +206,7 @@ public class DashboardController {
             case DIAGNOSTICO -> btnDiagnostico;
             case MAQUINAS -> btnMaquinas;
             case CONTADORES -> btnContadores;
+            case TURNOS -> btnTurnos;
         };
     }
 
@@ -278,6 +280,7 @@ public class DashboardController {
             case REPORTES_BILLETEROS -> handleReportesBilleteros();
             case MAQUINAS -> handleMaquinas();
             case CONTADORES -> handleContadores();
+            case TURNOS -> handleTurnos();
             case PRESUPUESTOS -> handlePresupuestos();
             case REGISTRO_CAMBIOS -> handleRegistroCambios();
             case CORREGIR_DATOS -> handleCorregirDatos();
@@ -424,6 +427,7 @@ public class DashboardController {
             sidebar.getChildren().remove(lblGrupoMaquinas);
             sidebar.getChildren().remove(btnMaquinas);
             sidebar.getChildren().remove(btnContadores);
+            sidebar.getChildren().remove(btnTurnos);
             sidebar.getChildren().removeIf(node -> {
                 if (node instanceof Button) {
                     Button btn = (Button) node;
@@ -714,6 +718,16 @@ public class DashboardController {
         log.debug("Navegando a Gestión de Máquinas");
         establecerBotonActivo(btnMaquinas);
         cargarVista("/fxml/gestion-maquinas.fxml");
+    }
+    
+    @FXML
+    public void handleTurnos() {
+        if (sinPermiso(Ventana.TURNOS)) {
+            return;
+        }
+        log.debug("Navegando a Turnos");
+        establecerBotonActivo(btnTurnos);
+        cargarVista("/fxml/gestion-turnos.fxml");
     }
     
     @FXML

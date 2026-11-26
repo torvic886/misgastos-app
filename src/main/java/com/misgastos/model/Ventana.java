@@ -15,6 +15,7 @@ public enum Ventana {
     CLIENTES("Clientes", "PERSONAS", "/fxml/clientes.fxml"),
     BILLETEROS("Billeteros", "PERSONAS", "/fxml/gestion-billeteros.fxml"),
     REPORTES_BILLETEROS("Reportes Billeteros", "PERSONAS", "/fxml/reportes-billeteros.fxml"),
+    TURNOS("Turnos", "PERSONAS", "/fxml/gestion-turnos.fxml"),
     MAQUINAS("Máquinas", "MAQUINAS", "/fxml/gestion-maquinas.fxml"),
     CONTADORES("Contadores", "MAQUINAS", "/fxml/contadores.fxml"),
     PRESUPUESTOS("Presupuestos", "SISTEMA", "/fxml/presupuestos.fxml"),

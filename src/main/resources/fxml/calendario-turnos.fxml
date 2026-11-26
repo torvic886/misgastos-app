@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="6" style="-fx-padding: 0;"
+        xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+        fx:controller="com.misgastos.controller.CalendarioTurnosController">
+
+        <HBox spacing="12" alignment="CENTER_LEFT">
+                <Label fx:id="lblMes" styleClass="panel-title" />
+                <HBox fx:id="boxResumen" spacing="8" alignment="CENTER_LEFT" />
+                <Region HBox.hgrow="ALWAYS" />
+                <HBox fx:id="boxLeyenda" spacing="12" alignment="CENTER_RIGHT" />
+        </HBox>
+
+        <ScrollPane fitToWidth="true" fitToHeight="true" VBox.vgrow="ALWAYS"
+                style="-fx-background-color: transparent; -fx-background: transparent;">
+                <content>
+                        <GridPane fx:id="gridMes" hgap="6" vgap="6" />
+                </content>
+        </ScrollPane>
+</VBox>

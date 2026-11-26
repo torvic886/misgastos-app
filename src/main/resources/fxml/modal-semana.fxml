@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.SVGPath?>
+
+<VBox xmlns="http://javafx.com/javafx/17"
+	xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="com.misgastos.controller.ModalSemanaController"
+	styleClass="content, gasto-screen" prefWidth="1020" prefHeight="660">
+
+	<VBox spacing="10" styleClass="form-card" VBox.vgrow="ALWAYS">
+
+		<HBox spacing="10" alignment="CENTER_LEFT"
+			styleClass="panel-header">
+			<Label styleClass="icon-circle">
+				<graphic>
+					<SVGPath styleClass="icon-white"
+						content="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z" />
+				</graphic>
+			</Label>
+			<VBox spacing="2" HBox.hgrow="ALWAYS">
+				<Label fx:id="lblTitulo" text="Semana"
+					styleClass="panel-title" />
+				<Label fx:id="lblSubtitulo" text="" wrapText="true"
+					styleClass="panel-subtitle" />
+			</VBox>
+			<Button text="◂ Semana anterior"
+				styleClass="toolbar-button, toolbar-neutral"
+				onAction="#handleSemanaAnterior" />
+			<Button text="Semana siguiente ▸"
+				styleClass="toolbar-button, toolbar-neutral"
+				onAction="#handleSemanaSiguiente" />
+		</HBox>
+
+		<HBox spacing="8" alignment="CENTER_LEFT">
+			<Label text="Brocha:" styleClass="field-caption" />
+			<HBox fx:id="boxBrochas" spacing="8" alignment="CENTER_LEFT" />
+			<Region HBox.hgrow="ALWAYS" />
+			<Button text="Copiar semana anterior"
+				styleClass="toolbar-button, toolbar-neutral"
+				onAction="#handleCopiarAnterior" />
+		</HBox>
+
+		<ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
+			style="-fx-background-color: transparent; -fx-background: transparent;">
+			<content>
+				<GridPane fx:id="gridSemana" hgap="8" vgap="8" />
+			</content>
+		</ScrollPane>
+
+		<Label wrapText="true" styleClass="form-hint"
+			text="Elige una brocha y toca las celdas. Para cambiar una celda en orden (1, 2, ½, Des y vacía), quita la brocha tocándola de nuevo y luego toca la celda. El orden dentro del turno y las horas se calculan solos, y cada cambio queda en el Registro de cambios." />
+
+		<Label fx:id="lblError" text="" styleClass="error-message"
+			managed="false" visible="false" wrapText="true" />
+
+		<HBox spacing="10" alignment="CENTER_RIGHT">
+			<Button text="Recalcular horas" styleClass="btn-limpiar"
+				onAction="#handleRecalcular" prefWidth="190" />
+			<Button text="Aplicar novedades" styleClass="btn-limpiar"
+				onAction="#handleAplicarNovedades" prefWidth="190" />
+			<Button text="Cancelar" styleClass="btn-limpiar"
+				onAction="#handleCancelar" prefWidth="170">
+				<graphic>
+					<SVGPath styleClass="icon-slate"
+						content="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+				</graphic>
+			</Button>
+			<Button text="Guardar semana" styleClass="btn-guardar"
+				onAction="#handleGuardar" prefWidth="200">
+				<graphic>
+					<SVGPath styleClass="icon-white"
+						content="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z" />
+				</graphic>
+			</Button>
+		</HBox>
+
+	</VBox>
+</VBox>
